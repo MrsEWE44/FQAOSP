@@ -3,8 +3,15 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/drawable-v21/app_widget_background.xml" value="0.1955" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/drawable-v21/app_widget_inner_view_background.xml" value="0.1955" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" value="0.1955" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/drawable/ic_launcher_background.xml" value="0.1955" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/activity_main.xml" value="0.358695652173913" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/apk_decompile_activity.xml" value="0.36614583333333334" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/apk_decompile_menu_activity.xml" value="0.36614583333333334" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/apk_extract_activity.xml" value="0.36614583333333334" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/apk_recompile_activity.xml" value="0.2049147839873167" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/kill_app.xml" value="0.1875" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/kill_app_activity.xml" value="0.1875" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/kill_app_widget.xml" value="0.1875" />

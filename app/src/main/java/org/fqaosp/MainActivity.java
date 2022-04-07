@@ -1,17 +1,30 @@
 package org.fqaosp;
 
+import static org.fqaosp.utils.multiFunc.jump;
+
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import org.fqaosp.databinding.ApkDecompileMenuActivityBinding;
+import org.fqaosp.myActivitys.apkDecompileMenuActivity;
 import org.fqaosp.myActivitys.apkExtractActivity;
 import org.fqaosp.myActivitys.killAppActivity;
 import org.fqaosp.myActivitys.mountLocalImageActivity;
@@ -34,24 +47,26 @@ public class MainActivity extends AppCompatActivity {
         Button b2 = findViewById(R.id.mb2);
         Button b3 = findViewById(R.id.mb3);
         Button b4 = findViewById(R.id.mb4);
+        Button b5 = findViewById(R.id.mb5);
 
         jump(b1,this,workProfileMenuActivity.class);
         jump(b2,this,apkExtractActivity.class);
         jump(b3,this, killAppActivity.class);
         jump(b4,this, mountLocalImageActivity.class);
+        jump(b5,this, apkDecompileMenuActivity.class);
 
     }
 
 
-    private void jump(Button b , Context srcA , Class<?> cls){
-        b.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Intent intent = new Intent(srcA, cls);
-                startActivity(intent);
-            }
-        });
-    }
+//    private void jump(Button b , Context srcA , Class<?> cls){
+//        b.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                Intent intent = new Intent(srcA, cls);
+//                startActivity(intent);
+//            }
+//        });
+//    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -74,4 +89,5 @@ public class MainActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
 }

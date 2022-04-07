@@ -20,16 +20,20 @@ public class CMD {
     private Process exec=null;
     private Integer resultCode=-1;
 
-    //默认以root身份运行命令
-    public CMD(String cmd){
+    //运行命令
+    public CMD(String cmd , Boolean root){
         try {
             Log.i("cmd ::: ",cmd);
-            exec = Runtime.getRuntime().exec("su");
-            DataOutputStream dos  = new DataOutputStream(exec.getOutputStream());
-            dos.writeBytes(cmd + "\n");
-            dos.flush();
-            dos.writeBytes("exit\n");
-            dos.flush();
+            if(root){
+                exec = Runtime.getRuntime().exec("su");
+                DataOutputStream dos  = new DataOutputStream(exec.getOutputStream());
+                dos.writeBytes(cmd + "\n");
+                dos.flush();
+                dos.writeBytes("exit\n");
+                dos.flush();
+            }else{
+                exec = Runtime.getRuntime().exec(cmd);
+            }
             BufferedReader reader = new BufferedReader(new InputStreamReader(exec.getInputStream(),"UTF-8"));
             String line="";
             while((line=reader.readLine()) != null){
@@ -40,6 +44,11 @@ public class CMD {
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    //默认以root身份运行命令
+    public CMD(String cmd){
+        this(cmd,true);
     }
 
 

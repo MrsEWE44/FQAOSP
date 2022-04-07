@@ -41,6 +41,9 @@
         <activity android:name=".myActivitys.apkExtractActivity" />
         <activity android:name=".myActivitys.killAppActivity" />
         <activity android:name=".myActivitys.mountLocalImageActivity" />
+        <activity android:name=".myActivitys.apkDecompileMenuActivity"/>
+        <activity android:name=".myActivitys.apkDecompileActivity"/>
+        <activity android:name=".myActivitys.apkRecompileActivity"/>
     </application>
 
 </manifest>

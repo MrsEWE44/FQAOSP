@@ -1,16 +1,22 @@
 package org.fqaosp.utils;
 
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Build;
 import android.os.FileUtils;
 import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.provider.MediaStore;
 import android.view.View;
+import android.widget.Button;
 
 import org.fqaosp.entity.PKGINFO;
 
@@ -19,6 +25,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,34 +37,63 @@ import java.util.List;
 
 public class multiFunc {
 
+    //页面布局跳转
+    public static void jump(Button b , Context srcA , Class<?> cls){
+        b.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(srcA, cls);
+                srcA.startActivity(intent);
+            }
+        });
+    }
+
+
+    //复制文件
+    public static Boolean copyFile(InputStream is, String outfile)  {
+        return  copyFile(is,new File(outfile));
+    }
+
+    //复制文件
+    public static Boolean copyFile(InputStream is, File outFile)  {
+        try {
+            return copyFile(is,new FileOutputStream(outFile));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    //复制文件
+    public static Boolean copyFile(InputStream is, OutputStream os)  {
+        try {
+            byte[] buffer = new byte[1024];
+            int length;
+            while ((length = is.read(buffer)) > 0) {
+                os.write(buffer, 0, length);
+            }
+            os.close();
+            is.close();
+            return true;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
     //复制文件
     public static Boolean copyFile(String srcFile , String outFile){
         return copyFile(new File(srcFile),new File(outFile));
     }
     //复制文件
     public static Boolean copyFile(File srcFile , File outFile){
-        FileChannel sourceChannel = null;
-        FileChannel destChannel = null;
-        if(srcFile.exists()){
-            try {
-                sourceChannel = new FileInputStream(srcFile).getChannel();
-                destChannel = new FileOutputStream(outFile).getChannel();
-                destChannel.transferFrom(sourceChannel, 0, sourceChannel.size());
-                return true;
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally{
-                try {
-                    sourceChannel.close();
-                    destChannel.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-            }
+        try {
+            return copyFile(new FileInputStream(srcFile),outFile);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
         }
         return false;
-
     }
 
 

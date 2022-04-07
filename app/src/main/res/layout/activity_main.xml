@@ -57,6 +57,13 @@
                android:id="@+id/mb4"
                ></Button>
 
+           <Button
+               android:layout_width="fill_parent"
+               android:layout_weight="1"
+               android:layout_height="wrap_content"
+               android:text="apk反编译"
+               android:id="@+id/mb5"
+               ></Button>
 
        </LinearLayout>
 
