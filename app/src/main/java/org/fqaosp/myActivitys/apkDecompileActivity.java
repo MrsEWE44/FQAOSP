@@ -1,5 +1,7 @@
 package org.fqaosp.myActivitys;
 
+import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -98,24 +100,9 @@ public class apkDecompileActivity extends AppCompatActivity {
                 startActivityForResult(intent, 0);
             }
         });
-
-
     }
 
 
-    /**
-     * 通过反射 阻止关闭对话框
-     */
-    private void preventDismissDialog(AlertDialog ddd) {
-        try {
-            Field field = ddd.getClass().getSuperclass().getDeclaredField("mShowing");
-            field.setAccessible(true);
-            //设置mShowing值，欺骗android系统
-            field.set(ddd, false);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     private void requestPermission(Context context){
         // 通过api判断手机当前版本号
@@ -187,21 +174,16 @@ public class apkDecompileActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
         menu.add("退出");
-
-
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-//        Toast.makeText(this, "item id :::: "+itemId, Toast.LENGTH_SHORT).show();
         switch (itemId){
             case 0:
                 fuckActivity.getIns().killall();
-
                 ;
         }
         return super.onOptionsItemSelected(item);

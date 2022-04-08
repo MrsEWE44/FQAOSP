@@ -1,12 +1,14 @@
 package org.fqaosp.utils;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -27,6 +29,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -152,8 +155,80 @@ public class multiFunc {
             for (PackageInfo packageInfo : installedPackages) {
                 ApplicationInfo applicationInfo = packageInfo.applicationInfo;
                 pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
-
             }
+        }
+
+    }
+
+    //查询当前机主安装的应用,用户部分
+    public static void queryUserPKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
+        PackageManager packageManager = activity.getPackageManager();
+        List<PackageInfo> installedPackages = packageManager.getInstalledPackages(types);
+        if(checkboxs != null){
+            for (PackageInfo packageInfo : installedPackages) {
+                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
+                if((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0){
+                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+                    checkboxs.add(false);
+                }
+            }
+        }else{
+            for (PackageInfo packageInfo : installedPackages) {
+                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
+                if((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0){
+                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+                }
+            }
+        }
+
+    }
+
+    //查询当前机主安装的应用,禁用部分
+    public static void queryDisablePKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
+        PackageManager packageManager = activity.getPackageManager();
+        List<PackageInfo> installedPackages = packageManager.getInstalledPackages(types);
+        if(checkboxs != null){
+            for (PackageInfo packageInfo : installedPackages) {
+                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
+                if(!applicationInfo.enabled){
+                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+                    checkboxs.add(false);
+                }
+            }
+        }else{
+            for (PackageInfo packageInfo : installedPackages) {
+                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
+                if(!applicationInfo.enabled){
+                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+                }
+            }
+        }
+
+    }
+
+    /**
+     * 通过反射 阻止关闭对话框
+     */
+    public static void preventDismissDialog(AlertDialog ddd) {
+        try {
+            Field field = ddd.getClass().getSuperclass().getDeclaredField("mShowing");
+            field.setAccessible(true);
+            //设置mShowing值，欺骗android系统
+            field.set(ddd, false);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    //释放资源文件
+    public static  void extactAssetsFile(Context context, String fileName,String toPath){
+        AssetManager assets = context.getAssets();
+        InputStream stream = null;
+        try {
+            stream = assets.open(fileName);
+            copyFile(stream,toPath);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
     }

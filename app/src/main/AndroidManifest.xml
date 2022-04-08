@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CHANGE_COMPONENT_ENABLED_STATE"/>
 
     <application
         android:allowBackup="true"
@@ -44,6 +45,11 @@
         <activity android:name=".myActivitys.apkDecompileMenuActivity"/>
         <activity android:name=".myActivitys.apkDecompileActivity"/>
         <activity android:name=".myActivitys.apkRecompileActivity"/>
+        <activity android:name=".myActivitys.appDisableActivity"/>
+        <activity android:name=".myActivitys.appopsActivity"/>
+        <activity android:name=".myActivitys.appopsInfoActivity"/>
+
+
     </application>
 
 </manifest>

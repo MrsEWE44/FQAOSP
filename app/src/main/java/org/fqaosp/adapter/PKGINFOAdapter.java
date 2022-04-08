@@ -35,7 +35,7 @@ public class PKGINFOAdapter extends BaseAdapter {
 
     @Override
     public Object getItem(int i) {
-        return null;
+        return pkginfos.get(i);
     }
 
     @Override
@@ -59,4 +59,5 @@ public class PKGINFOAdapter extends BaseAdapter {
         imageView.setImageDrawable(pkginfos.get(position).getAppicon());
         return convertView;
     }
+
 }
