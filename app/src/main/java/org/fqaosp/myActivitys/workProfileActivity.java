@@ -49,13 +49,11 @@ public class workProfileActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Toast.makeText(workProfileActivity.this, "6546", Toast.LENGTH_SHORT).show();
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if (checkboxs.get(i)) {
                         try {
                             Integer num = Integer.valueOf(editText1.getText().toString());
                             if(num<1024 && num > 0){
-//                                Log.i("clickd  ", pkginfos.get(i).getAppname()+" -- edit text ::: "+editText1.getText().toString());
                                 makeWP makewp = new makeWP();
                                 if(makewp.init()){
                                     PKGINFO pkginfo = pkginfos.get(i);
@@ -99,21 +97,16 @@ public class workProfileActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
         menu.add("退出");
-
-
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-//        Toast.makeText(this, "item id :::: "+itemId, Toast.LENGTH_SHORT).show();
         switch (itemId){
             case 0:
                 fuckActivity.getIns().killall();
-
                 ;
         }
         return super.onOptionsItemSelected(item);

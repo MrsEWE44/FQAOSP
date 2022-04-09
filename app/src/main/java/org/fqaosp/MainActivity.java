@@ -30,10 +30,12 @@ import org.fqaosp.myActivitys.apkDecompileMenuActivity;
 import org.fqaosp.myActivitys.apkExtractActivity;
 import org.fqaosp.myActivitys.appDisableActivity;
 import org.fqaosp.myActivitys.appopsActivity;
+import org.fqaosp.myActivitys.imgToolMenuActivity;
 import org.fqaosp.myActivitys.killAppActivity;
 import org.fqaosp.myActivitys.mountLocalImageActivity;
 import org.fqaosp.myActivitys.workProfileMenuActivity;
 import org.fqaosp.utils.fuckActivity;
+import org.fqaosp.utils.permissionRequest;
 
 /**
  * 首页界面内容...
@@ -47,10 +49,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         fuckActivity.getIns().add(this);
-        String p[] = {Manifest.permission.CHANGE_COMPONENT_ENABLED_STATE,Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.MANAGE_EXTERNAL_STORAGE,Manifest.permission.REQUEST_COMPANION_PROFILE_WATCH};
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(p,0);
-        }
+        permissionRequest.requestExternalStoragePermission(this);
+        initBut();
+    }
+
+    private  void initBut(){
         Button b1 = findViewById(R.id.mb1);
         Button b2 = findViewById(R.id.mb2);
         Button b3 = findViewById(R.id.mb3);
@@ -58,6 +61,7 @@ public class MainActivity extends AppCompatActivity {
         Button b5 = findViewById(R.id.mb5);
         Button mapkdisable = findViewById(R.id.mapkdisable);
         Button mappops = findViewById(R.id.mappops);
+        Button imgtool = findViewById(R.id.imgtool);
 
         jump(b1,this,workProfileMenuActivity.class);
         jump(b2,this,apkExtractActivity.class);
@@ -66,7 +70,9 @@ public class MainActivity extends AppCompatActivity {
         jump(b5,this, apkDecompileMenuActivity.class);
         jump(mapkdisable,this, appDisableActivity.class);
         jump(mappops,this, appopsActivity.class);
+        jump(imgtool,this, imgToolMenuActivity.class);
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -77,7 +83,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-//        Toast.makeText(this, "item id :::: "+itemId, Toast.LENGTH_SHORT).show();
         switch (itemId){
             case 0:
                 fuckActivity.getIns().killall();

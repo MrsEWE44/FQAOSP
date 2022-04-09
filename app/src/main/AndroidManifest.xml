@@ -48,6 +48,11 @@
         <activity android:name=".myActivitys.appDisableActivity"/>
         <activity android:name=".myActivitys.appopsActivity"/>
         <activity android:name=".myActivitys.appopsInfoActivity"/>
+        <activity android:name=".myActivitys.imgToolMenuActivity"/>
+        <activity android:name=".myActivitys.imgToolUnpackActivity"/>
+        <activity android:name=".myActivitys.imgToolRepackActivity"/>
+        <activity android:name=".myActivitys.importToolsActivity"/>
+
 
 
     </application>

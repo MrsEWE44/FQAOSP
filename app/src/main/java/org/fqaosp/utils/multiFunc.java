@@ -1,5 +1,6 @@
 package org.fqaosp.utils;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
@@ -12,15 +13,23 @@ import android.content.res.AssetManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Environment;
 import android.os.FileUtils;
 import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Toast;
+
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.myActivitys.appopsInfoActivity;
+import org.fqaosp.myActivitys.imgToolUnpackActivity;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,12 +50,17 @@ import java.util.List;
 public class multiFunc {
 
     //页面布局跳转
+    public static void jump(Context srcA , Class<?> cls){
+        Intent intent = new Intent(srcA, cls);
+        srcA.startActivity(intent);
+    }
+
+    //页面布局跳转
     public static void jump(Button b , Context srcA , Class<?> cls){
         b.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(srcA, cls);
-                srcA.startActivity(intent);
+                jump(srcA,cls);
             }
         });
     }
@@ -219,6 +233,92 @@ public class multiFunc {
             e.printStackTrace();
         }
     }
+
+    public static void execFileSelect(Context context,Activity activity , String msg){
+        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
+        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);//打开多个文件
+        intent.addCategory(Intent.CATEGORY_DEFAULT);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        activity.startActivityForResult(intent, 0);
+    }
+
+    //获取在内部存储的自家路径
+    public static String getMyStorageHomePath(Context context){
+        String s = Environment.getExternalStorageDirectory().toString();
+        return s+"/Android/data/"+context.getPackageName();
+    }
+
+    //获取自家data的files路径
+    public static String getMyHomeFilesPath(Context context){
+        String datadir="/data/data/"+context.getPackageName();
+        return datadir+"/files";
+    }
+
+    //选择文件时，判断是否为理想类型
+    public static void selectFile(Context context, String storage , Uri uri , ArrayList<String> list , ArrayList<Boolean> checkboxs , String msg , String equalstr){
+        String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
+        String fileName = getPathByLastNameType(filePath);
+        if(fileName.equals(equalstr)){
+//            filePath=filePath.substring(0,filePath.lastIndexOf("/"));
+            list.add(filePath);
+            checkboxs.add(false);
+        }else{
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    //获取文件结尾类型
+    public static String getPathByLastNameType(String filePath){
+        return filePath.substring(filePath.lastIndexOf(".")+1);
+    }
+
+    //获取路径文件名称
+    public static String getPathByLastName(String filePath){
+        return filePath.substring(filePath.lastIndexOf("/")+1);
+    }
+
+    /**
+     * 关闭对话框
+     */
+    public static void dismissDialog(AlertDialog ddd) {
+        try {
+            Field field = ddd.getClass().getSuperclass().getDeclaredField("mShowing");
+            field.setAccessible(true);
+            field.set(ddd, true);
+        } catch (Exception e) {
+        }
+        ddd.dismiss();
+    }
+
+    //调用命令对选项进行相应授权、撤销操作
+    public static void runAppopsCMD(Context context,String pkgname,String pkgcate , int ss , String msg , String msg2){
+        String cmdstr = "";
+        switch (ss){
+            case 0:
+                cmdstr="pm revoke "+pkgname + " " + pkgcate;
+                break;
+            case 1:
+            case 2:
+                cmdstr="pm disable " +pkgname+"/"+ pkgcate;
+                break;
+            case 3:
+                cmdstr="pm grant "+pkgname + " " + pkgcate;
+                break;
+            case 4:
+            case 5:
+                cmdstr="pm enable " +pkgname+"/"+ pkgcate;
+                break;
+        }
+        CMD cmd = new CMD(cmdstr);
+        if(cmd.getResultCode() == 0){
+            Toast.makeText(context, pkgcate + " " +msg, Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(context, pkgcate + " " +msg2, Toast.LENGTH_SHORT).show();
+        }
+    }
+
 
     //释放资源文件
     public static  void extactAssetsFile(Context context, String fileName,String toPath){

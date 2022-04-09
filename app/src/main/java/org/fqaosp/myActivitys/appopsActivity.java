@@ -89,18 +89,20 @@ public class appopsActivity extends AppCompatActivity {
 
     }
 
+    private void clearList(){
+        checkboxs.clear();
+        pkginfos.clear();
+    }
 
     //获取对应的应用程序
     private void getUserPKGS(){
-        checkboxs.clear();
-        pkginfos.clear();
+        clearList();
         multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
     }
 
     //获取对应的应用程序
     private void getPKGS(){
-        checkboxs.clear();
-        pkginfos.clear();
+        clearList();
         multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
     }
 
@@ -115,7 +117,6 @@ public class appopsActivity extends AppCompatActivity {
         menu.add(Menu.NONE,0,0,"显示用户安装应用");
         menu.add(Menu.NONE,1,1,"显示所有应用");
         menu.add(Menu.NONE,2,2,"退出");
-
         return super.onCreateOptionsMenu(menu);
     }
 

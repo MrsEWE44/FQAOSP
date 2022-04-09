@@ -1,6 +1,10 @@
 package org.fqaosp.myActivitys;
 
+import static org.fqaosp.utils.multiFunc.execFileSelect;
+import static org.fqaosp.utils.multiFunc.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.queryUserPKGS;
+import static org.fqaosp.utils.multiFunc.selectFile;
 
 import android.Manifest;
 import android.app.Activity;
@@ -31,10 +35,12 @@ import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.threads.alertDialogThread;
 import org.fqaosp.threads.cmdThread;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
+import org.fqaosp.utils.permissionRequest;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -55,27 +61,22 @@ public class apkDecompileActivity extends AppCompatActivity {
         Button b2 = findViewById(R.id.adab2);
         Button b3 = findViewById(R.id.adab3);
         lv1 = findViewById(R.id.adalv1);
-        requestPermission(this);
+        permissionRequest.getExternalStorageManager(apkDecompileActivity.this);
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if(checkboxs.get(i)){
-                        final AlertDialog.Builder alertDialog = new AlertDialog.Builder(apkDecompileActivity.this);
-                        alertDialog.setTitle("提示");
-                        alertDialog.setMessage("请稍后，正在反编译中...");
-                        AlertDialog show = alertDialog.show();
-                        preventDismissDialog(show);
-                        String datadir="/data/data/"+getPackageName();
-                        String filesDir = datadir+"/files";
+                        String filesDir = getMyHomeFilesPath(apkDecompileActivity.this);
                         String filePath = pkginfos.size() > 0 ?pkginfos.get(i).getApkpath() : list.get(i);
                         PackageManager packageManager = getPackageManager();
                         PackageInfo archiveInfo = packageManager.getPackageArchiveInfo(filePath, 0);
                         String pkgname =  archiveInfo.packageName;
                         String storage = Environment.getExternalStorageDirectory().toString();
                         String outDir = storage+"/Android/data/"+getPackageName()+"/files/decompile/"+pkgname;
-                        cmdThread ee = new cmdThread("cd " + filesDir + " && sh de.sh " + outDir + " " + filePath, "反编译成功 " + outDir, "反编译失败", apkDecompileActivity.this, show);
-                        ee.start();
+                        String cmd = "cd " + filesDir + " && sh de.sh " + outDir + " " + filePath;
+                        alertDialogThread dialogThread = new alertDialogThread(apkDecompileActivity.this, "请稍后，正在反编译中...", cmd, "提示", "反编译成功 " + outDir, "反编译失败");
+                        dialogThread.start();
                     }
                 }
             }
@@ -92,35 +93,9 @@ public class apkDecompileActivity extends AppCompatActivity {
         b3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
-                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);//打开多个文件
-                intent.addCategory(Intent.CATEGORY_DEFAULT);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivityForResult(intent, 0);
+                execFileSelect(apkDecompileActivity.this,apkDecompileActivity.this,"请选择.apk文件");
             }
         });
-    }
-
-
-
-    private void requestPermission(Context context){
-        // 通过api判断手机当前版本号
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // 安卓11，判断有没有“所有文件访问权限”权限
-            if (Environment.isExternalStorageManager()) {
-                Toast.makeText(context, "已获取文件访问权限", Toast.LENGTH_SHORT).show();
-            } else {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                intent.setData(Uri.parse("package:" + context.getPackageName()));
-                startActivity(intent);
-            }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // 安卓6 判断有没有读写权限权限
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(context, "已获取文件访问权限", Toast.LENGTH_SHORT).show();
-            }
-        }
     }
 
     @Override
@@ -133,15 +108,11 @@ public class apkDecompileActivity extends AppCompatActivity {
                 int count = data.getClipData().getItemCount();
                 for(int i =0;i<count;i++){
                     Uri uri = data.getClipData().getItemAt(i).getUri();
-                    String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
-                    list.add(filePath);
-                    checkboxs.add(false);
+                    selectFile(apkDecompileActivity.this,storage,uri,list,checkboxs,"请选择正确的apk文件","apk");
                 }
             } else if(data.getData() != null) {//只有一个文件咯
                 Uri uri = data.getData();
-                String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
-                list.add(filePath);
-                checkboxs.add(false);
+                selectFile(apkDecompileActivity.this,storage,uri,list,checkboxs,"请选择正确的apk文件","apk");
             }
 
             showSelectApkPath(lv1);
@@ -157,7 +128,12 @@ public class apkDecompileActivity extends AppCompatActivity {
     //获取对应的应用程序
     private void getPKGS(){
        clearList();
-        multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
+       multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
+    }
+
+    private void getUserPKGS(){
+        clearList();
+        queryUserPKGS(this,pkginfos,checkboxs,0);
     }
 
     private void showPKGS(ListView listView){
@@ -174,7 +150,9 @@ public class apkDecompileActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add("退出");
+        menu.add(Menu.NONE,0,0,"显示所有应用");
+        menu.add(Menu.NONE,1,1,"显示用户安装的应用");
+        menu.add(Menu.NONE,2,2,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -183,6 +161,14 @@ public class apkDecompileActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
+                getPKGS();
+                showPKGS(lv1);
+                break;
+            case 1:
+                getUserPKGS();
+                showPKGS(lv1);
+                break;
+            case 2:
                 fuckActivity.getIns().killall();
                 ;
         }

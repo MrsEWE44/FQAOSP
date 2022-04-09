@@ -1,5 +1,11 @@
 package org.fqaosp.myActivitys;
 
+import static org.fqaosp.utils.multiFunc.execFileSelect;
+import static org.fqaosp.utils.multiFunc.getMyHomeFilesPath;
+import static org.fqaosp.utils.multiFunc.getPathByLastName;
+import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.selectFile;
+
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -27,8 +33,10 @@ import androidx.core.content.ContextCompat;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.USERAdapter;
+import org.fqaosp.threads.alertDialogThread;
 import org.fqaosp.threads.cmdThread;
 import org.fqaosp.utils.fuckActivity;
+import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -54,13 +62,7 @@ public class apkRecompileActivity extends AppCompatActivity {
 
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if(checkboxs.get(i)){
-                        final AlertDialog.Builder alertDialog = new AlertDialog.Builder(apkRecompileActivity.this);
-                        alertDialog.setTitle("提示");
-                        alertDialog.setMessage("请稍后，正在回编译中...");
-                        AlertDialog show = alertDialog.show();
-                        preventDismissDialog(show);
-                        String datadir="/data/data/"+getPackageName();
-                        String filesDir = datadir+"/files";
+                        String filesDir = getMyHomeFilesPath(apkRecompileActivity.this);
                         String decompilepath = list.get(i);
                         String outname = decompilepath.substring(decompilepath.lastIndexOf("/")+1);
                         String storage = Environment.getExternalStorageDirectory().toString();
@@ -70,8 +72,9 @@ public class apkRecompileActivity extends AppCompatActivity {
                            file.mkdirs();
                         }
                         String outFile = outDir+"/"+outname+".apk";
-                        cmdThread ee = new cmdThread("cd " + filesDir + " && sh re.sh " + outFile + " " + decompilepath, "回编译成功 " + outFile, "回编译失败", apkRecompileActivity.this, show);
-                        ee.start();
+                        String cmd = "cd " + filesDir + " && sh re.sh " + outFile + " " + decompilepath;
+                        alertDialogThread dialogThread = new alertDialogThread(apkRecompileActivity.this, "请稍后，正在回编译中...", cmd, "提示", "回编译成功 " + outFile, "回编译失败");
+                        dialogThread.start();
                     }
                 }
 
@@ -106,32 +109,12 @@ public class apkRecompileActivity extends AppCompatActivity {
         b3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(apkRecompileActivity.this, "请选择 apktool.yml 文件", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
-                intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);//打开多个文件
-                intent.addCategory(Intent.CATEGORY_DEFAULT);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivityForResult(intent, 0);
+                execFileSelect(apkRecompileActivity.this,apkRecompileActivity.this,"请选择 apktool.yml 文件");
             }
         });
-
-        requestPermission(this);
+        permissionRequest.getExternalStorageManager(apkRecompileActivity.this);
     }
 
-    /**
-     * 通过反射 阻止关闭对话框
-     */
-    private void preventDismissDialog(AlertDialog ddd) {
-        try {
-            Field field = ddd.getClass().getSuperclass().getDeclaredField("mShowing");
-            field.setAccessible(true);
-            //设置mShowing值，欺骗android系统
-            field.set(ddd, false);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -143,30 +126,12 @@ public class apkRecompileActivity extends AppCompatActivity {
                 int count = data.getClipData().getItemCount();
                 for(int i =0;i<count;i++){
                     Uri uri = data.getClipData().getItemAt(i).getUri();
-                    String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
-                    String fileName = filePath.substring(filePath.lastIndexOf("/")+1);
-                    if(fileName.equals("apktool.yml")){
-                        filePath=filePath.substring(0,filePath.lastIndexOf("/"));
-                        list.add(filePath);
-                        checkboxs.add(false);
-                    }else{
-                        Toast.makeText(this, "请选择正确的apktool.yml文件", Toast.LENGTH_SHORT).show();
-                    }
-
+                    selectFile(apkRecompileActivity.this,storage,uri,list,checkboxs,"请选择正确的apktool.yml文件","yml");
                 }
             } else if(data.getData() != null) {//只有一个文件咯
                 Uri uri = data.getData();
-                String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
-                String fileName = filePath.substring(filePath.lastIndexOf("/")+1);
-                if(fileName.equals("apktool.yml")){
-                    filePath=filePath.substring(0,filePath.lastIndexOf("/"));
-                    list.add(filePath);
-                    checkboxs.add(false);
-                }else{
-                    Toast.makeText(this, "请选择正确的apktool.yml文件", Toast.LENGTH_SHORT).show();
-                }
+                selectFile(apkRecompileActivity.this,storage,uri,list,checkboxs,"请选择正确的apktool.yml文件","yml");
             }
-
             showSelectApkToolPath(lv1);
         }
     }
@@ -178,25 +143,6 @@ public class apkRecompileActivity extends AppCompatActivity {
         }
     }
 
-    private void requestPermission(Context context){
-        // 通过api判断手机当前版本号
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // 安卓11，判断有没有“所有文件访问权限”权限
-            if (Environment.isExternalStorageManager()) {
-                Toast.makeText(context, "已获取文件访问权限", Toast.LENGTH_SHORT).show();
-            } else {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                intent.setData(Uri.parse("package:" + context.getPackageName()));
-                startActivity(intent);
-            }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // 安卓6 判断有没有读写权限权限
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(context, "已获取文件访问权限", Toast.LENGTH_SHORT).show();
-            }
-        }
-    }
-
     private void clearList(){
         checkboxs.clear();
         list.clear();
@@ -205,21 +151,16 @@ public class apkRecompileActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
         menu.add("退出");
-
-
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-//        Toast.makeText(this, "item id :::: "+itemId, Toast.LENGTH_SHORT).show();
         switch (itemId){
             case 0:
                 fuckActivity.getIns().killall();
-
                 ;
         }
         return super.onOptionsItemSelected(item);

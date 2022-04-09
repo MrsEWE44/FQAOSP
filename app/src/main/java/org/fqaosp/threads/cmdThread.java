@@ -1,5 +1,7 @@
 package org.fqaosp.threads;
 
+import static org.fqaosp.utils.multiFunc.dismissDialog;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Looper;
@@ -7,8 +9,10 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.fqaosp.utils.CMD;
+import org.fqaosp.utils.multiFunc;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 
 public class cmdThread extends  Thread{
 
@@ -33,27 +37,16 @@ public class cmdThread extends  Thread{
         if(cmd.getResultCode() == 0){
             Looper.prepare();
             Toast.makeText(this.context, sucess_msg, Toast.LENGTH_SHORT).show();
-            dismissDialog();
+            dismissDialog(ddd);
             Looper.loop();
         }else{
             Looper.prepare();
             Toast.makeText(this.context, error_msg, Toast.LENGTH_SHORT).show();
-            dismissDialog();
+            dismissDialog(ddd);
             Looper.loop();
         }
     }
 
-    /**
-     * 关闭对话框
-     */
-    private void dismissDialog() {
-        try {
-            Field field = ddd.getClass().getSuperclass().getDeclaredField("mShowing");
-            field.setAccessible(true);
-            field.set(ddd, true);
-        } catch (Exception e) {
-        }
-        ddd.dismiss();
-    }
+
 
 }

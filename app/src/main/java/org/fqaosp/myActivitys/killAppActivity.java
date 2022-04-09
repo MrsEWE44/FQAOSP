@@ -44,10 +44,7 @@ public class killAppActivity extends AppCompatActivity {
                 for (PKGINFO pkginfo : pkginfos) {
                     if(!pkginfo.getPkgname().equals(getPackageName())){
                         //调用命令终止后台程序
-                        CMD cmd = new CMD("am force-stop "+pkginfo.getPkgname());
-                        if(cmd.getResultCode() == 0){
-                            Toast.makeText(killAppActivity.this, "已终止 "+pkginfo.getAppname(), Toast.LENGTH_SHORT).show();
-                        }
+                        stopApp(pkginfo);
                     }
                 }
                 Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
@@ -63,10 +60,7 @@ public class killAppActivity extends AppCompatActivity {
                     if(checkboxs.get(i)){
                         PKGINFO pkginfo = pkginfos.get(i);
                         if(!pkginfo.getPkgname().equals(getPackageName())){
-                            CMD cmd = new CMD("am force-stop "+pkginfo.getPkgname());
-                            if(cmd.getResultCode() == 0){
-                                Toast.makeText(killAppActivity.this, "已终止 "+pkginfo.getAppname(), Toast.LENGTH_SHORT).show();
-                            }
+                            stopApp(pkginfo);
                         }
                     }
                 }
@@ -83,10 +77,7 @@ public class killAppActivity extends AppCompatActivity {
                     if(!checkboxs.get(i)){
                         PKGINFO pkginfo = pkginfos.get(i);
                         if(!pkginfo.getPkgname().equals(getPackageName())){
-                            CMD cmd = new CMD("am force-stop "+pkginfo.getPkgname());
-                            if(cmd.getResultCode() == 0){
-                                Toast.makeText(killAppActivity.this, "已终止 "+pkginfo.getAppname(), Toast.LENGTH_SHORT).show();
-                            }
+                            stopApp(pkginfo);
                         }
                     }
                 }
@@ -95,8 +86,13 @@ public class killAppActivity extends AppCompatActivity {
                 showPKGS(lv1);
             }
         });
+    }
 
-
+    private void stopApp(PKGINFO pkginfo){
+        CMD cmd = new CMD("am force-stop "+pkginfo.getPkgname());
+        if(cmd.getResultCode() == 0){
+            Toast.makeText(killAppActivity.this, "已终止 "+pkginfo.getAppname(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void getRunning(int ss){
@@ -127,7 +123,6 @@ public class killAppActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-//        Toast.makeText(this, "item id :::: "+itemId, Toast.LENGTH_SHORT).show();
         switch (itemId){
             case 0 :
                 getRunning(2);

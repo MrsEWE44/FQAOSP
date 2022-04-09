@@ -89,21 +89,16 @@ public class workProfileRemoveActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
         menu.add("退出");
-
-
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-//        Toast.makeText(this, "item id :::: "+itemId, Toast.LENGTH_SHORT).show();
         switch (itemId){
             case 0:
                 fuckActivity.getIns().killall();
-
                 ;
         }
         return super.onOptionsItemSelected(item);
