@@ -5,6 +5,7 @@ import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -49,7 +50,7 @@ public class appDisableActivity extends AppCompatActivity {
         hideButton();
         String datadir="/data/data/"+getPackageName();
         String filesDir = datadir+"/files";
-        String sysupfile = filesDir+"startupsystem.sh";
+        String sysupfile = filesDir+"/startupsystem.sh";
         hideButtonClick(filesDir);
         if(extractAssertFile(sysupfile,filesDir)){
             Toast.makeText(this, "禁用脚本已存在", Toast.LENGTH_SHORT).show();
@@ -170,6 +171,7 @@ public class appDisableActivity extends AppCompatActivity {
     }
 
     private Boolean extractAssertFile(String sysupfile,String filesDir){
+        Log.d("fff :: ",sysupfile);
         File sysupF = new File(sysupfile);
         File fileD = new File(filesDir);
         if(!fileD.exists()){

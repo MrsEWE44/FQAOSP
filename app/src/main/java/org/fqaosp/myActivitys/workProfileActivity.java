@@ -34,6 +34,8 @@ public class workProfileActivity extends AppCompatActivity {
 
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
+    private ListView listView1;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -41,11 +43,9 @@ public class workProfileActivity extends AppCompatActivity {
         setContentView(R.layout.work_profile_activity);
         fuckActivity.getIns().add(this);
         Button b1 = findViewById(R.id.wpb1);
-        ListView listView1 = findViewById(R.id.wplv1);
+        listView1 = findViewById(R.id.wplv1);
         EditText editText1 = findViewById(R.id.wpet1);
 
-        getPKGS();
-        showPKGS(listView1);
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -89,15 +89,23 @@ public class workProfileActivity extends AppCompatActivity {
         multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
     }
 
+    private void getUserPKGS(){
+        checkboxs.clear();
+        pkginfos.clear();
+        //提取所有已安装的应用列表
+        multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
+    }
+
     private void showPKGS(ListView listView){
         PKGINFOAdapter pkginfoAdapter = new PKGINFOAdapter(pkginfos, workProfileActivity.this, checkboxs);
         listView.setAdapter(pkginfoAdapter);
     }
 
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add("退出");
+        menu.add(Menu.NONE,0,0,"显示所有应用");
+        menu.add(Menu.NONE,1,1,"显示用户安装的应用");
+        menu.add(Menu.NONE,2,2,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -106,6 +114,14 @@ public class workProfileActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
+                getPKGS();
+                showPKGS(listView1);
+                break;
+            case 1:
+                getUserPKGS();
+                showPKGS(listView1);
+                break;
+            case 2:
                 fuckActivity.getIns().killall();
                 ;
         }
