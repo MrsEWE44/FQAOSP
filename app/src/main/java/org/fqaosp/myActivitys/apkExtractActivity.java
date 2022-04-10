@@ -18,6 +18,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.threads.alertDialogThread;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 
@@ -59,12 +60,15 @@ public class apkExtractActivity extends AppCompatActivity {
                         if(!appHome.exists()){
                            appHome.mkdirs();
                         }
-                        if(multiFunc.copyFile(pkginfo.getApkpath(),FileOutPath)){
-                            Toast.makeText(apkExtractActivity.this, "提取 "+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
-                            Toast.makeText(apkExtractActivity.this, "提取的文件保存在 "+FileOutPath, Toast.LENGTH_SHORT).show();
-                        }else{
-                            Toast.makeText(apkExtractActivity.this, "提取 "+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
-                        }
+                        String cmd = "cp " + pkginfo.getApkpath() + " " + FileOutPath;
+                        alertDialogThread dialogThread = new alertDialogThread(apkExtractActivity.this, "正在提取文件中...", cmd, "提示", "提取成功 " + FileOutPath, "提取失败");
+                        dialogThread.start();
+//                        if(multiFunc.copyFile(pkginfo.getApkpath(),FileOutPath)){
+//                            Toast.makeText(apkExtractActivity.this, "提取 "+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(apkExtractActivity.this, "提取的文件保存在 "+FileOutPath, Toast.LENGTH_SHORT).show();
+//                        }else{
+//                            Toast.makeText(apkExtractActivity.this, "提取 "+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
+//                        }
                     }
                 }
             }

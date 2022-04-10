@@ -1,6 +1,13 @@
 package org.fqaosp.myActivitys;
 
+import static org.fqaosp.utils.multiFunc.dismissDialog;
+import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.queryUSERS;
+
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -17,11 +24,16 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.threads.alertDialogThread;
+import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeWP;
 import org.fqaosp.utils.multiFunc;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -36,6 +48,8 @@ public class workProfileActivity extends AppCompatActivity {
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private ListView listView1;
 
+    private ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,42 +59,103 @@ public class workProfileActivity extends AppCompatActivity {
         Button b1 = findViewById(R.id.wpb1);
         listView1 = findViewById(R.id.wplv1);
         EditText editText1 = findViewById(R.id.wpet1);
-
+        showDialogWaring();
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if (checkboxs.get(i)) {
-                        try {
-                            Integer num = Integer.valueOf(editText1.getText().toString());
-                            if(num<1024 && num > 0){
-                                makeWP makewp = new makeWP();
-                                if(makewp.init()){
-                                    PKGINFO pkginfo = pkginfos.get(i);
-                                    for(int j=0;j<num;j++){
-                                        //创建工作资料空间
-                                        if(makewp.createWP()){
-                                            Toast.makeText(workProfileActivity.this, multiFunc.getMyUID() + " 已成功新增 : "+pkginfo.getAppname(), Toast.LENGTH_SHORT).show();
+
+                AlertDialog.Builder alertDialog = new AlertDialog.Builder(workProfileActivity.this);
+                alertDialog.setTitle("提示");
+                alertDialog.setMessage("正在创建分身空间,请稍后(可能会出现无响应，请耐心等待)....");
+                AlertDialog show = alertDialog.show();
+                preventDismissDialog(show);
+
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        makeWP makewp = new makeWP();
+                        Integer num = Integer.valueOf(editText1.getText().toString());
+                        if(num<makewp.getInitsize() && num > 0){
+
+                            if(makewp.init()){
+                                for(int j=0;j<num;j++){
+                                    //创建工作资料空间
+                                    Runnable runnable = new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            if(makewp.createWP()){
+                                                Log.d("workP "," is create ok !!!");
+                                            }
                                         }
-                                    }
-                                    //同步所有空间都安装选中的应用
-                                    makewp.syncapk(workProfileActivity.this,pkginfo);
-                                    editText1.setText("");
-                                    Toast.makeText(workProfileActivity.this, "全部新增成功", Toast.LENGTH_LONG).show();
+                                    };
+                                    executorService.execute(runnable);
                                 }
-                            }else{
-                                Toast.makeText(workProfileActivity.this, "请输入1024以内并且大于0的数值", Toast.LENGTH_SHORT).show();
+
                             }
-                        }catch (Exception e){
-                            Toast.makeText(workProfileActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                            executorService.shutdown();
+                            try {
+                                while(true){
+                                    if(executorService.isTerminated()){
+                                        ArrayList<String> list = new ArrayList<>();
+                                        queryUSERS(workProfileActivity.this,list);
+                                        for (int i = 0; i < checkboxs.size(); i++) {
+                                            if (checkboxs.get(i)) {
+                                                PKGINFO pkginfo = pkginfos.get(i);
+                                                //同步所有空间都安装选中的应用
+//                                                makewp.syncapk(workProfileActivity.this,pkginfo);
+                                                for (String userid : list) {
+                                                    Runnable runnable = new Runnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            makewp.startWP(userid);
+                                                            String pkgname = pkginfo.getPkgname();
+                                                            CMD cmd = new CMD(makewp.getInstallPkgCMD(userid,pkgname));
+                                                            Log.d("install ",pkginfo.getAppname() +" --  code :: "+ cmd.getResultCode() );
+                                                        }
+                                                    };
+                                                    cacheThreadPool.execute(runnable);
+                                                }
+                                            }
+                                        }
+                                        cacheThreadPool.shutdown();
+                                        while(true){
+                                            if(cacheThreadPool.isTerminated()){
+                                                editText1.setText("");
+                                                Toast.makeText(workProfileActivity.this, "全部新增成功", Toast.LENGTH_LONG).show();
+                                                multiFunc.dismissDialog(show);
+                                                break;
+                                            }
+                                            Thread.sleep(100);
+                                        }
+                                        break;
+                                    }
+                                    Thread.sleep(100);
+                                }
+                            }catch (Exception e){
+                                Toast.makeText(workProfileActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+
+                        }else{
+                            Toast.makeText(workProfileActivity.this, "请输入 "+makewp.getInitsize()+" 以内并且大于0的数值", Toast.LENGTH_SHORT).show();
                         }
-                        
                     }
-                }
+                });
             }
         });
     }
 
+    private void showDialogWaring(){
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(workProfileActivity.this);
+        alertDialog.setTitle("警告");
+        alertDialog.setMessage("分身部分不能一次性开启太多，不然的话会闪退或者无响应");
+        alertDialog.setNegativeButton("我已知晓", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        alertDialog.show();
+    }
 
     private void getPKGS(){
         checkboxs.clear();

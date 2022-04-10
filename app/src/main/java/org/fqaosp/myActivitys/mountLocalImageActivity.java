@@ -1,5 +1,8 @@
 package org.fqaosp.myActivitys;
 
+import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
@@ -19,6 +22,7 @@ import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeImgToPC;
+import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.permissionRequest;
 
 import java.util.ArrayList;
@@ -45,6 +49,12 @@ public class mountLocalImageActivity extends AppCompatActivity {
         Button b1 = findViewById(R.id.mliab1);
         ListView lv1 = findViewById(R.id.mlialv1);
 
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(mountLocalImageActivity.this);
+        alertDialog.setTitle("提示");
+        alertDialog.setMessage("正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
+        AlertDialog show = alertDialog.show();
+        preventDismissDialog(show);
+
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -67,6 +77,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
             public void run() {
                 getImgs();
                 showImgs(lv1);
+                multiFunc.dismissDialog(show);
             }
         });
 

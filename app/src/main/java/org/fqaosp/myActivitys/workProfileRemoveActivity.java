@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.USERAdapter;
+import org.fqaosp.threads.alertDialogThread;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeWP;
 import org.fqaosp.utils.multiFunc;
@@ -46,15 +47,12 @@ public class workProfileRemoveActivity extends AppCompatActivity {
             public void onClick(View view) {
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if (checkboxs.get(i)) {
-                        makeWP wp = new makeWP();
                         //移除掉勾选的内容
-                        if(wp.removeWP(list.get(i))){
-                            Toast.makeText(workProfileRemoveActivity.this, "成功删除分身: "+list.get(i), Toast.LENGTH_SHORT).show();
-                        }
+                        makeWP wp = new makeWP();
+                        alertDialogThread dialogThread = new alertDialogThread(workProfileRemoveActivity.this, "正在删除分身空间", wp.getRemoveWPCMD(list.get(i)), "提示", "删除成功", "删除失败");
+                        dialogThread.start();
                     }
                 }
-                getUsers();
-                showUsers(listView1);
             }
         });
         b2.setOnClickListener(new View.OnClickListener() {
@@ -62,12 +60,9 @@ public class workProfileRemoveActivity extends AppCompatActivity {
             public void onClick(View view) {
                 for (String s : list) {
                     makeWP wp = new makeWP();
-                    if(wp.removeWP(s)){
-                        Toast.makeText(workProfileRemoveActivity.this, "成功删除分身: "+s, Toast.LENGTH_SHORT).show();
-                    }
+                    alertDialogThread dialogThread = new alertDialogThread(workProfileRemoveActivity.this, "正在删除分身空间", wp.getRemoveWPCMD(s), "提示", "删除成功", "删除失败");
+                    dialogThread.start();
                 }
-                Intent intent = new Intent(workProfileRemoveActivity.this,workProfileMenuActivity.class);
-                startActivity(intent);
             }
         });
         getUsers();

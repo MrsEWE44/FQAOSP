@@ -1,9 +1,11 @@
 package org.fqaosp.myActivitys;
 
+import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -56,7 +58,23 @@ public class appDisableActivity extends AppCompatActivity {
             Toast.makeText(this, "禁用脚本已存在", Toast.LENGTH_SHORT).show();
         }else{
             Toast.makeText(this, "禁用脚本无法获取，请退出重试或者重新安装app", Toast.LENGTH_SHORT).show();
-            fuckActivity.getIns().killall();
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(appDisableActivity.this);
+            alertDialog.setTitle("警告");
+            alertDialog.setMessage("禁用脚本没有找到,部分功能使用将受到限制或者异常,要继续使用吗？");
+            alertDialog.setPositiveButton("继续", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.dismiss();
+                }
+            });
+            alertDialog.setNegativeButton("补全组件脚本", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.dismiss();
+                    jump(appDisableActivity.this,importToolsActivity.class);
+                }
+            });
+            alertDialog.show();
         }
         ada_disableappb.setOnClickListener(new View.OnClickListener() {
             @Override

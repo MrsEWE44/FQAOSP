@@ -234,6 +234,7 @@ public class multiFunc {
         }
     }
 
+    //调用系统文件选择器
     public static void execFileSelect(Context context,Activity activity , String msg){
         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
