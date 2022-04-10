@@ -152,8 +152,6 @@ public class importToolsActivity extends AppCompatActivity {
                 if(s.indexOf(jdkfile) != -1){
                     extractFile(s,jdkfile);
                 }
-
-
             }
 
         }

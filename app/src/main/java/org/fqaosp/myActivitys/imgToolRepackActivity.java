@@ -59,16 +59,17 @@ public class imgToolRepackActivity extends AppCompatActivity {
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if(checkboxs.get(i)){
                         String s = list.get(i);
-                        String name = getPathByLastName(s);
+                        String inputDir=s.substring(0,s.lastIndexOf("/"));
+                        String name = getPathByLastName(inputDir);
                         String mystoragehome = getMyStorageHomePath(imgToolRepackActivity.this);
                         String filesPath = getMyHomeFilesPath(imgToolRepackActivity.this);
-                        String outPath = mystoragehome+"/repack/"+name;
+                        String outPath = mystoragehome+"/files/repack/"+name;
                         String outName = outPath+"/"+name;
                         File file = new File(outPath);
                         if(!file.exists()){
                             file.mkdirs();
                         }
-                        String cmd = "cd " + filesPath + " && sh repack.sh "+s + " "+outName+ " " + name;
+                        String cmd = "cd " + filesPath + " && sh repack.sh "+inputDir + " "+outName+ " " + name;
                         alertDialogThread dialogThread = new alertDialogThread(imgToolRepackActivity.this, "正在打包 " + name + " ...", cmd, "提示", "打包成功 " + outName, "打包失败");
                         dialogThread.start();
                     }

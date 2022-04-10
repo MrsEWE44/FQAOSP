@@ -64,15 +64,17 @@ public class apkRecompileActivity extends AppCompatActivity {
                     if(checkboxs.get(i)){
                         String filesDir = getMyHomeFilesPath(apkRecompileActivity.this);
                         String decompilepath = list.get(i);
-                        String outname = decompilepath.substring(decompilepath.lastIndexOf("/")+1);
+                        String inputDir=decompilepath.substring(0,decompilepath.lastIndexOf("/"));
+                        String outname = getPathByLastName(inputDir);
                         String storage = Environment.getExternalStorageDirectory().toString();
                         String outDir = storage+"/Android/data/"+getPackageName()+"/files/recompile";
                         File file = new File(outDir);
                         if(!file.exists()){
                            file.mkdirs();
                         }
+
                         String outFile = outDir+"/"+outname+".apk";
-                        String cmd = "cd " + filesDir + " && sh re.sh " + outFile + " " + decompilepath;
+                        String cmd = "cd " + filesDir + " && sh re.sh " + outFile + " " + inputDir;
                         alertDialogThread dialogThread = new alertDialogThread(apkRecompileActivity.this, "请稍后，正在回编译中...", cmd, "提示", "回编译成功 " + outFile, "回编译失败");
                         dialogThread.start();
                     }

@@ -70,7 +70,7 @@ public class imgToolUnpackActivity extends AppCompatActivity {
                         String name = getPathByLastName(s).replaceAll(".img","");
                         String mystoragehome = getMyStorageHomePath(imgToolUnpackActivity.this);
                         String filesPath = getMyHomeFilesPath(imgToolUnpackActivity.this);
-                        String outPath = mystoragehome+"/unpack/"+name;
+                        String outPath = mystoragehome+"/files/unpack/"+name;
                         File file = new File(outPath);
                         if(!file.exists()){
                            file.mkdirs();

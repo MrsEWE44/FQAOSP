@@ -31,6 +31,7 @@ import org.fqaosp.myActivitys.apkExtractActivity;
 import org.fqaosp.myActivitys.appDisableActivity;
 import org.fqaosp.myActivitys.appopsActivity;
 import org.fqaosp.myActivitys.imgToolMenuActivity;
+import org.fqaosp.myActivitys.importToolsActivity;
 import org.fqaosp.myActivitys.killAppActivity;
 import org.fqaosp.myActivitys.mountLocalImageActivity;
 import org.fqaosp.myActivitys.workProfileMenuActivity;
@@ -76,7 +77,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add("退出");
+        menu.add(Menu.NONE,0,0,"进入工具包组件检查页面");
+        menu.add(Menu.NONE,1,1,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -85,6 +87,9 @@ public class MainActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
+                jump(MainActivity.this, importToolsActivity.class);
+                break;
+            case 1:
                 fuckActivity.getIns().killall();
                 ;
         }
