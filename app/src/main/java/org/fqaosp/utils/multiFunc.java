@@ -28,6 +28,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -246,6 +248,12 @@ public class multiFunc {
         for (PackageInfo packageInfo : installedPackages) {
             appInfoAdd(packageManager,packageInfo,pkginfos,checkboxs,state);
         }
+        Collections.sort(pkginfos, new Comparator<PKGINFO>() {
+            @Override
+            public int compare(PKGINFO pkginfo, PKGINFO t1) {
+                return pkginfo.getAppname().compareTo(t1.getAppname());
+            }
+        });
     }
 
     //查询当前机主安装的应用,启用部分

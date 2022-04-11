@@ -5,8 +5,10 @@ import android.util.Log;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Map;
 
 /**
  *
@@ -23,17 +25,20 @@ public class CMD {
     //运行命令
     public CMD(String cmd , Boolean root){
         try {
+            String cmdhead ="/system/bin/sh";
             Log.i("cmd ::: ",cmd);
             if(root){
-                exec = Runtime.getRuntime().exec("su");
-                DataOutputStream dos  = new DataOutputStream(exec.getOutputStream());
-                dos.writeBytes(cmd + "\n");
-                dos.flush();
-                dos.writeBytes("exit\n");
-                dos.flush();
-            }else{
-                exec = Runtime.getRuntime().exec(cmd);
+                cmdhead="su";
             }
+            String cmds[] = {cmdhead,"-c",cmd};
+            ProcessBuilder processBuilder = new ProcessBuilder(cmds);
+            processBuilder.redirectErrorStream(true);
+            exec = processBuilder.start();
+            DataOutputStream dos  = new DataOutputStream(exec.getOutputStream());
+            dos.writeBytes(cmd + "\n");
+            dos.flush();
+            dos.writeBytes("exit\n");
+            dos.flush();
             BufferedReader reader = new BufferedReader(new InputStreamReader(exec.getInputStream(),"UTF-8"));
             String line="";
             while((line=reader.readLine()) != null){

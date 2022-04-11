@@ -10,6 +10,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Process;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
@@ -128,7 +129,8 @@ public class apkDecompileMenuActivity extends AppCompatActivity {
                     Toast.makeText(this, "未找到re.sh，请重新导入工具包后再执行此项", Toast.LENGTH_LONG).show();
                     jump(apkDecompileMenuActivity.this,importToolsActivity.class);
                 }
-                String cmd = "cd " + filesDir + " && sh make.sh";
+                Integer myuid = Process.myUid();
+                String cmd = "cd " + filesDir + " && sh make.sh && cd ../ && chown -R "+myuid+":"+myuid+" files/";
                 alertDialogThread dialogThread = new alertDialogThread(apkDecompileMenuActivity.this, "请稍后，正在解压apktool相关资源文件", cmd, "提示", "解压成功", "解压失败");
                 dialogThread.start();
             }

@@ -4,6 +4,7 @@ import static org.fqaosp.utils.multiFunc.copyFile;
 import static org.fqaosp.utils.multiFunc.execFileSelect;
 import static org.fqaosp.utils.multiFunc.extactAssetsFile;
 import static org.fqaosp.utils.multiFunc.getMyHomeFilesPath;
+import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.selectFile;
 
 import android.app.Activity;
@@ -11,6 +12,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Process;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -24,6 +26,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
 import org.fqaosp.threads.alertDialogThread;
+import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.permissionRequest;
@@ -102,6 +105,7 @@ public class importToolsActivity extends AppCompatActivity {
     }
 
     private void extractFile(String s,String fff){
+        String myuid = Process.myUid()+"";
         String filesPath = getMyHomeFilesPath(importToolsActivity.this);
         String outName = filesPath+"/"+fff;
         if(copyFile(s,outName)){
@@ -115,7 +119,7 @@ public class importToolsActivity extends AppCompatActivity {
             if(!extractScriptF.exists()){
                 extactAssetsFile(this,"extract.sh",extractScriptFile);
             }
-            String cmd = "cd " + filesPath + " && sh extract.sh ";
+            String cmd = "cd " + filesPath + " && sh extract.sh && cd ../ && chown -R "+myuid+":"+myuid+ " files/";
             alertDialogThread dialogThread = new alertDialogThread(importToolsActivity.this, "解压 " + fff + " ...", cmd, "提示", "解压成功", "解压失败");
             dialogThread.start();
         }
