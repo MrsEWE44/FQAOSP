@@ -46,9 +46,9 @@ public class mountLocalImageActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.mount_local_img_activity);
         fuckActivity.getIns().add(this);
+        setTitle("U盘模式");
         Button b1 = findViewById(R.id.mliab1);
         ListView lv1 = findViewById(R.id.mlialv1);
-
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(mountLocalImageActivity.this);
         alertDialog.setTitle("提示");
         alertDialog.setMessage("正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");

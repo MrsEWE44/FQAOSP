@@ -33,6 +33,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.apk_decompile_menu_activity);
         fuckActivity.getIns().add(this);
+        setTitle("apktool菜单");
         Button b1 = findViewById(R.id.admab1);
         Button b2 = findViewById(R.id.admab2);
         jump(b1,this,apkDecompileActivity.class);

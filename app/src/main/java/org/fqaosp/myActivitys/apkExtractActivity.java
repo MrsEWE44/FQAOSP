@@ -8,6 +8,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -43,7 +44,10 @@ public class apkExtractActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.apk_extract_activity);
         fuckActivity.getIns().add(this);
+        setTitle("apk提取");
         Button b1 = findViewById(R.id.aeab1);
+        Button b2 = findViewById(R.id.aeab2);
+        EditText aeaet1 = findViewById(R.id.aeaet1);
         listView1 = findViewById(R.id.aealv1);
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -63,30 +67,37 @@ public class apkExtractActivity extends AppCompatActivity {
                         String cmd = "cp " + pkginfo.getApkpath() + " " + FileOutPath;
                         alertDialogThread dialogThread = new alertDialogThread(apkExtractActivity.this, "正在提取文件中...", cmd, "提示", "提取成功 " + FileOutPath, "提取失败");
                         dialogThread.start();
-//                        if(multiFunc.copyFile(pkginfo.getApkpath(),FileOutPath)){
-//                            Toast.makeText(apkExtractActivity.this, "提取 "+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
-//                            Toast.makeText(apkExtractActivity.this, "提取的文件保存在 "+FileOutPath, Toast.LENGTH_SHORT).show();
-//                        }else{
-//                            Toast.makeText(apkExtractActivity.this, "提取 "+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
-//                        }
                     }
                 }
             }
         });
 
+        b2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String searchStr = aeaet1.getText().toString();
+                pkginfos = multiFunc.indexOfPKGS(apkExtractActivity.this,searchStr,pkginfos,checkboxs,0);
+                showPKGS(listView1);
+            }
+        });
+
+
     }
 
+    private void getUserEnablePKGS(){
+        multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
+    }
+
+    private void getEnablePKGS(){
+        multiFunc.queryEnablePKGS(this,pkginfos,checkboxs,0);
+    }
 
     private void getPKGS(){
-        checkboxs.clear();
-        pkginfos.clear();
         //提取所有已安装的应用列表
         multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
     }
 
     private void getUserPKGS(){
-        checkboxs.clear();
-        pkginfos.clear();
         //提取所有已安装的应用列表
         multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
     }
@@ -99,8 +110,10 @@ public class apkExtractActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE,0,0,"显示所有应用");
-        menu.add(Menu.NONE,1,1,"显示用户安装的应用");
-        menu.add(Menu.NONE,2,2,"退出");
+        menu.add(Menu.NONE,1,1,"显示所有应用(包括禁用)");
+        menu.add(Menu.NONE,2,2,"显示用户安装的应用");
+        menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
+        menu.add(Menu.NONE,4,4,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -109,14 +122,22 @@ public class apkExtractActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
-                getPKGS();
+                getEnablePKGS();
                 showPKGS(listView1);
                 break;
             case 1:
-                getUserPKGS();
+                getPKGS();
                 showPKGS(listView1);
                 break;
             case 2:
+                getUserPKGS();
+                showPKGS(listView1);
+                break;
+            case 3:
+                getUserEnablePKGS();
+                showPKGS(listView1);
+                break;
+            case 4:
                 fuckActivity.getIns().killall();
                 ;
         }

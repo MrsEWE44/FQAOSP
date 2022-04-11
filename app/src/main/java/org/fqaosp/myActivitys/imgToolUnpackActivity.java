@@ -55,6 +55,7 @@ public class imgToolUnpackActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.img_tool_unpack_activity);
         fuckActivity.getIns().add(this);
+        setTitle("镜像解包");
         Button ituab1= findViewById(R.id.ituab1);
         Button ituab2 = findViewById(R.id.ituab2);
         Button ituab3 = findViewById(R.id.ituab3);

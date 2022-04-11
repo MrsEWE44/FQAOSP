@@ -1,5 +1,13 @@
 package org.fqaosp.myActivitys;
 
+/**
+ *
+ * 用于更改组件状态
+ * 可以禁用/启用应用的service、activity
+ * 可以授权/撤销应用的permission
+ *
+ * */
+
 import android.app.AppOpsManager;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -46,7 +54,7 @@ public class appopsInfoActivity extends AppCompatActivity {
     private PackageInfo packageInfo;
     private ApplicationInfo appInfo;
     private Button b1,b2,b3,b4,b5,b6;
-    private String pkgname;
+    private String pkgname,uid;
     private int mode;
 
     @Override
@@ -54,8 +62,10 @@ public class appopsInfoActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.appopsinfo_activity);
         fuckActivity.getIns().add(this);
+        setTitle("应用详细操作");
         Intent intent = getIntent();
         pkgname = intent.getStringExtra("pkgname");
+        uid = intent.getStringExtra("uid");
         pm = getPackageManager();
         try {
             packageInfo = pm.getPackageInfo(pkgname, PackageManager.GET_PERMISSIONS|PackageManager.GET_ACTIVITIES|PackageManager.GET_DISABLED_COMPONENTS);
@@ -184,7 +194,7 @@ public class appopsInfoActivity extends AppCompatActivity {
     }
 
     private void showListView(ListView listView){
-        APPOPSINFOAdapter adapter = new APPOPSINFOAdapter(list, appopsInfoActivity.this, checkboxs, switbs,appInfo.packageName,mode);
+        APPOPSINFOAdapter adapter = new APPOPSINFOAdapter(list, appopsInfoActivity.this, checkboxs, switbs,appInfo.packageName,mode,uid);
         listView.setAdapter(adapter);
     }
 
@@ -202,7 +212,7 @@ public class appopsInfoActivity extends AppCompatActivity {
         for (int i = 0; i < checkboxs.size(); i++) {
             if(checkboxs.get(i)){
                 String pkgcate = list.get(i);
-                multiFunc.runAppopsCMD(appopsInfoActivity.this,pkgname,pkgcate,ss,msg,msg2);
+                multiFunc.runAppopsCMD(appopsInfoActivity.this,pkgname,pkgcate,ss,msg,msg2,uid);
             }
         }
     }

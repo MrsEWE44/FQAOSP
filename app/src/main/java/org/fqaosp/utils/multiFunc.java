@@ -1,36 +1,23 @@
 package org.fqaosp.utils;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
-import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Environment;
-import android.os.FileUtils;
 import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
-import android.provider.MediaStore;
-import android.provider.Settings;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import org.fqaosp.entity.PKGINFO;
-import org.fqaosp.myActivitys.appopsInfoActivity;
-import org.fqaosp.myActivitys.imgToolUnpackActivity;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,15 +27,24 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.TreeSet;
 
 /**
  * 通用功能函数集合
  * */
 
 public class multiFunc {
+
+    public final static Integer QUERY_ALL_USER_ENABLE_PKG=2;
+    public final static Integer QUERY_ALL_ENABLE_PKG=0;
+    public final static Integer QUERY_ALL_USER_PKG=3;
+    public final static Integer QUERY_ALL_DISABLE_PKG=1;
+    public final static Integer QUERY_ALL_DEFAULT_PKG=4;
+
 
     //页面布局跳转
     public static void jump(Context srcA , Class<?> cls){
@@ -65,7 +61,6 @@ public class multiFunc {
             }
         });
     }
-
 
     //复制文件
     public static Boolean copyFile(InputStream is, String outfile)  {
@@ -152,73 +147,116 @@ public class multiFunc {
     }
 
 
-    //查询当前机主安装的应用，默认
-    public static void queryPKGS(Activity activity, ArrayList<PKGINFO> pkginfos){
-        queryPKGS(activity,pkginfos,null,0);
-    }
     //查询当前机主安装的应用
     public static void queryPKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
-        PackageManager packageManager = activity.getPackageManager();
-        List<PackageInfo> installedPackages = packageManager.getInstalledPackages(types);
-        if(checkboxs != null){
-            for (PackageInfo packageInfo : installedPackages) {
-                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-                pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
-                checkboxs.add(false);
-            }
-        }else{
-            for (PackageInfo packageInfo : installedPackages) {
-                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-                pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
-            }
-        }
-
+        clearList(pkginfos,checkboxs);
+        queryPKGSCore(activity,pkginfos,checkboxs,types,QUERY_ALL_DEFAULT_PKG);
     }
 
     //查询当前机主安装的应用,用户部分
     public static void queryUserPKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
-        PackageManager packageManager = activity.getPackageManager();
-        List<PackageInfo> installedPackages = packageManager.getInstalledPackages(types);
-        if(checkboxs != null){
-            for (PackageInfo packageInfo : installedPackages) {
-                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-                if((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
-                    checkboxs.add(false);
-                }
-            }
-        }else{
-            for (PackageInfo packageInfo : installedPackages) {
-                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-                if((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
-                }
-            }
-        }
+        clearList(pkginfos,checkboxs);
+        queryPKGSCore(activity,pkginfos,checkboxs,types,QUERY_ALL_USER_PKG);
+
+    }
+
+    //查询当前机主安装的应用,用户启用部分
+    public static void queryUserEnablePKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
+        clearList(pkginfos,checkboxs);
+        queryPKGSCore(activity,pkginfos,checkboxs,types,QUERY_ALL_USER_ENABLE_PKG);
 
     }
 
     //查询当前机主安装的应用,禁用部分
     public static void queryDisablePKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
-        PackageManager packageManager = activity.getPackageManager();
-        List<PackageInfo> installedPackages = packageManager.getInstalledPackages(types);
-        if(checkboxs != null){
-            for (PackageInfo packageInfo : installedPackages) {
-                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-                if(!applicationInfo.enabled){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
-                    checkboxs.add(false);
-                }
-            }
-        }else{
-            for (PackageInfo packageInfo : installedPackages) {
-                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-                if(!applicationInfo.enabled){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
-                }
+        clearList(pkginfos,checkboxs);
+        queryPKGSCore(activity,pkginfos,checkboxs,types,QUERY_ALL_DISABLE_PKG);
+
+    }
+
+    //搜索列表匹配项
+    public static ArrayList<PKGINFO> indexOfPKGS(Activity activity,String findStr, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
+        if(pkginfos.size() == 0){
+            queryEnablePKGS(activity,pkginfos,checkboxs,types);
+        }
+        return indexOfPKGS(pkginfos,checkboxs,findStr);
+    }
+
+    //搜索列表匹配项
+    public static ArrayList<PKGINFO> indexOfPKGS(ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,String findStr){
+        checkboxs.clear();
+        ArrayList<PKGINFO> pkginfos2 = new ArrayList<>();
+        for (PKGINFO pkginfo : pkginfos) {
+            if(pkginfo.getAppname().indexOf(findStr) != -1){
+                pkginfos2.add(pkginfo);
             }
         }
+        return pkginfos2;
+    }
 
+
+    public static void checkBoxs(ArrayList<PKGINFO> pkginfos,ArrayList<Boolean> checkboxs,ApplicationInfo applicationInfo,PackageManager packageManager){
+        if(checkboxs != null){
+            checkboxs.add(false);
+        }
+        pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+
+    }
+
+    public static void checkBoxsHashMap(HashMap<String,PKGINFO> pkginfos, ArrayList<Boolean> checkboxs, ApplicationInfo applicationInfo, PackageManager packageManager){
+        if(checkboxs != null){
+            checkboxs.add(false);
+        }
+        pkginfos.put(applicationInfo.packageName, new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+    }
+
+    public static void appInfoAdd(PackageManager packageManager,PackageInfo packageInfo,ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer state){
+        ApplicationInfo applicationInfo = packageInfo.applicationInfo;
+        switch (state){
+            case 0:
+                if(applicationInfo.enabled){
+                    checkBoxs(pkginfos,checkboxs,applicationInfo,packageManager);
+                }
+                break;
+            case 1:
+                if(!applicationInfo.enabled){
+                    checkBoxs(pkginfos,checkboxs,applicationInfo,packageManager);
+                }
+                break;
+            case 2:
+                if((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0 && applicationInfo.enabled){
+                    checkBoxs(pkginfos,checkboxs,applicationInfo,packageManager);
+                }
+                break;
+            case 3:
+                if((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0){
+                    checkBoxs(pkginfos,checkboxs,applicationInfo,packageManager);
+                }
+                break;
+            case 4:
+                checkBoxs(pkginfos,checkboxs,applicationInfo,packageManager);
+                break;
+        }
+
+    }
+
+    public static void queryPKGSCore(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types,Integer state){
+        PackageManager packageManager = activity.getPackageManager();
+        List<PackageInfo> installedPackages = packageManager.getInstalledPackages(types);
+        for (PackageInfo packageInfo : installedPackages) {
+            appInfoAdd(packageManager,packageInfo,pkginfos,checkboxs,state);
+        }
+    }
+
+    //查询当前机主安装的应用,启用部分
+    public static void queryEnablePKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
+        clearList(pkginfos,checkboxs);
+        queryPKGSCore(activity,pkginfos,checkboxs,types,QUERY_ALL_ENABLE_PKG);
+    }
+
+    public static void clearList(ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs){
+        checkboxs.clear();
+        pkginfos.clear();
     }
 
     /**
@@ -295,22 +333,39 @@ public class multiFunc {
     }
 
     //调用命令对选项进行相应授权、撤销操作
-    public static void runAppopsCMD(Context context,String pkgname,String pkgcate , int ss , String msg , String msg2){
+    public static void runAppopsCMD(Context context,String pkgname,String pkgcate , int ss , String msg , String msg2,String uid){
         String cmdstr = "";
         switch (ss){
             case 0:
-                cmdstr="pm revoke "+pkgname + " " + pkgcate;
+                if(uid == null){
+                    cmdstr="pm revoke "+pkgname + " " + pkgcate;
+                }else{
+                    cmdstr="pm revoke --user "+uid + " "+pkgname + " " + pkgcate;
+                }
                 break;
             case 1:
             case 2:
-                cmdstr="pm disable " +pkgname+"/"+ pkgcate;
+                if(uid == null){
+                    cmdstr="pm disable " +pkgname+"/"+ pkgcate;
+                }else{
+                    cmdstr="pm disable --user "+uid+" " +pkgname+"/"+ pkgcate;
+                }
+
                 break;
             case 3:
-                cmdstr="pm grant "+pkgname + " " + pkgcate;
+                if(uid == null){
+                    cmdstr="pm grant "+pkgname + " " + pkgcate;
+                }else{
+                    cmdstr="pm grant --user " + uid + " " +pkgname + " " + pkgcate;
+                }
                 break;
             case 4:
             case 5:
-                cmdstr="pm enable " +pkgname+"/"+ pkgcate;
+                if(uid == null){
+                    cmdstr="pm enable " +pkgname+"/"+ pkgcate;
+                }else{
+                    cmdstr="pm enable --user "+uid + " " +pkgname+"/"+ pkgcate;
+                }
                 break;
         }
         CMD cmd = new CMD(cmdstr);

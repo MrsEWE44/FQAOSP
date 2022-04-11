@@ -45,6 +45,7 @@ public class importToolsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.import_tools_activity);
         fuckActivity.getIns().add(this);
+        setTitle("工具导入与检测");
         initButton();
         permissionRequest.getExternalStorageManager(importToolsActivity.this);
     }

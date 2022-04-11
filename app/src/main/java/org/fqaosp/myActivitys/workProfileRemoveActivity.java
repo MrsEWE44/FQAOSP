@@ -38,7 +38,7 @@ public class workProfileRemoveActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.work_profile_remove_activity);
         fuckActivity.getIns().add(this);
-
+        setTitle("删除分身");
         Button b1 = findViewById(R.id.wprab1);
         Button b2 = findViewById(R.id.wprab2);
         ListView listView1 = findViewById(R.id.wpralv1);

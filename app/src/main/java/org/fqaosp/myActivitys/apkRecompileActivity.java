@@ -51,6 +51,7 @@ public class apkRecompileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.apk_recompile_activity);
         fuckActivity.getIns().add(this);
+        setTitle("apk回编译");
         Button b1 = findViewById(R.id.arab1);
         Button b2 = findViewById(R.id.arab2);
         Button b3 = findViewById(R.id.arab3);

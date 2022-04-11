@@ -3,10 +3,14 @@ package org.fqaosp.utils;
 import static org.fqaosp.utils.multiFunc.*;
 
 import android.app.Activity;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.util.Log;
 
 import org.fqaosp.entity.PKGINFO;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 
 /**
@@ -83,5 +87,46 @@ public class makeWP {
         }
     }
 
+    public String getUserPkgByUIDCMD(String uid){
+        return "pm list packages --user "+uid+" -3 | cut -d':' -f2 ";
+    }
+    public String getPkgByUIDCMD(String uid){
+        return "pm list packages --user "+uid+" | cut -d':' -f2 ";
+    }
+
+    public String getDisablePkgByUIDCMD(String uid){
+        return "pm list packages --user "+uid+" -d | cut -d':' -f2 ";
+    }
+
+    public String getUninstallPkgByUIDCMD(String uid,String pkgname){
+        return "pm uninstall --user "+uid+"  "+pkgname;
+    }
+
+    public void addCMDResult(String cmdstr , Activity activity,ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs){
+        try {
+            CMD cmd = new CMD(cmdstr);
+            if(cmd.getResultCode() ==0){
+                for (String s : cmd.getResult().split("\n")) {
+                    PackageManager pm = activity.getPackageManager();
+                    PackageInfo packageInfo = pm.getPackageInfo(s, 0);
+                    checkBoxs(pkginfos,checkboxs,packageInfo.applicationInfo,pm);
+                }
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void getPkgByUID(Activity activity,String uid, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs){
+        addCMDResult(getPkgByUIDCMD(uid),activity,pkginfos,checkboxs);
+    }
+
+    public void getUserPkgByUID(Activity activity,String uid, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs){
+        addCMDResult(getUserPkgByUIDCMD(uid),activity,pkginfos,checkboxs);
+    }
+
+    public void getDisablePkgByUID(Activity activity,String uid, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs){
+        addCMDResult(getDisablePkgByUIDCMD(uid),activity,pkginfos,checkboxs);
+    }
 
 }

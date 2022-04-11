@@ -56,10 +56,14 @@ public class workProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.work_profile_activity);
         fuckActivity.getIns().add(this);
+        setTitle("应用分身");
         Button b1 = findViewById(R.id.wpb1);
+        Button b2 = findViewById(R.id.wpb2);
         listView1 = findViewById(R.id.wplv1);
         EditText editText1 = findViewById(R.id.wpet1);
+        EditText editText2 = findViewById(R.id.wpet2);
         showDialogWaring();
+
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -110,7 +114,6 @@ public class workProfileActivity extends AppCompatActivity {
                                                             makewp.startWP(userid);
                                                             String pkgname = pkginfo.getPkgname();
                                                             CMD cmd = new CMD(makewp.getInstallPkgCMD(userid,pkgname));
-                                                            Log.d("install ",pkginfo.getAppname() +" --  code :: "+ cmd.getResultCode() );
                                                         }
                                                     };
                                                     cacheThreadPool.execute(runnable);
@@ -142,6 +145,15 @@ public class workProfileActivity extends AppCompatActivity {
                 });
             }
         });
+
+        b2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String searchStr = editText2.getText().toString();
+                pkginfos = multiFunc.indexOfPKGS(workProfileActivity.this,searchStr,pkginfos,checkboxs,0);
+                showPKGS(listView1);
+            }
+        });
     }
 
     private void showDialogWaring(){
@@ -157,16 +169,22 @@ public class workProfileActivity extends AppCompatActivity {
         alertDialog.show();
     }
 
+
+    private void getUserEnablePKGS(){
+        multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
+    }
+
+    //获取启用的应用程序
+    private void getEnablePKGS(){
+        multiFunc.queryEnablePKGS(this,pkginfos,checkboxs,0);
+    }
+
     private void getPKGS(){
-        checkboxs.clear();
-        pkginfos.clear();
         //提取所有已安装的应用列表
         multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
     }
 
     private void getUserPKGS(){
-        checkboxs.clear();
-        pkginfos.clear();
         //提取所有已安装的应用列表
         multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
     }
@@ -179,8 +197,10 @@ public class workProfileActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE,0,0,"显示所有应用");
-        menu.add(Menu.NONE,1,1,"显示用户安装的应用");
-        menu.add(Menu.NONE,2,2,"退出");
+        menu.add(Menu.NONE,1,1,"显示所有应用(包括禁用)");
+        menu.add(Menu.NONE,2,2,"显示用户安装的应用");
+        menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
+        menu.add(Menu.NONE,4,4,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -189,14 +209,22 @@ public class workProfileActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
-                getPKGS();
+                getEnablePKGS();
                 showPKGS(listView1);
                 break;
             case 1:
-                getUserPKGS();
+                getPKGS();
                 showPKGS(listView1);
                 break;
             case 2:
+                getUserPKGS();
+                showPKGS(listView1);
+                break;
+            case 3:
+                getUserEnablePKGS();
+                showPKGS(listView1);
+                break;
+            case 4:
                 fuckActivity.getIns().killall();
                 ;
         }

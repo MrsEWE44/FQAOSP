@@ -10,13 +10,34 @@
 
         <LinearLayout
             android:layout_width="fill_parent"
-            android:layout_height="260dp"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <EditText
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:hint="请输入需要搜索的应用名称"
+                android:id="@+id/ada_et1"
+                ></EditText>
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="搜索"
+                android:id="@+id/ada_searchb1"
+                ></Button>
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="300dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
             <LinearLayout
                 android:layout_width="fill_parent"
-                android:layout_height="120dp"
+                android:layout_height="110dp"
                 android:layout_weight="1"
                 android:orientation="horizontal">
 

@@ -48,6 +48,7 @@ public class imgToolRepackActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.img_tool_repack_activity);
         fuckActivity.getIns().add(this);
+        setTitle("镜像打包");
         Button itrab1= findViewById(R.id.itrab1);
         Button itrab2 = findViewById(R.id.itrab2);
         Button itrab3 = findViewById(R.id.itrab3);

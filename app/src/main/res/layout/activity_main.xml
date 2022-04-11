@@ -57,7 +57,7 @@
                      android:layout_width="fill_parent"
                      android:layout_weight="1"
                      android:layout_height="match_parent"
-                     android:text="appops"
+                     android:text="应用管理"
                      android:layout_marginLeft="5dp"
                      android:id="@+id/mappops"
                      ></Button>

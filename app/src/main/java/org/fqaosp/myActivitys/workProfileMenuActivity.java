@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
 import org.fqaosp.utils.fuckActivity;
+import org.fqaosp.utils.multiFunc;
 
 /**
  *
@@ -27,24 +28,31 @@ public class workProfileMenuActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.work_profile_menu_activity);
         fuckActivity.getIns().add(this);
-
+        setTitle("分身菜单");
         Button b1 = findViewById(R.id.wpmab1);
         Button b2 = findViewById(R.id.wpmab2);
+        Button b3 = findViewById(R.id.wpmab3);
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(workProfileMenuActivity.this,workProfileActivity.class);
-                startActivity(intent);
+                multiFunc.jump(workProfileMenuActivity.this,workProfileActivity.class);
             }
         });
 
         b2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(workProfileMenuActivity.this,workProfileRemoveActivity.class);
-                startActivity(intent);
+                multiFunc.jump(workProfileMenuActivity.this,workProfileRemoveActivity.class);
             }
         });
+
+        b3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                multiFunc.jump(workProfileMenuActivity.this,workProfileManageActivity.class);
+            }
+        });
+
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

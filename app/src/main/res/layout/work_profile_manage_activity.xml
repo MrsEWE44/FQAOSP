@@ -18,50 +18,62 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:hint="请输入需要搜索的应用名称"
-                android:id="@+id/adaet1"
+                android:id="@+id/wpmanageaet1"
                 ></EditText>
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="搜索"
-                android:id="@+id/adab4"
+                android:id="@+id/wpmanageab3"
                 ></Button>
 
         </LinearLayout>
 
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="开始反编译"
-            android:id="@+id/adab1"
-            ></Button>
-
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/adab2"
-                android:layout_width="fill_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="选择已安装应用"
+                android:text="同步安装一个应用到分身"
+                android:id="@+id/wpmanageab1"
                 ></Button>
+
             <Button
-                android:layout_width="fill_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="选择本地文件"
                 android:layout_weight="1"
-                android:id="@+id/adab3"
+                android:layout_marginLeft="5dp"
+                android:text="从分身删除应用"
+                android:id="@+id/wpmanageab2"
                 ></Button>
+
         </LinearLayout>
 
-        <ListView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/adalv1"
-            ></ListView>
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:orientation="horizontal">
+
+            <ListView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:id="@+id/wpmanagealv2"
+                ></ListView>
+
+            <ListView
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_weight="1"
+                android:id="@+id/wpmanagealv1"
+                ></ListView>
+
+        </LinearLayout>
 
 
     </LinearLayout>

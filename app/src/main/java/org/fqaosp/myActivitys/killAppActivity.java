@@ -32,6 +32,7 @@ public class killAppActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.kill_app_activity);
         fuckActivity.getIns().add(this);
+        setTitle("后台管理");
         Button b1 = findViewById(R.id.kaab1);
         Button b2 = findViewById(R.id.kaab2);
         Button b3 = findViewById(R.id.kaab3);

@@ -17,17 +17,34 @@
            android:orientation="vertical">
 
            <Button
-               android:layout_width="match_parent"
-               android:layout_height="wrap_content"
+               android:layout_width="fill_parent"
+               android:layout_height="fill_parent"
                android:text="新增分身"
                android:layout_weight="1"
                android:id="@+id/wpmab1"></Button>
-           <Button
-               android:layout_width="match_parent"
-               android:layout_height="wrap_content"
-               android:text="删除分身"
+
+           <LinearLayout
+               android:layout_width="fill_parent"
+               android:layout_height="fill_parent"
                android:layout_weight="1"
-               android:id="@+id/wpmab2"></Button>
+               android:orientation="horizontal">
+
+               <Button
+                   android:layout_width="fill_parent"
+                   android:layout_height="fill_parent"
+                   android:text="删除分身"
+                   android:layout_weight="1"
+                   android:id="@+id/wpmab2"></Button>
+
+               <Button
+                   android:layout_width="fill_parent"
+                   android:layout_height="fill_parent"
+                   android:text="分身管理"
+                   android:layout_weight="1"
+                   android:layout_marginLeft="5dp"
+                   android:id="@+id/wpmab3"></Button>
+
+           </LinearLayout>
 
        </LinearLayout>
 

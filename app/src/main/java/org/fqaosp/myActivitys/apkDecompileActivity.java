@@ -22,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -57,9 +58,12 @@ public class apkDecompileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.apk_decompile_activity);
         fuckActivity.getIns().add(this);
+        setTitle("apk反编译");
         Button b1 = findViewById(R.id.adab1);
         Button b2 = findViewById(R.id.adab2);
         Button b3 = findViewById(R.id.adab3);
+        Button b4 = findViewById(R.id.adab4);
+        EditText adaet1 = findViewById(R.id.adaet1);
         lv1 = findViewById(R.id.adalv1);
         permissionRequest.getExternalStorageManager(apkDecompileActivity.this);
         b1.setOnClickListener(new View.OnClickListener() {
@@ -85,7 +89,7 @@ public class apkDecompileActivity extends AppCompatActivity {
         b2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                getPKGS();
+                getUserEnablePKGS();
                 showPKGS(lv1);
             }
         });
@@ -94,6 +98,15 @@ public class apkDecompileActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 execFileSelect(apkDecompileActivity.this,apkDecompileActivity.this,"请选择.apk文件");
+            }
+        });
+
+        b4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String searchStr = adaet1.getText().toString();
+                pkginfos = multiFunc.indexOfPKGS(apkDecompileActivity.this,searchStr,pkginfos,checkboxs,0);
+                showPKGS(lv1);
             }
         });
     }
@@ -125,14 +138,20 @@ public class apkDecompileActivity extends AppCompatActivity {
         list.clear();
     }
 
+    private void getUserEnablePKGS(){
+        multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
+    }
+
+    private void getEnablePKGS(){
+        multiFunc.queryEnablePKGS(this,pkginfos,checkboxs,0);
+    }
+
     //获取对应的应用程序
     private void getPKGS(){
-       clearList();
        multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
     }
 
     private void getUserPKGS(){
-        clearList();
         queryUserPKGS(this,pkginfos,checkboxs,0);
     }
 
@@ -151,8 +170,10 @@ public class apkDecompileActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE,0,0,"显示所有应用");
-        menu.add(Menu.NONE,1,1,"显示用户安装的应用");
-        menu.add(Menu.NONE,2,2,"退出");
+        menu.add(Menu.NONE,1,1,"显示所有应用(包括禁用)");
+        menu.add(Menu.NONE,2,2,"显示用户安装的应用");
+        menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
+        menu.add(Menu.NONE,4,4,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -161,14 +182,22 @@ public class apkDecompileActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
-                getPKGS();
+                getEnablePKGS();
                 showPKGS(lv1);
                 break;
             case 1:
-                getUserPKGS();
+                getPKGS();
                 showPKGS(lv1);
                 break;
             case 2:
+                getUserPKGS();
+                showPKGS(lv1);
+                break;
+            case 3:
+                getUserEnablePKGS();
+                showPKGS(lv1);
+                break;
+            case 4:
                 fuckActivity.getIns().killall();
                 ;
         }

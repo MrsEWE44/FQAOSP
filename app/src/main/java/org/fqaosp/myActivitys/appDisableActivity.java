@@ -12,6 +12,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -40,6 +41,8 @@ public class appDisableActivity extends AppCompatActivity {
     private  Button ada_disablemyuib;
     private  Button ada_disablecolorb;
     private  Button ada_disablevivob;
+    private Button ada_searchb;
+    private EditText ada_et1;
 
     private ListView ada_disablelv;
 
@@ -48,6 +51,7 @@ public class appDisableActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.app_disable_activity);
         fuckActivity.getIns().add(this);
+        setTitle("应用程序禁用");
         buttoninit();
         hideButton();
         String datadir="/data/data/"+getPackageName();
@@ -76,6 +80,7 @@ public class appDisableActivity extends AppCompatActivity {
             });
             alertDialog.show();
         }
+
         ada_disableappb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -85,10 +90,13 @@ public class appDisableActivity extends AppCompatActivity {
                         CMD cmd = new CMD("pm disable " + pkginfo.getPkgname());
                         if(cmd.getResultCode() ==0){
                             Toast.makeText(appDisableActivity.this, "禁用 "+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
+                        }else{
+                            Toast.makeText(appDisableActivity.this, "禁用 "+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
-
+                getUserEnablePKGS();
+                showPKGS(ada_disablelv);
             }
         });
         ada_enableappb.setOnClickListener(new View.OnClickListener() {
@@ -100,13 +108,25 @@ public class appDisableActivity extends AppCompatActivity {
                         CMD cmd = new CMD("pm enable " + pkginfo.getPkgname());
                         if(cmd.getResultCode() ==0){
                             Toast.makeText(appDisableActivity.this, "启用 "+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
+                        }else{
+                            Toast.makeText(appDisableActivity.this, "启用 "+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
                         }
                     }
                 }
+                getDisablePKGS();
+                showPKGS(ada_disablelv);
+            }
+        });
+
+        ada_searchb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String searchStr = ada_et1.getText().toString();
+                pkginfos = multiFunc.indexOfPKGS(appDisableActivity.this,searchStr,pkginfos,checkboxs,0);
+                showPKGS(ada_disablelv);
             }
         });
     }
-
 
     private void buttoninit(){
         ada_disableappb = findViewById(R.id.ada_disableappb);
@@ -117,6 +137,8 @@ public class appDisableActivity extends AppCompatActivity {
         ada_disablemyuib = findViewById(R.id.ada_disablemyuib);
         ada_disablecolorb = findViewById(R.id.ada_disablecolorb);
         ada_disablevivob = findViewById(R.id.ada_disablevivob);
+        ada_searchb = findViewById(R.id.ada_searchb1);
+        ada_et1 = findViewById(R.id.ada_et1);
     }
 
     private void hideButton(){
@@ -180,16 +202,18 @@ public class appDisableActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+
         menu.add(Menu.NONE,0,0,"显示所有应用");
-        menu.add(Menu.NONE,1,1,"显示用户安装的应用");
-        menu.add(Menu.NONE,2,2,"显示已禁用的应用");
-        menu.add(Menu.NONE,3,3,"显示其他禁用选项");
-        menu.add(Menu.NONE,4,4,"退出");
+        menu.add(Menu.NONE,1,1,"显示所有应用(包括禁用)");
+        menu.add(Menu.NONE,2,2,"显示用户安装的应用");
+        menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
+        menu.add(Menu.NONE,4,4,"显示已禁用的应用");
+        menu.add(Menu.NONE,5,5,"显示其他禁用选项");
+        menu.add(Menu.NONE,6,6,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
     private Boolean extractAssertFile(String sysupfile,String filesDir){
-        Log.d("fff :: ",sysupfile);
         File sysupF = new File(sysupfile);
         File fileD = new File(filesDir);
         if(!fileD.exists()){
@@ -206,44 +230,57 @@ public class appDisableActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
-                getPKGS();
+                getEnablePKGS();
                 showPKGS(ada_disablelv);
                 break;
             case 1:
-                getUserPKGS();
+                getPKGS();
                 showPKGS(ada_disablelv);
                 break;
             case 2:
-                getDisablePKGS();
+                getUserEnablePKGS();
                 showPKGS(ada_disablelv);
                 break;
             case 3:
-                showButton();
+                getUserPKGS();
+                showPKGS(ada_disablelv);
                 break;
             case 4:
+                getDisablePKGS();
+                showPKGS(ada_disablelv);
+                break;
+            case 5:
+                showButton();
+                break;
+            case 6:
                 fuckActivity.getIns().killall();
                 ;
         }
         return super.onOptionsItemSelected(item);
     }
+
+
+    private void getUserEnablePKGS(){
+        multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
+    }
+
     //获取对应的应用程序
     private void getPKGS(){
-        checkboxs.clear();
-        pkginfos.clear();
         multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
+    }
+
+    //获取启用的应用程序
+    private void getEnablePKGS(){
+        multiFunc.queryEnablePKGS(this,pkginfos,checkboxs,0);
     }
 
     //获取对应的应用程序
     private void getUserPKGS(){
-        checkboxs.clear();
-        pkginfos.clear();
         multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
     }
 
     //获取对应的应用程序
     private void getDisablePKGS(){
-        checkboxs.clear();
-        pkginfos.clear();
         multiFunc.queryDisablePKGS(this,pkginfos,checkboxs,0);
     }
 

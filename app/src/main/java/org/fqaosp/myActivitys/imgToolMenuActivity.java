@@ -25,6 +25,7 @@ public class imgToolMenuActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.img_tool_menu_activity);
         fuckActivity.getIns().add(this);
+        setTitle("镜像工具菜单");
         Button itmab1 = findViewById(R.id.itmab1);
         Button itmab2 = findViewById(R.id.itmab2);
         jump(itmab1,this,imgToolUnpackActivity.class);
