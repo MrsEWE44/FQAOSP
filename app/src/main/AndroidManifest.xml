@@ -53,7 +53,7 @@
         <activity android:name=".myActivitys.imgToolRepackActivity"/>
         <activity android:name=".myActivitys.importToolsActivity"/>
         <activity android:name=".myActivitys.workProfileManageActivity"/>
-
+        <activity android:name=".myActivitys.sqliteManageActivity"/>
 
 
     </application>

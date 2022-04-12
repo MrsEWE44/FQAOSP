@@ -26,6 +26,7 @@ import androidx.core.content.ContextCompat;
 import org.fqaosp.databinding.ApkDecompileMenuActivityBinding;
 import org.fqaosp.databinding.AppDisableActivityBinding;
 import org.fqaosp.databinding.AppopsActivityBinding;
+import org.fqaosp.databinding.SqliteManageActivityBinding;
 import org.fqaosp.myActivitys.apkDecompileMenuActivity;
 import org.fqaosp.myActivitys.apkExtractActivity;
 import org.fqaosp.myActivitys.appDisableActivity;
@@ -34,6 +35,7 @@ import org.fqaosp.myActivitys.imgToolMenuActivity;
 import org.fqaosp.myActivitys.importToolsActivity;
 import org.fqaosp.myActivitys.killAppActivity;
 import org.fqaosp.myActivitys.mountLocalImageActivity;
+import org.fqaosp.myActivitys.sqliteManageActivity;
 import org.fqaosp.myActivitys.workProfileMenuActivity;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.permissionRequest;
@@ -63,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
         Button mapkdisable = findViewById(R.id.mapkdisable);
         Button mappops = findViewById(R.id.mappops);
         Button imgtool = findViewById(R.id.imgtool);
+        Button sqliteb = findViewById(R.id.sqliteb);
 
         jump(b1,this,workProfileMenuActivity.class);
         jump(b2,this,apkExtractActivity.class);
@@ -72,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         jump(mapkdisable,this, appDisableActivity.class);
         jump(mappops,this, appopsActivity.class);
         jump(imgtool,this, imgToolMenuActivity.class);
+        jump(sqliteb,this, sqliteManageActivity.class);
     }
 
 

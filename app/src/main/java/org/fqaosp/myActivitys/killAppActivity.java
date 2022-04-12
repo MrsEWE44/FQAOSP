@@ -15,17 +15,21 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.sql.killAppDB;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class killAppActivity extends AppCompatActivity {
 
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private ListView lv1;
+    private killAppDB killAppdb = new killAppDB(killAppActivity.this, "killApp.db", null, 1);
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -39,15 +43,24 @@ public class killAppActivity extends AppCompatActivity {
         lv1 = findViewById(R.id.kaalv1);
         getRunning(1);
         showPKGS(lv1);
+
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                for (PKGINFO pkginfo : pkginfos) {
-                    if(!pkginfo.getPkgname().equals(getPackageName())){
-                        //调用命令终止后台程序
-                        stopApp(pkginfo);
+                if(killAppdb.count() == 0){
+                    for (PKGINFO pkginfo : pkginfos) {
+                        if(!pkginfo.getPkgname().equals(getPackageName())){
+                            //调用命令终止后台程序
+                            stopApp(pkginfo.getPkgname());
+                        }
+                    }
+                }else{
+                    HashMap<String, Integer> select = killAppdb.select(null, 0);
+                    for (Map.Entry<String, Integer> entry : select.entrySet()) {
+                        stopApp(entry.getKey());
                     }
                 }
+
                 Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
                 getRunning(1);
                 showPKGS(lv1);
@@ -61,7 +74,10 @@ public class killAppActivity extends AppCompatActivity {
                     if(checkboxs.get(i)){
                         PKGINFO pkginfo = pkginfos.get(i);
                         if(!pkginfo.getPkgname().equals(getPackageName())){
-                            stopApp(pkginfo);
+                            stopApp(pkginfo.getPkgname());
+                            if(killAppdb.select(pkginfo.getPkgname(),0).size() == 0){
+                                killAppdb.insert(pkginfo.getPkgname(),0);
+                            }
                         }
                     }
                 }
@@ -78,7 +94,10 @@ public class killAppActivity extends AppCompatActivity {
                     if(!checkboxs.get(i)){
                         PKGINFO pkginfo = pkginfos.get(i);
                         if(!pkginfo.getPkgname().equals(getPackageName())){
-                            stopApp(pkginfo);
+                            stopApp(pkginfo.getPkgname());
+                            if(killAppdb.select(pkginfo.getPkgname(),0).size() == 0){
+                                killAppdb.insert(pkginfo.getPkgname(),0);
+                            }
                         }
                     }
                 }
@@ -89,10 +108,10 @@ public class killAppActivity extends AppCompatActivity {
         });
     }
 
-    private void stopApp(PKGINFO pkginfo){
-        CMD cmd = new CMD("am force-stop "+pkginfo.getPkgname());
+    private void stopApp(String pkgname){
+        CMD cmd = new CMD("am force-stop "+pkgname);
         if(cmd.getResultCode() == 0){
-            Toast.makeText(killAppActivity.this, "已终止 "+pkginfo.getAppname(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(killAppActivity.this, "已终止 "+pkgname, Toast.LENGTH_SHORT).show();
         }
     }
 

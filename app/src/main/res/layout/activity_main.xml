@@ -115,6 +115,15 @@
                    ></Button>
 
            </LinearLayout>
+           <Button
+               android:layout_width="fill_parent"
+               android:layout_weight="1"
+               android:layout_height="wrap_content"
+               android:layout_marginLeft="5dp"
+               android:text="数据库编辑"
+               android:id="@+id/sqliteb"
+               ></Button>
+
 
 
        </LinearLayout>
