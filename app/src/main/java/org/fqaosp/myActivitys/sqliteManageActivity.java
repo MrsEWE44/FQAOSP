@@ -1,10 +1,7 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.jump;
-
 import android.app.Activity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,14 +20,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import org.fqaosp.MainActivity;
 import org.fqaosp.R;
-import org.fqaosp.sql.DBHelp;
 import org.fqaosp.sql.killAppDB;
 import org.fqaosp.utils.fuckActivity;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
