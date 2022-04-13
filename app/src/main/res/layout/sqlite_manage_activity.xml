@@ -8,6 +8,12 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="清空数据库"
+            android:id="@+id/sqlitemab3"></Button>
+
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"

@@ -24,6 +24,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.entity.workProfileDBEntity;
+import org.fqaosp.sql.workProfileDB;
 import org.fqaosp.threads.alertDialogThread;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
@@ -31,6 +33,7 @@ import org.fqaosp.utils.makeWP;
 import org.fqaosp.utils.multiFunc;
 
 import java.util.ArrayList;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -46,10 +49,16 @@ public class workProfileActivity extends AppCompatActivity {
 
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
+    private ArrayList<String> users = new ArrayList<>();
+
     private ListView listView1;
 
     private ExecutorService executorService = Executors.newFixedThreadPool(4);
     private ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
+
+    private workProfileDB workProfiledb = new workProfileDB(workProfileActivity.this, "workProfile", null, 1);
+
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -64,6 +73,7 @@ public class workProfileActivity extends AppCompatActivity {
         EditText editText2 = findViewById(R.id.wpet2);
         showDialogWaring();
 
+
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -73,12 +83,12 @@ public class workProfileActivity extends AppCompatActivity {
                 alertDialog.setMessage("正在创建分身空间,请稍后(可能会出现无响应，请耐心等待)....");
                 AlertDialog show = alertDialog.show();
                 preventDismissDialog(show);
-
                 view.post(new Runnable() {
                     @Override
                     public void run() {
                         makeWP makewp = new makeWP();
                         Integer num = Integer.valueOf(editText1.getText().toString());
+                        checkUser(makewp);
                         if(num<makewp.getInitsize() && num > 0){
 
                             if(makewp.init()){
@@ -100,20 +110,28 @@ public class workProfileActivity extends AppCompatActivity {
                             try {
                                 while(true){
                                     if(executorService.isTerminated()){
-                                        ArrayList<String> list = new ArrayList<>();
-                                        queryUSERS(workProfileActivity.this,list);
+                                        queryUSERS(workProfileActivity.this,users);
                                         for (int i = 0; i < checkboxs.size(); i++) {
                                             if (checkboxs.get(i)) {
                                                 PKGINFO pkginfo = pkginfos.get(i);
                                                 //同步所有空间都安装选中的应用
 //                                                makewp.syncapk(workProfileActivity.this,pkginfo);
-                                                for (String userid : list) {
+                                                for (String userid : users) {
                                                     Runnable runnable = new Runnable() {
                                                         @Override
                                                         public void run() {
                                                             makewp.startWP(userid);
                                                             String pkgname = pkginfo.getPkgname();
-                                                            CMD cmd = new CMD(makewp.getInstallPkgCMD(userid,pkgname));
+                                                            //从数据库里查询，如果不存在该用户以及相关包名，则允许安装与插入数据库
+                                                            ArrayList<workProfileDBEntity> select = workProfiledb.select(pkgname, Integer.valueOf(userid));
+                                                            if(select.size() == 0){
+                                                                CMD cmd = new CMD(makewp.getInstallPkgCMD(userid,pkgname));
+                                                                if(cmd.getResultCode() == 0){
+                                                                    workProfiledb.insert(pkgname,Integer.valueOf(userid));
+                                                                }else{
+                                                                    Log.d("error wp cmd ::: ",cmd.getResultCode() + " -- " + cmd.getResult());
+                                                                }
+                                                            }
                                                         }
                                                     };
                                                     cacheThreadPool.execute(runnable);
@@ -123,6 +141,7 @@ public class workProfileActivity extends AppCompatActivity {
                                         cacheThreadPool.shutdown();
                                         while(true){
                                             if(cacheThreadPool.isTerminated()){
+                                                checkUser(makewp);
                                                 editText1.setText("");
                                                 Toast.makeText(workProfileActivity.this, "全部新增成功", Toast.LENGTH_LONG).show();
                                                 multiFunc.dismissDialog(show);
@@ -135,7 +154,7 @@ public class workProfileActivity extends AppCompatActivity {
                                     Thread.sleep(100);
                                 }
                             }catch (Exception e){
-                                Toast.makeText(workProfileActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+                                Toast.makeText(workProfileActivity.this, "wpa :: "+e.getMessage(), Toast.LENGTH_SHORT).show();
                             }
 
                         }else{
@@ -154,6 +173,24 @@ public class workProfileActivity extends AppCompatActivity {
                 showPKGS(listView1);
             }
         });
+    }
+
+    private void checkUser(makeWP makewp){
+        queryUSERS(workProfileActivity.this,users);
+        for (String userid : users) {
+            ArrayList<workProfileDBEntity> treeMap = workProfiledb.select(null, Integer.valueOf(userid));
+            //如果没有找到该用户uid，则添加进数据库
+            if(treeMap.size() == 0){
+                //获取该用户下所有安装的包名
+                makewp.addCMDResult(makewp.getUserPkgByUIDCMD(userid),workProfileActivity.this,pkginfos,checkboxs);
+            }
+            for (PKGINFO pkginfo : pkginfos) {
+                ArrayList<workProfileDBEntity> select = workProfiledb.select(pkginfo.getPkgname(), Integer.valueOf(userid));
+                if(select.size() == 0){
+                    workProfiledb.insert(pkginfo.getPkgname(),Integer.valueOf(userid));
+                }
+            }
+        }
     }
 
     private void showDialogWaring(){

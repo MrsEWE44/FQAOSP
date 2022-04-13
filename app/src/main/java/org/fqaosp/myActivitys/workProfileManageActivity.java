@@ -25,6 +25,8 @@ import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.entity.workProfileDBEntity;
+import org.fqaosp.sql.workProfileDB;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeWP;
@@ -32,6 +34,8 @@ import org.fqaosp.utils.multiFunc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -45,6 +49,8 @@ public class workProfileManageActivity extends AppCompatActivity {
     private Button b1,b2,b3 ;
     private ListView lv1,lv2;
     private EditText et1;
+
+    private workProfileDB workProfiledb = new workProfileDB(workProfileManageActivity.this, "workProfile", null, 1);
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -76,6 +82,7 @@ public class workProfileManageActivity extends AppCompatActivity {
                         for (int i = 0; i < checkboxs.size(); i++) {
                             if(checkboxs.get(i)){
                                 PKGINFO pkginfo = pkginfos.get(i);
+                                String pkgname = pkginfo.getPkgname();
                                 Runnable runnable = new Runnable() {
                                     @Override
                                     public void run() {
@@ -86,7 +93,14 @@ public class workProfileManageActivity extends AppCompatActivity {
                                                 Runnable runnable1 = new Runnable() {
                                                     @Override
                                                     public void run() {
-                                                        CMD cmd = new CMD(wp.getInstallPkgCMD(s, pkginfo.getPkgname()));
+                                                        CMD cmd = new CMD(wp.getInstallPkgCMD(s, pkgname));
+                                                        //判断该用户下有没有安装该应用,如果有就跳过
+                                                        ArrayList<workProfileDBEntity> select = workProfiledb.select(pkgname, Integer.valueOf(s));
+                                                        if(select.size() == 0 && cmd.getResultCode() == 0){
+                                                            workProfiledb.insert(pkgname,Integer.valueOf(s));
+                                                        }else{
+                                                            Log.d("wpma insert error ::: ",pkgname + " --  uid ::: " + s + " -- " +select.size() + " -- cmd :::  " + cmd.getResultCode() + " -- " + cmd.getResult());
+                                                        }
                                                     }
                                                 };
                                                 cacheThreadPool2.execute(runnable1);
@@ -143,6 +157,7 @@ public class workProfileManageActivity extends AppCompatActivity {
                         for (int i = 0; i < checkboxs.size(); i++) {
                             if(checkboxs.get(i)){
                                 PKGINFO pkginfo = pkginfos.get(i);
+                                String pkgname = pkginfo.getPkgname();
                                 Runnable runnable = new Runnable() {
                                     @Override
                                     public void run() {
@@ -153,7 +168,14 @@ public class workProfileManageActivity extends AppCompatActivity {
                                                 Runnable runnable1 = new Runnable() {
                                                     @Override
                                                     public void run() {
-                                                        CMD cmd = new CMD(wp.getUninstallPkgByUIDCMD(s,pkginfo.getPkgname()));
+                                                        CMD cmd = new CMD(wp.getUninstallPkgByUIDCMD(s,pkgname));
+                                                        //判断该用户下有没有安装该应用,如果有就跳过
+                                                        ArrayList<workProfileDBEntity> select = workProfiledb.select(pkgname, Integer.valueOf(s));
+                                                        if(select.size() > 0 && cmd.getResultCode() == 0){
+                                                            workProfiledb.delete(pkgname,Integer.valueOf(s));
+                                                        }else{
+                                                            Log.d("wpma delete error ::: ",pkgname + " --  uid ::: " + s + " -- " +select.size() + " -- cmd :::  " + cmd.getResultCode() + " -- " + cmd.getResult());
+                                                        }
                                                     }
                                                 };
                                                 cacheThreadPool2.execute(runnable1);

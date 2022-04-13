@@ -53,9 +53,18 @@ public class killAppDB extends SQLiteOpenHelper {
     }
 
 
-    public void delete(String pkgname,int status){
+    public void delete(String pkgname,Integer status){
         SQLiteDatabase writableDatabase = this.getWritableDatabase();
         String sql = "delete from killApp where pkgname='"+pkgname+"' and status="+status;
+
+        if(pkgname == null && status != null){
+            sql = "delete from killApp where status="+status;
+        }
+
+        if(pkgname == null && status == null){
+            sql = "delete from killApp";
+        }
+
         writableDatabase.execSQL(sql);
         writableDatabase.close();
     }

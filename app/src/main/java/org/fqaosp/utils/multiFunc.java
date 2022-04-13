@@ -129,8 +129,10 @@ public class multiFunc {
 
     //查询用户
     public static void queryUSERS(Activity activity ,  ArrayList<String> us , ArrayList<Boolean> checkboxs){
+        us.clear();
         UserManager um = (UserManager) activity.getSystemService(Context.USER_SERVICE);
         if(checkboxs != null){
+            checkboxs.clear();
             for (UserHandle userHandle : um.getUserProfiles()) {
                 String uid = getUID(userHandle.toString());
                 if(!uid.equals(getMyUID())){

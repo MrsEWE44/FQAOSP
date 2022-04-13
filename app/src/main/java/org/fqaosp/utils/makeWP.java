@@ -106,6 +106,7 @@ public class makeWP {
         try {
             CMD cmd = new CMD(cmdstr);
             if(cmd.getResultCode() ==0){
+                pkginfos.clear();
                 for (String s : cmd.getResult().split("\n")) {
                     PackageManager pm = activity.getPackageManager();
                     PackageInfo packageInfo = pm.getPackageInfo(s, 0);

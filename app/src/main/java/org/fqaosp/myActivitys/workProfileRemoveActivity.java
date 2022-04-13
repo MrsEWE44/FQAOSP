@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.USERAdapter;
+import org.fqaosp.sql.workProfileDB;
 import org.fqaosp.threads.alertDialogThread;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeWP;
@@ -32,7 +33,8 @@ public class workProfileRemoveActivity extends AppCompatActivity {
 
     private ArrayList<String> list = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
-
+    private workProfileDB workProfiledb = new workProfileDB(workProfileRemoveActivity.this, "workProfile", null, 1);
+    private makeWP wp = new makeWP();
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,15 +44,14 @@ public class workProfileRemoveActivity extends AppCompatActivity {
         Button b1 = findViewById(R.id.wprab1);
         Button b2 = findViewById(R.id.wprab2);
         ListView listView1 = findViewById(R.id.wpralv1);
+
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if (checkboxs.get(i)) {
                         //移除掉勾选的内容
-                        makeWP wp = new makeWP();
-                        alertDialogThread dialogThread = new alertDialogThread(workProfileRemoveActivity.this, "正在删除分身空间", wp.getRemoveWPCMD(list.get(i)), "提示", "删除成功", "删除失败");
-                        dialogThread.start();
+                        delete(list.get(i));
                     }
                 }
             }
@@ -59,15 +60,19 @@ public class workProfileRemoveActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 for (String s : list) {
-                    makeWP wp = new makeWP();
-                    alertDialogThread dialogThread = new alertDialogThread(workProfileRemoveActivity.this, "正在删除分身空间", wp.getRemoveWPCMD(s), "提示", "删除成功", "删除失败");
-                    dialogThread.start();
+                    delete(s);
                 }
             }
         });
         getUsers();
         showUsers(listView1);
 
+    }
+
+    private void delete(String s){
+        workProfiledb.delete(null,Integer.valueOf(s));
+        alertDialogThread dialogThread = new alertDialogThread(workProfileRemoveActivity.this, "正在删除分身空间", wp.getRemoveWPCMD(s), "提示", "删除成功", "删除失败");
+        dialogThread.start();
     }
 
     private  void getUsers(){
