@@ -4,25 +4,12 @@ import android.graphics.drawable.Drawable;
 
 public class PKGINFO {
 
-
-    public PKGINFO(String pkgname, String appname, String apkpath, Drawable appicon) {
+    public PKGINFO(String pkgname, String appname, String apkpath, String apkuid, Drawable appicon) {
         this.pkgname = pkgname;
         this.appname = appname;
         this.apkpath = apkpath;
+        this.apkuid = apkuid;
         this.appicon = appicon;
-    }
-
-    private  String pkgname , appname , apkpath;
-    private Drawable appicon;
-
-    @Override
-    public String toString() {
-        return "PKGINFO{" +
-                "pkgname='" + pkgname + '\'' +
-                ", appname='" + appname + '\'' +
-                ", apkpath='" + apkpath + '\'' +
-                ", appicon=" + appicon +
-                '}';
     }
 
     public String getPkgname() {
@@ -49,6 +36,14 @@ public class PKGINFO {
         this.apkpath = apkpath;
     }
 
+    public String getApkuid() {
+        return apkuid;
+    }
+
+    public void setApkuid(String apkuid) {
+        this.apkuid = apkuid;
+    }
+
     public Drawable getAppicon() {
         return appicon;
     }
@@ -56,4 +51,20 @@ public class PKGINFO {
     public void setAppicon(Drawable appicon) {
         this.appicon = appicon;
     }
+
+    @Override
+    public String toString() {
+        return "PKGINFO{" +
+                "pkgname='" + pkgname + '\'' +
+                ", appname='" + appname + '\'' +
+                ", apkpath='" + apkpath + '\'' +
+                ", apkuid='" + apkuid + '\'' +
+                ", appicon=" + appicon +
+                '}';
+    }
+
+    private  String pkgname , appname , apkpath,apkuid;
+    private Drawable appicon;
+
+
 }

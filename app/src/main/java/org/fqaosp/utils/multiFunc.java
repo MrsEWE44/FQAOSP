@@ -203,7 +203,7 @@ public class multiFunc {
         if(checkboxs != null){
             checkboxs.add(false);
         }
-        pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+        pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir,applicationInfo.uid+"", applicationInfo.loadIcon(packageManager))) ;
 
     }
 
@@ -211,7 +211,7 @@ public class multiFunc {
         if(checkboxs != null){
             checkboxs.add(false);
         }
-        pkginfos.put(applicationInfo.packageName, new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+        pkginfos.put(applicationInfo.packageName, new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid+"",applicationInfo.loadIcon(packageManager))) ;
     }
 
     public static void appInfoAdd(PackageManager packageManager,PackageInfo packageInfo,ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer state){
@@ -414,7 +414,7 @@ public class multiFunc {
                 if(((ApplicationInfo.FLAG_SYSTEM & applicationInfo.flags) == 0)
                         && ((ApplicationInfo.FLAG_UPDATED_SYSTEM_APP & applicationInfo.flags) == 0)
                         && ((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid+"",applicationInfo.loadIcon(packageManager))) ;
                     checkboxs.add(false);
                 }
 
@@ -425,7 +425,7 @@ public class multiFunc {
                 if(((ApplicationInfo.FLAG_SYSTEM & applicationInfo.flags) == 0)
                         && ((ApplicationInfo.FLAG_UPDATED_SYSTEM_APP & applicationInfo.flags) == 0)
                         && ((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir,applicationInfo.uid+"", applicationInfo.loadIcon(packageManager))) ;
                 }
             }
         }
@@ -441,7 +441,7 @@ public class multiFunc {
             for (PackageInfo packageInfo : installedPackages) {
                 ApplicationInfo applicationInfo = packageInfo.applicationInfo;
                 if(((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid+"",applicationInfo.loadIcon(packageManager))) ;
                     checkboxs.add(false);
                 }
 
@@ -450,7 +450,7 @@ public class multiFunc {
             for (PackageInfo packageInfo : installedPackages) {
                 ApplicationInfo applicationInfo = packageInfo.applicationInfo;
                 if(((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir,applicationInfo.uid+"", applicationInfo.loadIcon(packageManager))) ;
                 }
             }
         }

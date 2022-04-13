@@ -42,22 +42,31 @@ import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
+import org.fqaosp.utils.iptablesManage;
 import org.fqaosp.utils.makeWP;
 import org.fqaosp.utils.multiFunc;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class appopsActivity extends AppCompatActivity {
 
-    private Button apopsab1,appopsab2;
+    private Button apopsab1,appopsab2,apopsab3,apopsab4,apopsab5;
     private ListView lv1;
     private EditText apopsaet1;
 
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private String uid;
+    private iptablesManage ipMange = new iptablesManage();
+
+    private String magiskDir="/data/adb/post-fs-data.d";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -67,6 +76,10 @@ public class appopsActivity extends AppCompatActivity {
         setTitle("应用管理");
         apopsab1 = findViewById(R.id.apopsab1);
         appopsab2 = findViewById(R.id.apopsab2);
+        apopsab3 = findViewById(R.id.apopsab3);
+        apopsab4 = findViewById(R.id.apopsab4);
+        apopsab5 = findViewById(R.id.apopsab5);
+
         apopsaet1 = findViewById(R.id.apopsaet1);
         lv1 = findViewById(R.id.apopsalv1);
         /**
@@ -81,14 +94,7 @@ public class appopsActivity extends AppCompatActivity {
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if(checkboxs.get(i)){
                         PKGINFO pkginfo = pkginfos.get(i);
-                        String cmdStr = "pm revoke "+pkginfo.getPkgname() + " " + Manifest.permission.WRITE_EXTERNAL_STORAGE + " && pm revoke " +
-                                pkginfo.getPkgname() + " " + Manifest.permission.READ_EXTERNAL_STORAGE + " && pm revoke " + pkginfo.getPkgname()+ " " +
-                                Manifest.permission.MANAGE_EXTERNAL_STORAGE;
-                        if(uid != null){
-                            cmdStr = "pm revoke --user "+uid+" "+pkginfo.getPkgname() + " " + Manifest.permission.WRITE_EXTERNAL_STORAGE + " && pm revoke --user "+uid + " " +
-                                    pkginfo.getPkgname() + " " + Manifest.permission.READ_EXTERNAL_STORAGE + " && pm revoke --user "+uid + " " + pkginfo.getPkgname()+ " " +
-                                    Manifest.permission.MANAGE_EXTERNAL_STORAGE;
-                        }
+                        String cmdStr = ipMange.disableAppByAPPUIDCMD(pkginfo.getApkuid());
                         CMD cmd = new CMD(cmdStr);
                         if(cmd.getResultCode() == 0){
                             Toast.makeText(appopsActivity.this, pkginfo.getAppname() +" 已经禁用完成", Toast.LENGTH_SHORT).show();
@@ -106,6 +112,70 @@ public class appopsActivity extends AppCompatActivity {
                 String searchStr = apopsaet1.getText().toString();
                 pkginfos = multiFunc.indexOfPKGS(appopsActivity.this,searchStr,pkginfos,checkboxs,0);
                 showPKGS(lv1);
+            }
+        });
+
+        apopsab3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    if(checkboxs.get(i)){
+                        PKGINFO pkginfo = pkginfos.get(i);
+                        String cmdStr = ipMange.enableAppByAPPUIDCMD(pkginfo.getApkuid());
+                        CMD cmd = new CMD(cmdStr);
+                        if(cmd.getResultCode() == 0){
+                            Toast.makeText(appopsActivity.this, pkginfo.getAppname() +" 已经启用完成", Toast.LENGTH_SHORT).show();
+                        }else{
+                            Toast.makeText(appopsActivity.this, pkginfo.getAppname() +" 看样子不能启用", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }
+        });
+
+
+        apopsab4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String autoStartScriptName = "disableIptables.sh";
+                String filepath=magiskDir + "/" + autoStartScriptName;
+                String firstcmd="[ -f "+filepath +" ] && rm -rf "+ filepath;
+                CMD cmd1 = new CMD(firstcmd);
+                cmd1.getResultCode();
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    if(checkboxs.get(i)){
+                        PKGINFO pkginfo = pkginfos.get(i);
+                        String cmdStr = "[ -d "+magiskDir+" ] && echo "+ipMange.disableAppByAPPUIDCMD(pkginfo.getApkuid()) +" #"+pkginfo.getAppname()+" >> "+filepath +" && chmod 755 "+filepath;
+                        CMD cmd = new CMD(cmdStr);
+                        if(cmd.getResultCode() != 0){
+                            Toast.makeText(appopsActivity.this, "需要安装alpha面具", Toast.LENGTH_SHORT).show();
+                        }
+                        Log.i("ipdis :: ",cmd.getResultCode()+ " -- " + cmd.getResult());
+                    }
+                }
+
+            }
+        });
+
+        apopsab5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String autoStartScriptName = "enableIptables.sh";
+                String filepath=magiskDir + "/" + autoStartScriptName;
+                String firstcmd="[ -f "+filepath +" ] && rm -rf "+ filepath;
+                CMD cmd1 = new CMD(firstcmd);
+                cmd1.getResultCode();
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    if(checkboxs.get(i)){
+                        PKGINFO pkginfo = pkginfos.get(i);
+                        String cmdStr = "[ -d "+magiskDir+" ] && echo "+ipMange.enableAppByAPPUIDCMD(pkginfo.getApkuid()) +" #"+pkginfo.getAppname()+" >> "+filepath +" && chmod 755 "+filepath;
+                        CMD cmd = new CMD(cmdStr);
+                        if(cmd.getResultCode() != 0){
+                            Toast.makeText(appopsActivity.this, "需要安装alpha面具", Toast.LENGTH_SHORT).show();
+                        }
+                        Log.i("ipen :: ",cmd.getResultCode()+ " -- " + cmd.getResult());
+                    }
+                }
             }
         });
 

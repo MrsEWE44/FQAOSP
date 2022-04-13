@@ -64,7 +64,7 @@ public class killApp extends AppWidgetProvider {
             if(((ApplicationInfo.FLAG_SYSTEM & applicationInfo.flags) == 0)
                     && ((ApplicationInfo.FLAG_UPDATED_SYSTEM_APP & applicationInfo.flags) == 0)
                     && ((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)){
-                pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.loadIcon(packageManager))) ;
+                pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid+"",applicationInfo.loadIcon(packageManager))) ;
             }
         }
         for (PKGINFO pkginfo : pkginfos) {
