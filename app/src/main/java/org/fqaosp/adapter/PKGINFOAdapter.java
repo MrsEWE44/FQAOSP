@@ -56,6 +56,7 @@ public class PKGINFOAdapter extends BaseAdapter {
                 checkboxs.set(position,b);
             }
         });
+        checkBox.setChecked(checkboxs.get(position));
         imageView.setImageDrawable(pkginfos.get(position).getAppicon());
         return convertView;
     }

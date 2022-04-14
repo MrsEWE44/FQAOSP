@@ -52,6 +52,7 @@ public class USERAdapter extends BaseAdapter {
                 checkboxs.set(i,b);
             }
         });
+        checkBox.setChecked(checkboxs.get(i));
         return view;
     }
 }

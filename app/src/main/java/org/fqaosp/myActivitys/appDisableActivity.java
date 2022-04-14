@@ -84,46 +84,61 @@ public class appDisableActivity extends AppCompatActivity {
         ada_disableappb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        CMD cmd = new CMD("pm disable " + pkginfo.getPkgname());
-                        if(cmd.getResultCode() ==0){
-                            Toast.makeText(appDisableActivity.this, "禁用 "+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
-                        }else{
-                            Toast.makeText(appDisableActivity.this, "禁用 "+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i = 0; i < checkboxs.size(); i++) {
+                            if(checkboxs.get(i)){
+                                PKGINFO pkginfo = pkginfos.get(i);
+                                CMD cmd = new CMD("pm disable " + pkginfo.getPkgname());
+                                if(cmd.getResultCode() ==0){
+                                    Toast.makeText(appDisableActivity.this, "禁用 "+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
+                                }else{
+                                    Toast.makeText(appDisableActivity.this, "禁用 "+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
+                                }
+                            }
                         }
+                        getUserEnablePKGS();
+                        showPKGS(ada_disablelv);
                     }
-                }
-                getUserEnablePKGS();
-                showPKGS(ada_disablelv);
+                });
             }
         });
         ada_enableappb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        CMD cmd = new CMD("pm enable " + pkginfo.getPkgname());
-                        if(cmd.getResultCode() ==0){
-                            Toast.makeText(appDisableActivity.this, "启用 "+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
-                        }else{
-                            Toast.makeText(appDisableActivity.this, "启用 "+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i = 0; i < checkboxs.size(); i++) {
+                            if(checkboxs.get(i)){
+                                PKGINFO pkginfo = pkginfos.get(i);
+                                CMD cmd = new CMD("pm enable " + pkginfo.getPkgname());
+                                if(cmd.getResultCode() ==0){
+                                    Toast.makeText(appDisableActivity.this, "启用 "+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
+                                }else{
+                                    Toast.makeText(appDisableActivity.this, "启用 "+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
+                                }
+                            }
                         }
+                        getDisablePKGS();
+                        showPKGS(ada_disablelv);
                     }
-                }
-                getDisablePKGS();
-                showPKGS(ada_disablelv);
+                });
             }
         });
 
         ada_searchb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String searchStr = ada_et1.getText().toString();
-                pkginfos = multiFunc.indexOfPKGS(appDisableActivity.this,searchStr,pkginfos,checkboxs,0);
-                showPKGS(ada_disablelv);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        String searchStr = ada_et1.getText().toString();
+                        pkginfos = multiFunc.indexOfPKGS(appDisableActivity.this,searchStr,pkginfos,checkboxs,0);
+                        showPKGS(ada_disablelv);
+                    }
+                });
             }
         });
     }

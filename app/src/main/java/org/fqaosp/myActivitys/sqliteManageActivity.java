@@ -94,85 +94,92 @@ public class sqliteManageActivity extends AppCompatActivity {
                 alertDialog.setMessage("正在更新数据库,请稍后(可能会出现无响应，请耐心等待)....");
                 AlertDialog show = alertDialog.show();
                 preventDismissDialog(show);
-                int childCount = tableLayout.getChildCount();
-                Map.Entry<String, Integer> entry = null;
-                workProfileDBEntity workProfileDBEntity = null,workProfileDBEntity1 =null;
-                for(int i =1 ;i<childCount;i++){
-                    TableRow tableRow = (TableRow) tableLayout.getChildAt(i);
-                    EditText editText = (EditText) tableRow.getChildAt(0);
-                    EditText editText2 = (EditText) tableRow.getChildAt(1);
-                     if(mode == 0){
-                         entry = list.get(i-1);
-                     }
-                     if(mode ==1){
-                         workProfileDBEntity = list2.get(i - 1);//修改后的
-                         workProfileDBEntity1 = select2.get(i - 1);//原来的
-                     }
 
-                    Map.Entry<String, Integer> finalEntry = entry;
-                    org.fqaosp.entity.workProfileDBEntity finalWorkProfileDBEntity = workProfileDBEntity;
-                    org.fqaosp.entity.workProfileDBEntity finalWorkProfileDBEntity1 = workProfileDBEntity1;
-                    Runnable runnable = new Runnable() {
-                        @Override
-                        public void run() {
-
-
-                            if(mode ==0){
-
-                                if(editText.getText().toString().isEmpty() || editText2.getText().toString().isEmpty()){
-                                    killAppdb.delete(finalEntry.getKey(), finalEntry.getValue());
-                                }
-                                if(select.get(editText.getText().toString()) == null){
-                                    try {
-                                        killAppdb.update(finalEntry.getKey(), finalEntry.getValue(),editText.getText().toString(),Integer.valueOf(editText2.getText().toString()));
-                                    }catch (Exception e){
-                                        Toast.makeText(me, e.getMessage(), Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        int childCount = tableLayout.getChildCount();
+                        Map.Entry<String, Integer> entry = null;
+                        workProfileDBEntity workProfileDBEntity = null,workProfileDBEntity1 =null;
+                        for(int i =1 ;i<childCount;i++){
+                            TableRow tableRow = (TableRow) tableLayout.getChildAt(i);
+                            EditText editText = (EditText) tableRow.getChildAt(0);
+                            EditText editText2 = (EditText) tableRow.getChildAt(1);
+                            if(mode == 0){
+                                entry = list.get(i-1);
+                            }
+                            if(mode ==1){
+                                workProfileDBEntity = list2.get(i - 1);//修改后的
+                                workProfileDBEntity1 = select2.get(i - 1);//原来的
                             }
 
-                            if(mode == 1){
-                                if(editText.getText().toString().isEmpty() || editText2.getText().toString().isEmpty()){
-                                    workProfiledb.delete(finalWorkProfileDBEntity.getPkgname(), finalWorkProfileDBEntity.getUid());
-                                }
-                                if(!finalWorkProfileDBEntity1.getPkgname().equals(editText2.getText().toString())){
-                                    try {
-                                        workProfiledb.update(finalWorkProfileDBEntity.getPkgname(), finalWorkProfileDBEntity.getUid(),editText2.getText().toString(),Integer.valueOf(editText.getText().toString()));
-                                    }catch (Exception e){
-                                        Toast.makeText(me, e.getMessage(), Toast.LENGTH_SHORT).show();
+                            Map.Entry<String, Integer> finalEntry = entry;
+                            org.fqaosp.entity.workProfileDBEntity finalWorkProfileDBEntity = workProfileDBEntity;
+                            org.fqaosp.entity.workProfileDBEntity finalWorkProfileDBEntity1 = workProfileDBEntity1;
+                            Runnable runnable = new Runnable() {
+                                @Override
+                                public void run() {
+
+
+                                    if(mode ==0){
+
+                                        if(editText.getText().toString().isEmpty() || editText2.getText().toString().isEmpty()){
+                                            killAppdb.delete(finalEntry.getKey(), finalEntry.getValue());
+                                        }
+                                        if(select.get(editText.getText().toString()) == null){
+                                            try {
+                                                killAppdb.update(finalEntry.getKey(), finalEntry.getValue(),editText.getText().toString(),Integer.valueOf(editText2.getText().toString()));
+                                            }catch (Exception e){
+                                                Toast.makeText(me, e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+
                                     }
+
+                                    if(mode == 1){
+                                        if(editText.getText().toString().isEmpty() || editText2.getText().toString().isEmpty()){
+                                            workProfiledb.delete(finalWorkProfileDBEntity.getPkgname(), finalWorkProfileDBEntity.getUid());
+                                        }
+                                        if(!finalWorkProfileDBEntity1.getPkgname().equals(editText2.getText().toString())){
+                                            try {
+                                                workProfiledb.update(finalWorkProfileDBEntity.getPkgname(), finalWorkProfileDBEntity.getUid(),editText2.getText().toString(),Integer.valueOf(editText.getText().toString()));
+                                            }catch (Exception e){
+                                                Toast.makeText(me, e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    }
+
                                 }
+                            };
+
+                            cacheThreadPool.execute(runnable);
+
+                        }
+
+                        cacheThreadPool.shutdown();
+                        while(true){
+                            if(cacheThreadPool.isTerminated()){
+
+                                if(mode ==0){
+                                    showDatabase(killAppdb,tableLayout,horizontalScrollView,scrollView);
+                                }
+
+                                if(mode == 1){
+                                    showDatabase2(workProfiledb,tableLayout,horizontalScrollView,scrollView);
+                                }
+                                multiFunc.dismissDialog(show);
+                                break;
                             }
-
-                        }
-                    };
-
-                    cacheThreadPool.execute(runnable);
-
-                }
-
-                cacheThreadPool.shutdown();
-                while(true){
-                    if(cacheThreadPool.isTerminated()){
-
-                        if(mode ==0){
-                            showDatabase(killAppdb,tableLayout,horizontalScrollView,scrollView);
+                            try {
+                                Thread.sleep(100);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
                         }
 
-                        if(mode == 1){
-                            showDatabase2(workProfiledb,tableLayout,horizontalScrollView,scrollView);
-                        }
-                        multiFunc.dismissDialog(show);
-                        break;
+
                     }
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-
+                });
 
             }
         });

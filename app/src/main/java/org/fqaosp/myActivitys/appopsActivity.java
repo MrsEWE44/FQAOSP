@@ -29,8 +29,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -57,15 +59,15 @@ import java.util.concurrent.Executors;
 
 public class appopsActivity extends AppCompatActivity {
 
-    private Button apopsab1,appopsab2,apopsab3,apopsab4,apopsab5;
+    private Button appopsab2,apopsab4,apopsab5;
     private ListView lv1;
     private EditText apopsaet1;
-
+    private Switch apopsasb1 , apopsasb2,apopsasb3;
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private String uid;
     private iptablesManage ipMange = new iptablesManage();
-
+    private boolean switch_mode_tmp,switch_mode_autostart,switch_mode_all;
     private String magiskDir="/data/adb/post-fs-data.d";
 
     @Override
@@ -74,12 +76,13 @@ public class appopsActivity extends AppCompatActivity {
         setContentView(R.layout.appops_activity);
         fuckActivity.getIns().add(this);
         setTitle("应用管理");
-        apopsab1 = findViewById(R.id.apopsab1);
+
+        apopsasb1 = findViewById(R.id.apopsasb1);
+        apopsasb2 = findViewById(R.id.apopsasb2);
+        apopsasb3 = findViewById(R.id.apopsasb3);
         appopsab2 = findViewById(R.id.apopsab2);
-        apopsab3 = findViewById(R.id.apopsab3);
         apopsab4 = findViewById(R.id.apopsab4);
         apopsab5 = findViewById(R.id.apopsab5);
-
         apopsaet1 = findViewById(R.id.apopsaet1);
         lv1 = findViewById(R.id.apopsalv1);
         /**
@@ -88,21 +91,26 @@ public class appopsActivity extends AppCompatActivity {
          * */
         Intent intent = getIntent();
         uid = intent.getStringExtra("uid");
-        apopsab1.setOnClickListener(new View.OnClickListener() {
+        apopsasb1.setChecked(true);
+
+        apopsasb1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View view) {
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        String cmdStr = ipMange.disableAppByAPPUIDCMD(pkginfo.getApkuid());
-                        CMD cmd = new CMD(cmdStr);
-                        if(cmd.getResultCode() == 0){
-                            Toast.makeText(appopsActivity.this, pkginfo.getAppname() +" 已经禁用完成", Toast.LENGTH_SHORT).show();
-                        }else{
-                            Toast.makeText(appopsActivity.this, pkginfo.getAppname() +" 看样子不能禁用", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                switch_mode_tmp=b;
+            }
+        });
+
+        apopsasb2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                switch_mode_autostart=b;
+            }
+        });
+
+        apopsasb3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                switch_mode_all=b;
             }
         });
 
@@ -115,67 +123,65 @@ public class appopsActivity extends AppCompatActivity {
             }
         });
 
-        apopsab3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        String cmdStr = ipMange.enableAppByAPPUIDCMD(pkginfo.getApkuid());
-                        CMD cmd = new CMD(cmdStr);
-                        if(cmd.getResultCode() == 0){
-                            Toast.makeText(appopsActivity.this, pkginfo.getAppname() +" 已经启用完成", Toast.LENGTH_SHORT).show();
-                        }else{
-                            Toast.makeText(appopsActivity.this, pkginfo.getAppname() +" 看样子不能启用", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-            }
-        });
-
-
         apopsab4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String autoStartScriptName = "disableIptables.sh";
-                String filepath=magiskDir + "/" + autoStartScriptName;
-                String firstcmd="[ -f "+filepath +" ] && rm -rf "+ filepath;
-                CMD cmd1 = new CMD(firstcmd);
-                cmd1.getResultCode();
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        String cmdStr = "[ -d "+magiskDir+" ] && echo "+ipMange.disableAppByAPPUIDCMD(pkginfo.getApkuid()) +" #"+pkginfo.getAppname()+" >> "+filepath +" && chmod 755 "+filepath;
-                        CMD cmd = new CMD(cmdStr);
-                        if(cmd.getResultCode() != 0){
-                            Toast.makeText(appopsActivity.this, "需要安装alpha面具", Toast.LENGTH_SHORT).show();
-                        }
-                        Log.i("ipdis :: ",cmd.getResultCode()+ " -- " + cmd.getResult());
-                    }
-                }
+                AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
+                alertDialog.setTitle("提示");
+                alertDialog.setMessage("正在禁用应用联网,请稍后(可能会出现无响应，请耐心等待)....");
+                AlertDialog show = alertDialog.show();
+                preventDismissDialog(show);
+               view.post(new Runnable() {
+                   @Override
+                   public void run() {
+                       if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart && switch_mode_all){
+                           auto_start_clicked(0,true,show);
+                       }
 
+                       if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart==false && switch_mode_all){
+                           default_clicked(0,true,show);
+                       }
+
+                       if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart && switch_mode_all==false){
+                           auto_start_clicked(0,false,show);
+                       }
+
+                       if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart==false && switch_mode_all ==false){
+                           default_clicked(0,false,show);
+                       }
+                   }
+               });
             }
         });
 
         apopsab5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String autoStartScriptName = "enableIptables.sh";
-                String filepath=magiskDir + "/" + autoStartScriptName;
-                String firstcmd="[ -f "+filepath +" ] && rm -rf "+ filepath;
-                CMD cmd1 = new CMD(firstcmd);
-                cmd1.getResultCode();
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        String cmdStr = "[ -d "+magiskDir+" ] && echo "+ipMange.enableAppByAPPUIDCMD(pkginfo.getApkuid()) +" #"+pkginfo.getAppname()+" >> "+filepath +" && chmod 755 "+filepath;
-                        CMD cmd = new CMD(cmdStr);
-                        if(cmd.getResultCode() != 0){
-                            Toast.makeText(appopsActivity.this, "需要安装alpha面具", Toast.LENGTH_SHORT).show();
-                        }
-                        Log.i("ipen :: ",cmd.getResultCode()+ " -- " + cmd.getResult());
-                    }
-                }
+                AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
+                alertDialog.setTitle("提示");
+                alertDialog.setMessage("正在启用应用联网,请稍后(可能会出现无响应，请耐心等待)....");
+                AlertDialog show = alertDialog.show();
+                preventDismissDialog(show);
+               view.post(new Runnable() {
+                   @Override
+                   public void run() {
+                       if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart && switch_mode_all){
+                           auto_start_clicked(1,true,show);
+                       }
+
+                       if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart==false && switch_mode_all){
+                           default_clicked(1,true,show);
+                       }
+
+                       if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart && switch_mode_all==false){
+                           auto_start_clicked(1,false,show);
+                       }
+
+                       if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart==false && switch_mode_all ==false){
+                           default_clicked(1,false,show);
+                       }
+                   }
+               });
             }
         });
 
@@ -229,6 +235,73 @@ public class appopsActivity extends AppCompatActivity {
         listView.setAdapter(pkginfoAdapter);
     }
 
+    private  void default_clicked(int mode,boolean isall,AlertDialog show){
+        if(isall){
+            for (int i = 0; i < checkboxs.size(); i++) {
+                PKGINFO pkginfo = pkginfos.get(i);
+                default_click(pkginfo,mode);
+            }
+        }else{
+            for (int i = 0; i < checkboxs.size(); i++) {
+                if(checkboxs.get(i)){
+                    PKGINFO pkginfo = pkginfos.get(i);
+                    default_click(pkginfo,mode);
+                }
+            }
+        }
+        multiFunc.dismissDialog(show);
+    }
+
+    private void default_click(PKGINFO pkginfo,int mode){
+        String cmdStr = ipMange.disableAppByAPPUIDCMD(pkginfo.getApkuid());
+        if(mode == 1){
+            cmdStr = ipMange.enableAppByAPPUIDCMD(pkginfo.getApkuid());
+        }
+        CMD cmd = new CMD(cmdStr);
+        if(cmd.getResultCode() == 0){
+            Toast.makeText(appopsActivity.this, pkginfo.getAppname() +" 已经执行完成", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(appopsActivity.this, pkginfo.getAppname() +" 看样子不能执行", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void auto_start(PKGINFO pkginfo,String magiskDir,String filepath,int mode){
+        String cmdStr = "[ -d "+magiskDir+" ] && echo '"+ipMange.disableAppByAPPUIDCMD(pkginfo.getApkuid()) +" #"+pkginfo.getAppname()+"' >> "+filepath +" && chmod 755 "+filepath;
+        if(mode == 1){
+            cmdStr = "[ -d "+magiskDir+" ] && echo '"+ipMange.enableAppByAPPUIDCMD(pkginfo.getApkuid()) +" #"+pkginfo.getAppname()+"' >> "+filepath +" && chmod 755 "+filepath;
+        }
+        CMD cmd = new CMD(cmdStr);
+        if(cmd.getResultCode() != 0){
+            Toast.makeText(appopsActivity.this, "需要安装alpha面具", Toast.LENGTH_SHORT).show();
+        }
+        Log.i("auto_start :: ",cmd.getResultCode() + " -- "+cmd.getResult());
+    }
+
+    private  void auto_start_clicked(int mode,boolean isall,AlertDialog show){
+        String autoStartScriptName = "disableIptables.sh";
+        if(mode == 1){
+            autoStartScriptName = "enableIptables.sh";
+        }
+        String filepath=magiskDir + "/" + autoStartScriptName;
+        String firstcmd="[ -f "+filepath +" ] && rm -rf "+ filepath;
+        CMD cmd1 = new CMD(firstcmd);
+        cmd1.getResultCode();
+        if(isall){
+            for (int i = 0; i < checkboxs.size(); i++) {
+                PKGINFO pkginfo = pkginfos.get(i);
+                auto_start(pkginfo,magiskDir,filepath,mode);
+            }
+        }else{
+            for (int i = 0; i < checkboxs.size(); i++) {
+                if(checkboxs.get(i)){
+                    PKGINFO pkginfo = pkginfos.get(i);
+                    auto_start(pkginfo,magiskDir,filepath,mode);
+                }
+            }
+        }
+        multiFunc.dismissDialog(show);
+
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

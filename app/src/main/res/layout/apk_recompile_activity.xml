@@ -30,7 +30,7 @@
             <Button
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="选择本地反编译后的文件夹"
+                android:text="选择本地文件夹"
                 android:layout_weight="1"
                 android:id="@+id/arab3"
                 ></Button>

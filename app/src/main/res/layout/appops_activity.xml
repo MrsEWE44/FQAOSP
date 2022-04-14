@@ -33,21 +33,75 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal">
-            <Button
-                android:layout_width="fill_parent"
-                android:layout_weight="1"
-                android:layout_height="wrap_content"
-                android:text="禁用联网(临时)"
-                android:id="@+id/apopsab1"
-                ></Button>
 
-            <Button
+            <LinearLayout
                 android:layout_width="fill_parent"
-                android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="启用联网(临时)"
-                android:id="@+id/apopsab3"
-                ></Button>
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="临时(默认)">
+
+                </TextView>
+
+                <Switch
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/apopsasb1">
+
+                </Switch>
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="自启(magisk)">
+
+                </TextView>
+
+                <Switch
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/apopsasb2">
+                </Switch>
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="全选">
+
+                </TextView>
+
+                <Switch
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/apopsasb3">
+
+                </Switch>
+
+
+            </LinearLayout>
 
         </LinearLayout>
 
@@ -59,7 +113,7 @@
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="禁用联网(magisk自启)"
+                android:text="禁用联网"
                 android:id="@+id/apopsab4"
                 ></Button>
 
@@ -67,7 +121,7 @@
                 android:layout_width="fill_parent"
                 android:layout_weight="1"
                 android:layout_height="wrap_content"
-                android:text="启用联网(magisk自启)"
+                android:text="启用联网"
                 android:id="@+id/apopsab5"
                 ></Button>
 

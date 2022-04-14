@@ -47,63 +47,78 @@ public class killAppActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(killAppdb.count() == 0){
-                    for (PKGINFO pkginfo : pkginfos) {
-                        if(!pkginfo.getPkgname().equals(getPackageName())){
-                            //调用命令终止后台程序
-                            stopApp(pkginfo.getPkgname());
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(killAppdb.count() == 0){
+                            for (PKGINFO pkginfo : pkginfos) {
+                                if(!pkginfo.getPkgname().equals(getPackageName())){
+                                    //调用命令终止后台程序
+                                    stopApp(pkginfo.getPkgname());
+                                }
+                            }
+                        }else{
+                            HashMap<String, Integer> select = killAppdb.select(null, 0);
+                            for (Map.Entry<String, Integer> entry : select.entrySet()) {
+                                stopApp(entry.getKey());
+                            }
                         }
-                    }
-                }else{
-                    HashMap<String, Integer> select = killAppdb.select(null, 0);
-                    for (Map.Entry<String, Integer> entry : select.entrySet()) {
-                        stopApp(entry.getKey());
-                    }
-                }
 
-                Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
-                getRunning(1);
-                showPKGS(lv1);
+                        Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
+                        getRunning(1);
+                        showPKGS(lv1);
+                    }
+                });
             }
         });
 
         b2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        if(!pkginfo.getPkgname().equals(getPackageName())){
-                            stopApp(pkginfo.getPkgname());
-                            if(killAppdb.select(pkginfo.getPkgname(),0).size() == 0){
-                                killAppdb.insert(pkginfo.getPkgname(),0);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i = 0; i < checkboxs.size(); i++) {
+                            if(checkboxs.get(i)){
+                                PKGINFO pkginfo = pkginfos.get(i);
+                                if(!pkginfo.getPkgname().equals(getPackageName())){
+                                    stopApp(pkginfo.getPkgname());
+                                    if(killAppdb.select(pkginfo.getPkgname(),0).size() == 0){
+                                        killAppdb.insert(pkginfo.getPkgname(),0);
+                                    }
+                                }
                             }
                         }
+                        Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
+                        getRunning(1);
+                        showPKGS(lv1);
                     }
-                }
-                Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
-                getRunning(1);
-                showPKGS(lv1);
+                });
             }
         });
 
         b3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(!checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        if(!pkginfo.getPkgname().equals(getPackageName())){
-                            stopApp(pkginfo.getPkgname());
-                            if(killAppdb.select(pkginfo.getPkgname(),0).size() == 0){
-                                killAppdb.insert(pkginfo.getPkgname(),0);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i = 0; i < checkboxs.size(); i++) {
+                            if(!checkboxs.get(i)){
+                                PKGINFO pkginfo = pkginfos.get(i);
+                                if(!pkginfo.getPkgname().equals(getPackageName())){
+                                    stopApp(pkginfo.getPkgname());
+                                    if(killAppdb.select(pkginfo.getPkgname(),0).size() == 0){
+                                        killAppdb.insert(pkginfo.getPkgname(),0);
+                                    }
+                                }
                             }
                         }
+                        Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
+                        getRunning(1);
+                        showPKGS(lv1);
                     }
-                }
-                Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
-                getRunning(1);
-                showPKGS(lv1);
+                });
             }
         });
     }

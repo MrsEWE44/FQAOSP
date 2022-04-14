@@ -74,7 +74,7 @@ public class workProfileManageActivity extends AppCompatActivity {
                 alertDialog.setMessage("正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
                 AlertDialog show = alertDialog.show();
                 preventDismissDialog(show);
-                runOnUiThread(new Runnable() {
+                view.post(new Runnable() {
                     @Override
                     public void run() {
                         ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
@@ -149,7 +149,7 @@ public class workProfileManageActivity extends AppCompatActivity {
                 alertDialog.setMessage("正在删除应用,请稍后(可能会出现无响应，请耐心等待)....");
                 AlertDialog show = alertDialog.show();
                 preventDismissDialog(show);
-                runOnUiThread(new Runnable() {
+                view.post(new Runnable() {
                     @Override
                     public void run() {
                         ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);

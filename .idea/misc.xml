@@ -11,7 +11,7 @@
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/apk_decompile_activity.xml" value="0.36614583333333334" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/apk_decompile_menu_activity.xml" value="0.36614583333333334" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/apk_extract_activity.xml" value="0.36614583333333334" />
-        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/apk_recompile_activity.xml" value="0.2049147839873167" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/apk_recompile_activity.xml" value="0.5" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/app_disable_activity.xml" value="0.346875" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/appops_activity.xml" value="0.33" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/appops_info_item_activity.xml" value="0.36614583333333334" />
@@ -19,6 +19,7 @@
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/appopsinfo_activity.xml" value="0.33" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/appopsinfo_item_activity.xml" value="0.1734375" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/img_tool_menu_activity.xml" value="0.1734375" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/img_tool_repack_activity.xml" value="0.33" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/img_tool_unpack_activity.xml" value="0.39928057553956836" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/import_tools_activity.xml" value="0.25" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/imt_tool_repack_activity.xml" value="0.1734375" />
