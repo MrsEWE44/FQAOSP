@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -46,7 +47,6 @@ public class multiFunc {
     public final static Integer QUERY_ALL_USER_PKG=3;
     public final static Integer QUERY_ALL_DISABLE_PKG=1;
     public final static Integer QUERY_ALL_DEFAULT_PKG=4;
-
 
     //页面布局跳转
     public static void jump(Context srcA , Class<?> cls){
@@ -148,6 +148,9 @@ public class multiFunc {
                 }
             }
         }
+
+        Collections.sort(us,String::compareTo);
+
     }
 
 
@@ -193,11 +196,11 @@ public class multiFunc {
         for (PKGINFO pkginfo : pkginfos) {
             if(pkginfo.getAppname().indexOf(findStr) != -1){
                 pkginfos2.add(pkginfo);
+                checkboxs.add(false);
             }
         }
         return pkginfos2;
     }
-
 
     public static void checkBoxs(ArrayList<PKGINFO> pkginfos,ArrayList<Boolean> checkboxs,ApplicationInfo applicationInfo,PackageManager packageManager){
         if(checkboxs != null){
@@ -378,14 +381,38 @@ public class multiFunc {
                 }
                 break;
         }
+        String TAG=context.getClass().getName();
         CMD cmd = new CMD(cmdstr);
         if(cmd.getResultCode() == 0){
-            Toast.makeText(context, pkgcate + " " +msg, Toast.LENGTH_SHORT).show();
+            Log.d(TAG,pkgcate + " " +msg);
         }else{
-            Toast.makeText(context, pkgcate + " " +msg2, Toast.LENGTH_SHORT).show();
+            Log.d(TAG,pkgcate + " " +msg2);
         }
     }
 
+    public static void runAppopsBySwtich(Boolean b,int mode ,Context context,String pkgname,String pkgcate , String uid){
+        if(b){
+            switch (mode){
+                case 0:
+                case 1:
+                    runAppopsCMD(context,pkgname,pkgcate,4,"开启组件成功","开启组件失败",uid);
+                    break;
+                case 2:
+                    runAppopsCMD(context,pkgname,pkgcate,3,"开启权限成功","开启权限失败",uid);
+                    break;
+            }
+        }else{
+            switch (mode){
+                case 0:
+                case 1:
+                    runAppopsCMD(context,pkgname,pkgcate,1,"关闭组件成功","关闭组件失败",uid);
+                    break;
+                case 2:
+                    runAppopsCMD(context,pkgname,pkgcate,0,"关闭权限成功","关闭权限失败",uid);
+                    break;
+            }
+        }
+    }
 
     //释放资源文件
     public static  void extactAssetsFile(Context context, String fileName,String toPath){
@@ -404,32 +431,41 @@ public class multiFunc {
         queryRunningPKGS(activity,pkginfos,null,0);
     }
 
+    public static void queryRunningPKGSCore(List<PackageInfo> installedPackages,ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,PackageManager packageManager,boolean isAll){
+        for (PackageInfo packageInfo : installedPackages) {
+            ApplicationInfo applicationInfo = packageInfo.applicationInfo;
+            if (isAll) {
+                if (((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)) {
+                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid + "", applicationInfo.loadIcon(packageManager)));
+                    if (checkboxs != null) {
+                        checkboxs.add(false);
+                    }
+                }
+            } else {
+                if (((ApplicationInfo.FLAG_SYSTEM & applicationInfo.flags) == 0)
+                        && ((ApplicationInfo.FLAG_UPDATED_SYSTEM_APP & applicationInfo.flags) == 0)
+                        && ((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)) {
+                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid + "", applicationInfo.loadIcon(packageManager)));
+                    if (checkboxs != null) {
+                        checkboxs.add(false);
+                    }
+                }
+
+            }
+        }
+        Collections.sort(pkginfos, new Comparator<PKGINFO>() {
+            @Override
+            public int compare(PKGINFO pkginfo, PKGINFO t1) {
+                return pkginfo.getAppname().compareTo(t1.getAppname());
+            }
+        });
+    }
+
     //查询当前运行在后台的应用，用户安装部分
     public static void queryRunningPKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
         PackageManager packageManager = activity.getPackageManager();
         List<PackageInfo> installedPackages = packageManager.getInstalledPackages(types);
-        if(checkboxs != null){
-            for (PackageInfo packageInfo : installedPackages) {
-                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-                if(((ApplicationInfo.FLAG_SYSTEM & applicationInfo.flags) == 0)
-                        && ((ApplicationInfo.FLAG_UPDATED_SYSTEM_APP & applicationInfo.flags) == 0)
-                        && ((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid+"",applicationInfo.loadIcon(packageManager))) ;
-                    checkboxs.add(false);
-                }
-
-            }
-        }else{
-            for (PackageInfo packageInfo : installedPackages) {
-                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-                if(((ApplicationInfo.FLAG_SYSTEM & applicationInfo.flags) == 0)
-                        && ((ApplicationInfo.FLAG_UPDATED_SYSTEM_APP & applicationInfo.flags) == 0)
-                        && ((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir,applicationInfo.uid+"", applicationInfo.loadIcon(packageManager))) ;
-                }
-            }
-        }
-
+        queryRunningPKGSCore(installedPackages,pkginfos,checkboxs,packageManager,false);
     }
 
 
@@ -437,24 +473,7 @@ public class multiFunc {
     public static void queryAllRunningPKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
         PackageManager packageManager = activity.getPackageManager();
         List<PackageInfo> installedPackages = packageManager.getInstalledPackages(types);
-        if(checkboxs != null){
-            for (PackageInfo packageInfo : installedPackages) {
-                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-                if(((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid+"",applicationInfo.loadIcon(packageManager))) ;
-                    checkboxs.add(false);
-                }
-
-            }
-        }else{
-            for (PackageInfo packageInfo : installedPackages) {
-                ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-                if(((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)){
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir,applicationInfo.uid+"", applicationInfo.loadIcon(packageManager))) ;
-                }
-            }
-        }
-
+        queryRunningPKGSCore(installedPackages,pkginfos,checkboxs,packageManager,true);
     }
 
 

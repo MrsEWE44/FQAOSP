@@ -54,31 +54,23 @@
 
             <LinearLayout
                 android:layout_width="fill_parent"
-                android:layout_height="120dp"
+                android:layout_height="150dp"
                 android:layout_weight="1"
                 android:orientation="horizontal">
 
-                <Button
+                <EditText
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="关闭权限"
-                    android:id="@+id/apabt1">
-                </Button>
-                <Button
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="关闭服务"
-                    android:id="@+id/apabt2">
-                </Button>
+                    android:hint="请输入搜索内容"
+                    android:id="@+id/apaet1"
+                    ></EditText>
 
                 <Button
-                    android:layout_width="fill_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="关闭活动"
-                    android:id="@+id/apabt3">
+                    android:text="搜索"
+                    android:id="@+id/apasearchbt1">
                 </Button>
 
             </LinearLayout>
@@ -86,7 +78,51 @@
 
             <LinearLayout
                 android:layout_width="fill_parent"
-                android:layout_height="120dp"
+                android:layout_height="140dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="选中"></TextView>
+
+                    <Switch
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/apasb1"></Switch>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="未选中"></TextView>
+
+                    <Switch
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/apasb2"></Switch>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="150dp"
                 android:layout_weight="1"
                 android:orientation="horizontal">
 
@@ -94,27 +130,12 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="开启权限"
-                    android:id="@+id/apabt4">
-                </Button>
-                <Button
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="开启服务"
-                    android:id="@+id/apabt5">
+                    android:text="应用更改"
+                    android:id="@+id/apabt1">
                 </Button>
 
-                <Button
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="开启活动"
-                    android:id="@+id/apabt6">
-                </Button>
 
             </LinearLayout>
-
 
             <ListView
                 android:layout_width="fill_parent"

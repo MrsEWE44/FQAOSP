@@ -63,27 +63,7 @@ public class APPOPSINFOAdapter extends BaseAdapter {
                 switbs.set(i,b);
                 switchbbb.setChecked(switbs.get(i));
                 String pkgcate = list.get(i);
-                if(b){
-                    switch (mode){
-                        case 0:
-                        case 1:
-                            multiFunc.runAppopsCMD(context,pkgname,pkgcate,4,"开启组件成功","开启组件失败",uid);
-                            break;
-                        case 2:
-                            multiFunc.runAppopsCMD(context,pkgname,pkgcate,3,"开启权限成功","开启权限失败",uid);
-                            break;
-                    }
-                }else{
-                    switch (mode){
-                        case 0:
-                        case 1:
-                            multiFunc.runAppopsCMD(context,pkgname,pkgcate,1,"关闭组件成功","关闭组件失败",uid);
-                            break;
-                        case 2:
-                            multiFunc.runAppopsCMD(context,pkgname,pkgcate,0,"关闭权限成功","关闭权限失败",uid);
-                            break;
-                    }
-                }
+                multiFunc.runAppopsBySwtich(b,mode,context,pkgname,pkgcate,uid);
             }
         });
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -92,6 +72,7 @@ public class APPOPSINFOAdapter extends BaseAdapter {
                 checkboxs.set(i,b);
             }
         });
+        checkBox.setChecked(checkboxs.get(i));
         return view;
     }
 }

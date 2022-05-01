@@ -24,6 +24,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Switch;
@@ -53,8 +55,11 @@ public class appopsInfoActivity extends AppCompatActivity {
     private PackageManager pm;
     private PackageInfo packageInfo;
     private ApplicationInfo appInfo;
-    private Button b1,b2,b3,b4,b5,b6;
+    private Button b1,apasearchbt1;
+    private EditText apaet1;
+    private Switch apasb1,apasb2;
     private String pkgname,uid;
+    private Boolean apasb1Bool,apasb2Bool;
     private int mode;
 
     @Override
@@ -114,6 +119,24 @@ public class appopsInfoActivity extends AppCompatActivity {
                 ;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private  void checkMode(){
+        switch (mode){
+            case 0:
+                getPKGActivitys(packageInfo);
+                break;
+            case 1:
+                getPKGServices(pm,appInfo);
+
+                break;
+            case 2:
+                getPKGPermission(packageInfo);
+
+                break;
+
+
+        }
     }
 
     private void clearList(){
@@ -200,74 +223,84 @@ public class appopsInfoActivity extends AppCompatActivity {
 
     private void initButton(){
         b1 = findViewById(R.id.apabt1);
-        b2 = findViewById(R.id.apabt2);
-        b3 = findViewById(R.id.apabt3);
-        b4 = findViewById(R.id.apabt4);
-        b5 = findViewById(R.id.apabt5);
-        b6 = findViewById(R.id.apabt6);
+        apasearchbt1 = findViewById(R.id.apasearchbt1);
+        apaet1 =findViewById(R.id.apaet1);
+        apasb1 =findViewById(R.id.apasb1);
+        apasb2 =findViewById(R.id.apasb2);
+        apasb1Bool =true;
+        apasb2Bool =false;
+        apasb1.setChecked(apasb1Bool);
+        apasb2.setChecked(apasb2Bool);
         clickButton();
     }
 
-    private void clickFun(int ss, String msg ,String msg2){
-        for (int i = 0; i < checkboxs.size(); i++) {
-            if(checkboxs.get(i)){
-                String pkgcate = list.get(i);
-                multiFunc.runAppopsCMD(appopsInfoActivity.this,pkgname,pkgcate,ss,msg,msg2,uid);
-            }
-        }
-    }
-
     private void clickButton(){
+
+        apasb1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                apasb1Bool=b;
+                apasb2Bool=!b;
+                apasb2.setChecked(apasb2Bool);
+            }
+        });
+        apasb2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                apasb1Bool=!b;
+                apasb2Bool=b;
+                apasb1.setChecked(apasb1Bool);
+            }
+        });
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                clickFun(0,"撤销权限成功","撤销权限失败");
-                getPKGPermission(packageInfo);
+                //应用更改
+//                clickFun(0,"撤销权限成功","撤销权限失败");
+                if(apasb1Bool){
+                    for (int i = 0; i < checkboxs.size(); i++) {
+                        if(checkboxs.get(i)){
+                            multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                        }
+                    }
+                }
+
+                if(apasb2Bool){
+                    for (int i = 0; i < checkboxs.size(); i++) {
+                        if(!checkboxs.get(i)){
+                            multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                        }
+                    }
+                }
+
+                checkMode();
                 showListView(lv1);
             }
         });
 
-        b2.setOnClickListener(new View.OnClickListener() {
+        apasearchbt1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                clickFun(1,"关闭服务成功","关闭服务失败");
-                getPKGServices(pm,appInfo);
+                String searchStr = apaet1.getText().toString();
+                ArrayList<String> strings = new ArrayList<>();
+                ArrayList<Boolean> switbs2 = new ArrayList<>();
+                if(list.size() <1 || searchStr.isEmpty()){
+                    checkMode();
+                }
+                checkboxs.clear();
+                for (int i = 0; i < list.size(); i++) {
+                    String s=list.get(i);
+                    if(s.indexOf(searchStr) != -1){
+                        strings.add(s);
+                        switbs2.add(switbs.get(i));
+                        checkboxs.add(false);
+                    }
+                }
+                list=strings;
+                switbs=switbs2;
                 showListView(lv1);
             }
         });
-        b3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                clickFun(2,"关闭活动成功","关闭活动失败");
-                getPKGActivitys(packageInfo);
-                showListView(lv1);
-            }
-        });
-        b4.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                clickFun(3,"授权成功","授权失败");
-                getPKGPermission(packageInfo);
-                showListView(lv1);
-            }
-        });
-        b5.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                clickFun(4,"开启服务成功","开启服务失败");
-                getPKGServices(pm,appInfo);
-                showListView(lv1);
-            }
-        });
-        b6.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                clickFun(5,"开启活动项成功","开启活动项失败");
-                getPKGActivitys(packageInfo);
-                showListView(lv1);
-            }
-        });
-
 
     }
 

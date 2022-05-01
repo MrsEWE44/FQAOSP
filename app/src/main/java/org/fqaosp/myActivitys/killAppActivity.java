@@ -1,11 +1,15 @@
 package org.fqaosp.myActivitys;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -29,6 +33,10 @@ public class killAppActivity extends AppCompatActivity {
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private ListView lv1;
+    private EditText kaaet1;
+    private Button b1 ,kaasearchb;
+    private Switch kaasb1,kaasb2,kaasb3;
+    private Boolean kaasb1Bool,kaasb2Bool,kaasb3Bool;
     private killAppDB killAppdb = new killAppDB(killAppActivity.this, "killApp.db", null, 1);
 
     @Override
@@ -37,12 +45,66 @@ public class killAppActivity extends AppCompatActivity {
         setContentView(R.layout.kill_app_activity);
         fuckActivity.getIns().add(this);
         setTitle("后台管理");
-        Button b1 = findViewById(R.id.kaab1);
-        Button b2 = findViewById(R.id.kaab2);
-        Button b3 = findViewById(R.id.kaab3);
-        lv1 = findViewById(R.id.kaalv1);
+        initBt();
         getRunning(1);
         showPKGS(lv1);
+    }
+
+    private void initBt(){
+        b1 = findViewById(R.id.kaab1);
+        kaasearchb = findViewById(R.id.kaasearchb);
+        kaaet1 = findViewById(R.id.kaaet1);
+        kaasb1 =findViewById(R.id.kaasb1);
+        kaasb2 =findViewById(R.id.kaasb2);
+        kaasb3 =findViewById(R.id.kaasb3);
+        lv1 = findViewById(R.id.kaalv1);
+        kaasb1Bool=false;
+        kaasb2Bool=false;
+        kaasb3Bool=false;
+        kaasb1.setChecked(kaasb1Bool);
+        kaasb2.setChecked(kaasb2Bool);
+        kaasb3.setChecked(kaasb3Bool);
+        btClick();
+    }
+
+    private void btClick(){
+
+        kaasb1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                kaasb1Bool=b;
+                kaasb2Bool=false;
+                kaasb3Bool=false;
+                kaasb1.setChecked(kaasb1Bool);
+                kaasb2.setChecked(kaasb2Bool);
+                kaasb3.setChecked(kaasb3Bool);
+            }
+        });
+
+        kaasb2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                kaasb1Bool=false;
+                kaasb2Bool=b;
+                kaasb3Bool=false;
+                kaasb1.setChecked(kaasb1Bool);
+                kaasb2.setChecked(kaasb2Bool);
+                kaasb3.setChecked(kaasb3Bool);
+            }
+        });
+
+        kaasb3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                kaasb1Bool=false;
+                kaasb2Bool=false;
+                kaasb3Bool=b;
+                kaasb1.setChecked(kaasb1Bool);
+                kaasb2.setChecked(kaasb2Bool);
+                kaasb3.setChecked(kaasb3Bool);
+            }
+        });
+
 
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -50,42 +112,50 @@ public class killAppActivity extends AppCompatActivity {
                 view.post(new Runnable() {
                     @Override
                     public void run() {
-                        if(killAppdb.count() == 0){
+
+                        if(kaasb3Bool){
+                            for (int i = 0; i < checkboxs.size(); i++) {
+                                if(!checkboxs.get(i)){
+                                    PKGINFO pkginfo = pkginfos.get(i);
+                                    if(!pkginfo.getPkgname().equals(getPackageName())){
+                                        stopApp(pkginfo.getPkgname());
+                                    }
+                                }
+                            }
+                        }
+
+                        if(kaasb2Bool){
+                            for (int i = 0; i < checkboxs.size(); i++) {
+                                if(checkboxs.get(i)){
+                                    PKGINFO pkginfo = pkginfos.get(i);
+                                    if(!pkginfo.getPkgname().equals(getPackageName())){
+                                        stopApp(pkginfo.getPkgname());
+                                    }
+                                }
+                            }
+                        }
+
+                        if(kaasb1Bool){
                             for (PKGINFO pkginfo : pkginfos) {
                                 if(!pkginfo.getPkgname().equals(getPackageName())){
                                     //调用命令终止后台程序
                                     stopApp(pkginfo.getPkgname());
                                 }
                             }
-                        }else{
-                            HashMap<String, Integer> select = killAppdb.select(null, 0);
-                            for (Map.Entry<String, Integer> entry : select.entrySet()) {
-                                stopApp(entry.getKey());
-                            }
                         }
 
-                        Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
-                        getRunning(1);
-                        showPKGS(lv1);
-                    }
-                });
-            }
-        });
-
-        b2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (int i = 0; i < checkboxs.size(); i++) {
-                            if(checkboxs.get(i)){
-                                PKGINFO pkginfo = pkginfos.get(i);
-                                if(!pkginfo.getPkgname().equals(getPackageName())){
-                                    stopApp(pkginfo.getPkgname());
-                                    if(killAppdb.select(pkginfo.getPkgname(),0).size() == 0){
-                                        killAppdb.insert(pkginfo.getPkgname(),0);
+                        if(kaasb1Bool==false && kaasb2Bool ==false && kaasb3Bool ==false){
+                            if(killAppdb.count() == 0){
+                                for (PKGINFO pkginfo : pkginfos) {
+                                    if(!pkginfo.getPkgname().equals(getPackageName())){
+                                        //调用命令终止后台程序
+                                        stopApp(pkginfo.getPkgname());
                                     }
+                                }
+                            }else{
+                                HashMap<String, Integer> select = killAppdb.select(null, 0);
+                                for (Map.Entry<String, Integer> entry : select.entrySet()) {
+                                    stopApp(entry.getKey());
                                 }
                             }
                         }
@@ -97,36 +167,24 @@ public class killAppActivity extends AppCompatActivity {
             }
         });
 
-        b3.setOnClickListener(new View.OnClickListener() {
+        kaasearchb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (int i = 0; i < checkboxs.size(); i++) {
-                            if(!checkboxs.get(i)){
-                                PKGINFO pkginfo = pkginfos.get(i);
-                                if(!pkginfo.getPkgname().equals(getPackageName())){
-                                    stopApp(pkginfo.getPkgname());
-                                    if(killAppdb.select(pkginfo.getPkgname(),0).size() == 0){
-                                        killAppdb.insert(pkginfo.getPkgname(),0);
-                                    }
-                                }
-                            }
-                        }
-                        Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
-                        getRunning(1);
-                        showPKGS(lv1);
-                    }
-                });
+                String searchStr = kaaet1.getText().toString();
+                pkginfos = multiFunc.indexOfPKGS(killAppActivity.this,searchStr,pkginfos,checkboxs,0);
+                showPKGS(lv1);
             }
         });
     }
 
+
     private void stopApp(String pkgname){
         CMD cmd = new CMD("am force-stop "+pkgname);
         if(cmd.getResultCode() == 0){
-            Toast.makeText(killAppActivity.this, "已终止 "+pkgname, Toast.LENGTH_SHORT).show();
+            if(killAppdb.select(pkgname,0).size() == 0){
+                killAppdb.insert(pkgname,0);
+            }
+            Log.d("killAppActivity","已终止 "+pkgname);
         }
     }
 
@@ -145,7 +203,6 @@ public class killAppActivity extends AppCompatActivity {
         PKGINFOAdapter pkginfoAdapter = new PKGINFOAdapter(pkginfos, killAppActivity.this, checkboxs);
         listView.setAdapter(pkginfoAdapter);
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
