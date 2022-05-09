@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -37,57 +38,44 @@ public class killApp extends AppWidgetProvider {
 
     @Override
     public void onRestored(Context context, int[] oldWidgetIds, int[] newWidgetIds) {
+        Log.d("fff ","onRestored");
         super.onRestored(context, oldWidgetIds, newWidgetIds);
     }
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         // There may be multiple widgets active, so update all of them
+        Log.d("fff ","onUpdate");
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
+
     }
 
     @Override
     public void onDeleted(Context context, int[] appWidgetIds) {
+        Log.d("fff ","onDeleted");
         super.onDeleted(context, appWidgetIds);
     }
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        ArrayList<PKGINFO> pkginfos = new ArrayList<>();
-        PackageManager packageManager = context.getPackageManager();
-        List<PackageInfo> installedPackages = packageManager.getInstalledPackages(0);
-        for (PackageInfo packageInfo : installedPackages) {
-            ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-            if(((ApplicationInfo.FLAG_SYSTEM & applicationInfo.flags) == 0)
-                    && ((ApplicationInfo.FLAG_UPDATED_SYSTEM_APP & applicationInfo.flags) == 0)
-                    && ((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)){
-                pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid+"",applicationInfo.loadIcon(packageManager))) ;
-            }
-        }
-        for (PKGINFO pkginfo : pkginfos) {
-            String pkgname = pkginfo.getPkgname();
-            if(!pkgname.equals(context.getPackageName()) & !pkgname.equals("com.teslacoilsw.launcher")){
-                //调用命令终止后台程序
-                CMD cmd = new CMD("am force-stop "+pkgname);
-                if(cmd.getResultCode() == 0){
-                    Toast.makeText(context, "已终止 "+pkginfo.getAppname(), Toast.LENGTH_SHORT).show();
-                }
-            }
-        }
+        Log.d("fff ","receive");
     }
 
     @Override
     public void onEnabled(Context context) {
         // Enter relevant functionality for when the first widget is created
+        Log.d("fff ","onEnabled");
         super.onEnabled(context);
     }
+
 
     @Override
     public void onDisabled(Context context) {
         // Enter relevant functionality for when the last widget is disabled
+        Log.d("fff ","onDisabled");
         super.onDisabled(context);
     }
 }

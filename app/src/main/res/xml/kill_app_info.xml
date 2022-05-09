@@ -5,7 +5,7 @@
     android:initialLayout="@layout/kill_app"
     android:minWidth="10dp"
     android:minHeight="10dp"
-    android:previewImage="@drawable/example_appwidget_preview"
+    android:previewImage="@drawable/killappico"
     android:previewLayout="@layout/kill_app"
     android:resizeMode="horizontal|vertical"
     android:targetCellWidth="1"

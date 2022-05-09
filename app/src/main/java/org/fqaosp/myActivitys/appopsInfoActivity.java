@@ -18,8 +18,6 @@ import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Process;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,12 +36,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.APPOPSINFOAdapter;
-import org.fqaosp.adapter.USERAdapter;
-import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class appopsInfoActivity extends AppCompatActivity {
 
@@ -83,7 +80,6 @@ public class appopsInfoActivity extends AppCompatActivity {
             iv1.setImageDrawable(appInfo.loadIcon(pm));
             tv1.setText(appInfo.packageName);
             tv2.setText(appInfo.loadLabel(pm));
-
         } catch (PackageManager.NameNotFoundException e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -134,8 +130,6 @@ public class appopsInfoActivity extends AppCompatActivity {
                 getPKGPermission(packageInfo);
 
                 break;
-
-
         }
     }
 
@@ -201,7 +195,8 @@ public class appopsInfoActivity extends AppCompatActivity {
         PackageInfo archiveInfo = pm.getPackageArchiveInfo(appinfo.sourceDir, PackageManager.GET_SERVICES);
         if(archiveInfo.services != null){
             for (ServiceInfo service : archiveInfo.services) {
-                int enabledSetting = pm.getComponentEnabledSetting(new ComponentName(packageInfo.packageName, service.name));
+                ComponentName componentName = new ComponentName(packageInfo.packageName, service.name);
+                int enabledSetting = pm.getComponentEnabledSetting(componentName);
                 if(enabledSetting == PackageManager.COMPONENT_ENABLED_STATE_DISABLED){
                     switbs.add(false);
                 }else{
@@ -209,11 +204,11 @@ public class appopsInfoActivity extends AppCompatActivity {
                 }
                 list.add(service.name);
                 checkboxs.add(false);
+
             }
         }else{
             Toast.makeText(this, appinfo.loadLabel(pm) + " 没有找到服务哦!", Toast.LENGTH_SHORT).show();
         }
-
     }
 
     private void showListView(ListView listView){
@@ -258,19 +253,29 @@ public class appopsInfoActivity extends AppCompatActivity {
                 //应用更改
 //                clickFun(0,"撤销权限成功","撤销权限失败");
                 if(apasb1Bool){
-                    for (int i = 0; i < checkboxs.size(); i++) {
-                        if(checkboxs.get(i)){
-                            multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                    view.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            for (int i = 0; i < checkboxs.size(); i++) {
+                                if(checkboxs.get(i)){
+                                    multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                                }
+                            }
                         }
-                    }
+                    });
                 }
 
                 if(apasb2Bool){
-                    for (int i = 0; i < checkboxs.size(); i++) {
-                        if(!checkboxs.get(i)){
-                            multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                    view.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            for (int i = 0; i < checkboxs.size(); i++) {
+                                if(!checkboxs.get(i)){
+                                    multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                                }
+                            }
                         }
-                    }
+                    });
                 }
 
                 checkMode();
@@ -281,28 +286,32 @@ public class appopsInfoActivity extends AppCompatActivity {
         apasearchbt1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String searchStr = apaet1.getText().toString();
-                ArrayList<String> strings = new ArrayList<>();
-                ArrayList<Boolean> switbs2 = new ArrayList<>();
-                if(list.size() <1 || searchStr.isEmpty()){
-                    checkMode();
-                }
-                checkboxs.clear();
-                for (int i = 0; i < list.size(); i++) {
-                    String s=list.get(i);
-                    if(s.indexOf(searchStr) != -1){
-                        strings.add(s);
-                        switbs2.add(switbs.get(i));
-                        checkboxs.add(false);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        String searchStr = apaet1.getText().toString();
+                        ArrayList<String> strings = new ArrayList<>();
+                        ArrayList<Boolean> switbs2 = new ArrayList<>();
+                        if(list.size() <1 || searchStr.isEmpty()){
+                            checkMode();
+                        }
+                        checkboxs.clear();
+                        for (int i = 0; i < list.size(); i++) {
+                            String s=list.get(i);
+                            if(s.toLowerCase(Locale.ROOT).indexOf(searchStr.toLowerCase(Locale.ROOT)) != -1){
+                                strings.add(s);
+                                switbs2.add(switbs.get(i));
+                                checkboxs.add(false);
+                            }
+                        }
+                        list=strings;
+                        switbs=switbs2;
+                        showListView(lv1);
                     }
-                }
-                list=strings;
-                switbs=switbs2;
-                showListView(lv1);
+                });
             }
         });
 
     }
-
 
 }

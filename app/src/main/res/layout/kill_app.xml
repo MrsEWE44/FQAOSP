@@ -8,12 +8,10 @@
         android:id="@+id/appwidget_text"
         style="@style/Widget.FQAOSP.AppWidget.InnerView"
         android:layout_width="100dp"
-        android:layout_height="50dp"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        android:layout_margin="8dp"
+        android:layout_height="70dp"
+        android:layout_centerInParent="true"
         android:contentDescription="@string/appwidget_text"
         android:text="@string/appwidget_text"
-        android:textSize="24sp"
+        android:textSize="20dp"
         android:textStyle="bold|italic" />
 </RelativeLayout>

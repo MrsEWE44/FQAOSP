@@ -32,9 +32,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.TreeSet;
+import java.util.Locale;
 
 /**
  * 通用功能函数集合
@@ -194,7 +193,7 @@ public class multiFunc {
         checkboxs.clear();
         ArrayList<PKGINFO> pkginfos2 = new ArrayList<>();
         for (PKGINFO pkginfo : pkginfos) {
-            if(pkginfo.getAppname().indexOf(findStr) != -1){
+            if(pkginfo.getAppname().toLowerCase(Locale.ROOT).indexOf(findStr.toLowerCase(Locale.ROOT)) != -1){
                 pkginfos2.add(pkginfo);
                 checkboxs.add(false);
             }
@@ -348,6 +347,9 @@ public class multiFunc {
     //调用命令对选项进行相应授权、撤销操作
     public static void runAppopsCMD(Context context,String pkgname,String pkgcate , int ss , String msg , String msg2,String uid){
         String cmdstr = "";
+        if(pkgcate.indexOf("$") != -1){
+            pkgcate = pkgcate.replaceAll("\\$","\\\\\\$");
+        }
         switch (ss){
             case 0:
                 if(uid == null){
@@ -359,9 +361,9 @@ public class multiFunc {
             case 1:
             case 2:
                 if(uid == null){
-                    cmdstr="pm disable " +pkgname+"/"+ pkgcate;
+                    cmdstr="pm disable \"" +pkgname+"/"+ pkgcate+"\"";
                 }else{
-                    cmdstr="pm disable --user "+uid+" " +pkgname+"/"+ pkgcate;
+                    cmdstr="pm disable --user \""+uid+" " +pkgname+"/"+ pkgcate+"\"";
                 }
 
                 break;
