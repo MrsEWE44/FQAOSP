@@ -204,14 +204,37 @@ public class appopsInfoActivity extends AppCompatActivity {
                 }
                 list.add(service.name);
                 checkboxs.add(false);
-
             }
         }else{
             Toast.makeText(this, appinfo.loadLabel(pm) + " 没有找到服务哦!", Toast.LENGTH_SHORT).show();
         }
     }
 
+    private void sort(){
+        ArrayList<String> list2 = new ArrayList<>();
+        ArrayList<String> list3 = new ArrayList<>();
+        for (int i = 0; i < switbs.size(); i++) {
+            if(switbs.get(i)){
+                list2.add(list.get(i));
+            }else{
+                list3.add(list.get(i));
+            }
+        }
+        list.clear();
+        switbs.clear();
+        for (int i = 0; i < list3.size(); i++) {
+            list.add(list3.get(i));
+            switbs.add(false);
+        }
+        for (int i = 0; i < list2.size(); i++) {
+            list.add(list2.get(i));
+            switbs.add(true);
+        }
+
+    }
+
     private void showListView(ListView listView){
+        sort();
         APPOPSINFOAdapter adapter = new APPOPSINFOAdapter(list, appopsInfoActivity.this, checkboxs, switbs,appInfo.packageName,mode,uid);
         listView.setAdapter(adapter);
     }
