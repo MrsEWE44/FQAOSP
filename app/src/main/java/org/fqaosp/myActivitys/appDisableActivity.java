@@ -4,6 +4,7 @@ import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 
 import android.app.AlertDialog;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
@@ -11,6 +12,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -141,6 +143,18 @@ public class appDisableActivity extends AppCompatActivity {
                 });
             }
         });
+
+        ada_disablelv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                PKGINFO pkginfo = pkginfos.get(i);
+                ClipboardManager cpm = (ClipboardManager) appDisableActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
+                cpm.setText(pkginfo.toString());
+                Toast.makeText(appDisableActivity.this, "已复制", Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        });
+
     }
 
     private void buttoninit(){

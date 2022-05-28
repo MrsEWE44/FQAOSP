@@ -321,7 +321,7 @@ public class appopsInfoActivity extends AppCompatActivity {
                         checkboxs.clear();
                         for (int i = 0; i < list.size(); i++) {
                             String s=list.get(i);
-                            if(s.toLowerCase(Locale.ROOT).indexOf(searchStr.toLowerCase(Locale.ROOT)) != -1){
+                            if(multiFunc.isIndexOfStr(s,searchStr)){
                                 strings.add(s);
                                 switbs2.add(switbs.get(i));
                                 checkboxs.add(false);

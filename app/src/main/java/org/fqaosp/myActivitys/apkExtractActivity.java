@@ -1,12 +1,16 @@
 package org.fqaosp.myActivitys;
 
 import android.Manifest;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -78,6 +82,17 @@ public class apkExtractActivity extends AppCompatActivity {
                 String searchStr = aeaet1.getText().toString();
                 pkginfos = multiFunc.indexOfPKGS(apkExtractActivity.this,searchStr,pkginfos,checkboxs,0);
                 showPKGS(listView1);
+            }
+        });
+
+        listView1.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                PKGINFO pkginfo = pkginfos.get(i);
+                ClipboardManager cpm = (ClipboardManager) apkExtractActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
+                cpm.setText(pkginfo.toString());
+                Toast.makeText(apkExtractActivity.this, "已复制", Toast.LENGTH_SHORT).show();
+                return false;
             }
         });
 

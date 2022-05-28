@@ -188,12 +188,16 @@ public class multiFunc {
         return indexOfPKGS(pkginfos,checkboxs,findStr);
     }
 
+    public static Boolean isIndexOfStr(String str,String instr){
+        return str.toLowerCase(Locale.ROOT).indexOf(instr.toLowerCase(Locale.ROOT)) != -1;
+    }
+
     //搜索列表匹配项
     public static ArrayList<PKGINFO> indexOfPKGS(ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,String findStr){
         checkboxs.clear();
         ArrayList<PKGINFO> pkginfos2 = new ArrayList<>();
         for (PKGINFO pkginfo : pkginfos) {
-            if(pkginfo.getAppname().toLowerCase(Locale.ROOT).indexOf(findStr.toLowerCase(Locale.ROOT)) != -1){
+            if(isIndexOfStr(pkginfo.getAppname(),findStr) || isIndexOfStr(pkginfo.getPkgname(),findStr)){
                 pkginfos2.add(pkginfo);
                 checkboxs.add(false);
             }

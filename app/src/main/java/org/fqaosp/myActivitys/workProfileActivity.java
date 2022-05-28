@@ -5,6 +5,8 @@ import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.queryUSERS;
 
 import android.app.AlertDialog;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Looper;
@@ -12,6 +14,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -171,6 +174,17 @@ public class workProfileActivity extends AppCompatActivity {
                 String searchStr = editText2.getText().toString();
                 pkginfos = multiFunc.indexOfPKGS(workProfileActivity.this,searchStr,pkginfos,checkboxs,0);
                 showPKGS(listView1);
+            }
+        });
+
+        listView1.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                PKGINFO pkginfo = pkginfos.get(i);
+                ClipboardManager cpm = (ClipboardManager) workProfileActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
+                cpm.setText(pkginfo.toString());
+                Toast.makeText(workProfileActivity.this, "已复制", Toast.LENGTH_SHORT).show();
+                return false;
             }
         });
     }

@@ -49,7 +49,9 @@ public class PKGINFOAdapter extends BaseAdapter {
         ImageView imageView = convertView.findViewById(R.id.lviaiv1);
         CheckBox checkBox=convertView.findViewById(R.id.lviacb1);
         TextView text = convertView.findViewById(R.id.lviatv1);
+        TextView text2 = convertView.findViewById(R.id.lviatv2);
         text.setText(pkginfos.get(position).getAppname());
+        text2.setText(pkginfos.get(position).getPkgname());
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
