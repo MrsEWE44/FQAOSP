@@ -20,10 +20,13 @@ import android.widget.Toast;
 
 import org.fqaosp.entity.PKGINFO;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -46,6 +49,7 @@ public class multiFunc {
     public final static Integer QUERY_ALL_USER_PKG=3;
     public final static Integer QUERY_ALL_DISABLE_PKG=1;
     public final static Integer QUERY_ALL_DEFAULT_PKG=4;
+    private static String TAG="multiFunc";
 
     //页面布局跳转
     public static void jump(Context srcA , Class<?> cls){
@@ -482,6 +486,38 @@ public class multiFunc {
         queryRunningPKGSCore(installedPackages,pkginfos,checkboxs,packageManager,true);
     }
 
+    //读取文件
+    public static String readFileToPath(String filePath){
+        StringBuilder stringBuilder = new StringBuilder();
+        try {
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath));
+            String line =null;
+            while((line=bufferedReader.readLine()) != null){
+                stringBuilder.append(line+"\n");
+            }
+            bufferedReader.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return stringBuilder.toString();
+    }
 
+    //读取文件
+    public static Boolean writeDataToPath(String data, String filePath, Boolean isApp){
+        try {
+            FileWriter writer =null;
+            if(isApp){
+                writer = new FileWriter(filePath,true);
+            }else{
+                writer = new FileWriter(filePath);
+            }
+            writer.write(data,0,data.length());
+            writer.close();
+            return true;
+        } catch (IOException e) {
+            Log.e(TAG,e.getMessage());
+        }
+        return false;
+    }
 
 }

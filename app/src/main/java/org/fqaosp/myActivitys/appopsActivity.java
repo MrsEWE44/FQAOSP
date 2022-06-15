@@ -24,6 +24,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -53,6 +54,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -69,6 +71,7 @@ public class appopsActivity extends AppCompatActivity {
     private iptablesManage ipMange = new iptablesManage();
     private boolean switch_mode_tmp,switch_mode_autostart,switch_mode_all;
     private String magiskDir="/data/adb/post-fs-data.d";
+    private int nowItemIndex=-1;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -198,18 +201,86 @@ public class appopsActivity extends AppCompatActivity {
         lv1.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                if(uid != null){
-                    PKGINFO pkginfo = pkginfos.get(i);
-                    Intent intent2 = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                    intent2.setData(Uri.parse("package:" + pkginfo.getPkgname()));
-                    startActivity(intent2);
-                }
+                nowItemIndex=i;
+                createLVMenu();
                 return false;
             }
         });
     }
 
+    //跳转到系统自带的应用详情界面
+    private void intoSYSApp(int i){
+        PKGINFO pkginfo = pkginfos.get(i);
+        Intent intent2 = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent2.setData(Uri.parse("package:" + pkginfo.getPkgname()));
+        startActivity(intent2);
+    }
 
+    //长按listview中的元素，显示一个菜单选项
+    private void createLVMenu(){
+        lv1.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+            @Override
+            public void onCreateContextMenu(ContextMenu contextMenu, View view, ContextMenu.ContextMenuInfo contextMenuInfo) {
+                contextMenu.add(0,0,0,"跳转至应用详情");
+                contextMenu.add(0,1,0,"导出所有勾选应用");
+                contextMenu.add(0,2,0,"导出并附加所有勾选应用");
+            }
+        });
+
+    }
+
+    //到处包名列表到本地
+    private  void extractPKGList(Boolean isApp){
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < checkboxs.size(); i++) {
+            if(checkboxs.get(i)){
+                PKGINFO pkginfo = pkginfos.get(i);
+                sb.append(pkginfo.getPkgname()+"\n");
+            }
+        }
+        String myStorageHomePath = multiFunc.getMyStorageHomePath(this)+"/files/pkgs";
+        String outFile = myStorageHomePath+"/pkglist.txt";
+        File file = new File(myStorageHomePath);
+        File file2 = new File(outFile);
+        if(!file.exists()){
+            //创建/sdcard/Android/data/包名/cache文件夹,可以不需要申请存储权限实现
+            this.getExternalCacheDir().mkdirs();
+            boolean mkdirs = file.mkdirs();
+            Log.d("con",file + " is no exists -- " + mkdirs);
+        }
+        if(file.exists()){
+            if(file2.exists() && isApp == false){
+                file2.delete();
+            }
+            try {
+                file2.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if(multiFunc.writeDataToPath(sb.toString(),outFile,isApp)){
+                Toast.makeText(this, "保存在: " + outFile, Toast.LENGTH_SHORT).show();
+            }else{
+                Toast.makeText(this, "失败", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    public boolean onContextItemSelected(@NonNull MenuItem item) {
+        switch(item.getItemId()){
+            case 0:
+                intoSYSApp(nowItemIndex);
+                break;
+            case 1:
+                extractPKGList(false);
+                break;
+            case 2:
+                extractPKGList(true);
+                break;
+
+        }
+        return super.onContextItemSelected(item);
+    }
 
     private void getUserEnablePKGS(){
         multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
