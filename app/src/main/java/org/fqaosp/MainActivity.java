@@ -2,33 +2,15 @@ package org.fqaosp;
 
 import static org.fqaosp.utils.multiFunc.jump;
 
-import android.Manifest;
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.Settings;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import org.fqaosp.databinding.ApkDecompileMenuActivityBinding;
-import org.fqaosp.databinding.AppDisableActivityBinding;
-import org.fqaosp.databinding.AppopsActivityBinding;
-import org.fqaosp.databinding.SqliteManageActivityBinding;
 import org.fqaosp.myActivitys.apkDecompileMenuActivity;
-import org.fqaosp.myActivitys.apkExtractActivity;
 import org.fqaosp.myActivitys.appDisableActivity;
 import org.fqaosp.myActivitys.appopsActivity;
 import org.fqaosp.myActivitys.imgToolMenuActivity;
@@ -58,7 +40,6 @@ public class MainActivity extends AppCompatActivity {
 
     private  void initBut(){
         Button b1 = findViewById(R.id.mb1);
-        Button b2 = findViewById(R.id.mb2);
         Button b3 = findViewById(R.id.mb3);
         Button b4 = findViewById(R.id.mb4);
         Button b5 = findViewById(R.id.mb5);
@@ -68,7 +49,6 @@ public class MainActivity extends AppCompatActivity {
         Button sqliteb = findViewById(R.id.sqliteb);
 
         jump(b1,this,workProfileMenuActivity.class);
-        jump(b2,this,apkExtractActivity.class);
         jump(b3,this, killAppActivity.class);
         jump(b4,this, mountLocalImageActivity.class);
         jump(b5,this, apkDecompileMenuActivity.class);

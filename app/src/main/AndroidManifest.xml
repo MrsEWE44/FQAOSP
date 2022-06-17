@@ -38,7 +38,6 @@
         <activity android:name=".myActivitys.workProfileActivity" />
         <activity android:name=".myActivitys.workProfileMenuActivity" />
         <activity android:name=".myActivitys.workProfileRemoveActivity" />
-        <activity android:name=".myActivitys.apkExtractActivity" />
         <activity android:name=".myActivitys.killAppActivity" />
         <activity android:name=".myActivitys.mountLocalImageActivity" />
         <activity android:name=".myActivitys.apkDecompileMenuActivity"/>

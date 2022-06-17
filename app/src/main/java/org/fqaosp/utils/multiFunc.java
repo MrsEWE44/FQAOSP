@@ -214,7 +214,6 @@ public class multiFunc {
             checkboxs.add(false);
         }
         pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir,applicationInfo.uid+"", applicationInfo.loadIcon(packageManager))) ;
-
     }
 
     public static void checkBoxsHashMap(HashMap<String,PKGINFO> pkginfos, ArrayList<Boolean> checkboxs, ApplicationInfo applicationInfo, PackageManager packageManager){

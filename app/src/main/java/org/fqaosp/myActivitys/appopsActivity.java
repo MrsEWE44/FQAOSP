@@ -9,11 +9,14 @@ package org.fqaosp.myActivitys;
  * */
 
 import static org.fqaosp.utils.multiFunc.checkBoxs;
+import static org.fqaosp.utils.multiFunc.copyFile;
+import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 
 import android.Manifest;
 import android.app.AlertDialog;
 import android.app.AppOpsManager;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -22,6 +25,8 @@ import android.content.pm.ServiceInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -43,6 +48,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.threads.cmdThread;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.iptablesManage;
@@ -56,6 +62,8 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -72,6 +80,8 @@ public class appopsActivity extends AppCompatActivity {
     private boolean switch_mode_tmp,switch_mode_autostart,switch_mode_all;
     private String magiskDir="/data/adb/post-fs-data.d";
     private int nowItemIndex=-1;
+    private View nowItemView = null;
+    private static final int PKGByUIDCompleted=0;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -94,6 +104,9 @@ public class appopsActivity extends AppCompatActivity {
          * */
         Intent intent = getIntent();
         uid = intent.getStringExtra("uid");
+        if(uid == null){
+            uid=getMyUID();
+        }
         apopsasb1.setChecked(true);
 
         apopsasb1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -202,6 +215,7 @@ public class appopsActivity extends AppCompatActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 nowItemIndex=i;
+                nowItemView=view;
                 createLVMenu();
                 return false;
             }
@@ -221,16 +235,91 @@ public class appopsActivity extends AppCompatActivity {
         lv1.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
             @Override
             public void onCreateContextMenu(ContextMenu contextMenu, View view, ContextMenu.ContextMenuInfo contextMenuInfo) {
-                contextMenu.add(0,0,0,"跳转至应用详情");
-                contextMenu.add(0,1,0,"导出所有勾选应用");
-                contextMenu.add(0,2,0,"导出并附加所有勾选应用");
+                contextMenu.add(0,0,0,"复制信息");
+                contextMenu.add(0,1,0,"跳转至应用详情");
+                contextMenu.add(0,2,0,"导出所有勾选应用包名");
+                contextMenu.add(0,3,0,"导出并附加所有勾选应用包名");
+                contextMenu.add(0,4,0,"提取应用");
+                contextMenu.add(0,5,0,"卸载应用");
             }
         });
 
     }
 
-    //到处包名列表到本地
-    private  void extractPKGList(Boolean isApp){
+    //卸载应用
+    private void uninstallPKG(){
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
+        alertDialog.setTitle("提示");
+        alertDialog.setMessage("正在卸载应用,请稍后(可能会出现无响应，请耐心等待)....");
+        AlertDialog show = alertDialog.show();
+        preventDismissDialog(show);
+        nowItemView.post(new Runnable() {
+            @Override
+            public void run() {
+                makeWP makewp = new makeWP();
+                int hit=0;
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    if(checkboxs.get(i)){
+                        PKGINFO pkginfo = pkginfos.get(i);
+                        CMD cmd = new CMD(makewp.getUninstallPkgByUIDCMD(uid, pkginfo.getPkgname()));
+                        cmd.getResultCode();
+                        hit++;
+                    }
+                }
+                if(hit ==0){
+                    PKGINFO pkginfo = pkginfos.get(nowItemIndex);
+                    CMD cmd = new CMD(makewp.getUninstallPkgByUIDCMD(uid, pkginfo.getPkgname()));
+                    cmd.getResultCode();
+                }
+                multiFunc.dismissDialog(show);
+            }
+        });
+    }
+
+    //提取apk文件
+    private void extractPKGFileToLocal(){
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
+        alertDialog.setTitle("提示");
+        alertDialog.setMessage("正在提取应用,请稍后(可能会出现无响应，请耐心等待)....");
+        AlertDialog show = alertDialog.show();
+        preventDismissDialog(show);
+        File cacheDir = this.getExternalCacheDir();
+        nowItemView.post(new Runnable() {
+            @Override
+            public void run() {
+                String myStorageHomePath = cacheDir.toString()+"/apks";
+                File file = new File(myStorageHomePath);
+                if(!file.exists()){
+                    //创建/sdcard/Android/data/包名/cache文件夹,可以不需要申请存储权限实现
+                    cacheDir.mkdirs();
+                    boolean mkdirs = file.mkdirs();
+                }
+                int hit=0;
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    if(checkboxs.get(i)){
+                        PKGINFO pkginfo = pkginfos.get(i);
+                        String apkpath = pkginfo.getApkpath();
+                        String outpath = myStorageHomePath+"/"+pkginfo.getPkgname()+".apk";
+                        copyFile(apkpath,outpath);
+                        hit++;
+                    }
+                }
+                if(hit == 0){
+                    PKGINFO pkginfo = pkginfos.get(nowItemIndex);
+                    String apkpath = pkginfo.getApkpath();
+                    String outpath = myStorageHomePath+"/"+pkginfo.getPkgname()+".apk";
+                    copyFile(apkpath,outpath);
+                }
+
+                multiFunc.dismissDialog(show);
+                Toast.makeText(appopsActivity.this, "文件保存在: "+myStorageHomePath, Toast.LENGTH_SHORT).show();
+            }
+        });
+
+    }
+
+    //导出包名列表到本地
+    private void extractPKGList(Boolean isApp){
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < checkboxs.size(); i++) {
             if(checkboxs.get(i)){
@@ -238,15 +327,15 @@ public class appopsActivity extends AppCompatActivity {
                 sb.append(pkginfo.getPkgname()+"\n");
             }
         }
-        String myStorageHomePath = multiFunc.getMyStorageHomePath(this)+"/files/pkgs";
+        File cacheDir = this.getExternalCacheDir();
+        String myStorageHomePath = cacheDir.toString()+"/pkgs";
         String outFile = myStorageHomePath+"/pkglist.txt";
         File file = new File(myStorageHomePath);
         File file2 = new File(outFile);
         if(!file.exists()){
             //创建/sdcard/Android/data/包名/cache文件夹,可以不需要申请存储权限实现
-            this.getExternalCacheDir().mkdirs();
+            cacheDir.mkdirs();
             boolean mkdirs = file.mkdirs();
-            Log.d("con",file + " is no exists -- " + mkdirs);
         }
         if(file.exists()){
             if(file2.exists() && isApp == false){
@@ -269,14 +358,27 @@ public class appopsActivity extends AppCompatActivity {
     public boolean onContextItemSelected(@NonNull MenuItem item) {
         switch(item.getItemId()){
             case 0:
-                intoSYSApp(nowItemIndex);
+                PKGINFO pkginfo = pkginfos.get(nowItemIndex);
+                ClipboardManager cpm = (ClipboardManager) appopsActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
+                cpm.setText(pkginfo.toString());
+                Toast.makeText(appopsActivity.this, "已复制", Toast.LENGTH_SHORT).show();
                 break;
             case 1:
-                extractPKGList(false);
+                intoSYSApp(nowItemIndex);
                 break;
             case 2:
+                extractPKGList(false);
+                break;
+            case 3:
                 extractPKGList(true);
                 break;
+            case 4:
+                extractPKGFileToLocal();
+                break;
+            case 5:
+                uninstallPKG();
+                break;
+
 
         }
         return super.onContextItemSelected(item);
@@ -384,17 +486,25 @@ public class appopsActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-
     private void getPKGByUID(String cmdstr){
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
         alertDialog.setTitle("提示");
         alertDialog.setMessage("正在检索用户 "+uid+" 下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
         AlertDialog show = alertDialog.show();
         preventDismissDialog(show);
-        ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
-        runOnUiThread(new Runnable() {
+        Handler handler = new Handler(){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if(msg.what==PKGByUIDCompleted){
+                    showPKGS(lv1);
+                    multiFunc.dismissDialog(show);
+                }
+            }
+        };
+        new Thread(new Runnable() {
             @Override
             public void run() {
+                ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
                 pkginfos.clear();
                 checkboxs.clear();
                 CMD cmd = new CMD(cmdstr);
@@ -418,8 +528,15 @@ public class appopsActivity extends AppCompatActivity {
                     cacheThreadPool.shutdown();
                     while(true){
                         if(cacheThreadPool.isTerminated()){
-                            showPKGS(lv1);
-                            multiFunc.dismissDialog(show);
+                            Collections.sort(pkginfos, new Comparator<PKGINFO>() {
+                                @Override
+                                public int compare(PKGINFO pkginfo, PKGINFO t1) {
+                                    return pkginfo.getAppname().compareTo(t1.getAppname());
+                                }
+                            });
+                            Message msg = new Message();
+                            msg.what=PKGByUIDCompleted;
+                            handler.sendMessage(msg);
                             break;
                         }
                         try {
@@ -430,7 +547,7 @@ public class appopsActivity extends AppCompatActivity {
                     }
                 }
             }
-        });
+        }).start();
 
     }
 
@@ -440,7 +557,7 @@ public class appopsActivity extends AppCompatActivity {
         makeWP wp = new makeWP();
         switch (itemId){
             case 0:
-                if(uid == null){
+                if(uid == null || uid.equals(getMyUID())){
                     getEnablePKGS();
                     showPKGS(lv1);
                 }else{
@@ -448,7 +565,7 @@ public class appopsActivity extends AppCompatActivity {
                 }
                 break;
             case 1:
-                if(uid == null){
+                if(uid == null || uid.equals(getMyUID())){
                     getPKGS();
                     showPKGS(lv1);
                 }else{
@@ -457,7 +574,7 @@ public class appopsActivity extends AppCompatActivity {
 
                 break;
             case 2:
-                if(uid == null){
+                if(uid == null|| uid.equals(getMyUID())){
                     getUserPKGS();
                     showPKGS(lv1);
                 }else{
@@ -466,7 +583,7 @@ public class appopsActivity extends AppCompatActivity {
 
                 break;
             case 3:
-                if(uid == null){
+                if(uid == null|| uid.equals(getMyUID())){
                     getUserEnablePKGS();
                     showPKGS(lv1);
                 }else{

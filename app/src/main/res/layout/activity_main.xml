@@ -30,13 +30,6 @@
              android:layout_weight="1"
              android:orientation="horizontal">
 
-             <Button
-                 android:layout_width="fill_parent"
-                 android:layout_weight="1"
-                 android:layout_height="match_parent"
-                 android:text="apk提取"
-                 android:id="@+id/mb2"
-                 ></Button>
 
              <LinearLayout
                  android:layout_width="fill_parent"

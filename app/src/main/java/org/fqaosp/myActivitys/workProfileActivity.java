@@ -93,7 +93,6 @@ public class workProfileActivity extends AppCompatActivity {
                         Integer num = Integer.valueOf(editText1.getText().toString());
                         checkUser(makewp);
                         if(num<makewp.getInitsize() && num > 0){
-
                             if(makewp.init()){
                                 for(int j=0;j<num;j++){
                                     //创建工作资料空间
