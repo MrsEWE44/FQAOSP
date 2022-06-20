@@ -5,14 +5,9 @@ import static org.fqaosp.utils.multiFunc.dismissDialog;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Looper;
-import android.util.Log;
 import android.widget.Toast;
 
 import org.fqaosp.utils.CMD;
-import org.fqaosp.utils.multiFunc;
-
-import java.lang.reflect.Field;
-import java.util.ArrayList;
 
 public class cmdThread extends  Thread{
 

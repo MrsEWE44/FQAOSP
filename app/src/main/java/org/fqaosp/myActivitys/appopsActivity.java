@@ -8,23 +8,23 @@ package org.fqaosp.myActivitys;
  *
  * */
 
+import static org.fqaosp.utils.fileTools.copyFile;
+import static org.fqaosp.utils.fileTools.execFileSelect;
 import static org.fqaosp.utils.multiFunc.checkBoxs;
-import static org.fqaosp.utils.multiFunc.copyFile;
+import static org.fqaosp.utils.multiFunc.clearList;
 import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 
-import android.Manifest;
+import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.AppOpsManager;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ServiceInfo;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
@@ -48,18 +48,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
-import org.fqaosp.threads.cmdThread;
 import org.fqaosp.utils.CMD;
+import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.iptablesManage;
 import org.fqaosp.utils.makeWP;
 import org.fqaosp.utils.multiFunc;
+import org.fqaosp.utils.permissionRequest;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -204,10 +201,18 @@ public class appopsActivity extends AppCompatActivity {
         lv1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Intent intent = new Intent(appopsActivity.this,appopsInfoActivity.class);
-                intent.putExtra("pkgname",pkginfos.get(i).getPkgname());
-                intent.putExtra("uid",uid);
-                startActivity(intent);
+                PKGINFO pkginfo = pkginfos.get(i);
+                try {
+                    PackageInfo packageInfo = getPackageManager().getPackageInfo(pkginfo.getPkgname(), 0);
+                    Intent intent = new Intent(appopsActivity.this,appopsInfoActivity.class);
+                    intent.putExtra("pkgname",pkginfo.getPkgname());
+                    intent.putExtra("uid",uid);
+                    startActivity(intent);
+                } catch (PackageManager.NameNotFoundException e) {
+                    Toast.makeText(appopsActivity.this, "未安装该应用", Toast.LENGTH_SHORT).show();
+                }
+
+                
             }
         });
 
@@ -232,18 +237,63 @@ public class appopsActivity extends AppCompatActivity {
 
     //长按listview中的元素，显示一个菜单选项
     private void createLVMenu(){
+        PackageManager pm = getPackageManager();
+        PKGINFO pkginfo = pkginfos.get(nowItemIndex);
         lv1.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
             @Override
             public void onCreateContextMenu(ContextMenu contextMenu, View view, ContextMenu.ContextMenuInfo contextMenuInfo) {
                 contextMenu.add(0,0,0,"复制信息");
-                contextMenu.add(0,1,0,"跳转至应用详情");
-                contextMenu.add(0,2,0,"导出所有勾选应用包名");
-                contextMenu.add(0,3,0,"导出并附加所有勾选应用包名");
-                contextMenu.add(0,4,0,"提取应用");
-                contextMenu.add(0,5,0,"卸载应用");
+                try {
+                    PackageInfo packageInfo= pm.getPackageInfo(pkginfo.getPkgname(),0);
+                    contextMenu.add(0,1,0,"跳转至应用详情");
+                    contextMenu.add(0,2,0,"导出所有勾选应用包名");
+                    contextMenu.add(0,3,0,"导出并附加所有勾选应用包名");
+                    contextMenu.add(0,4,0,"提取应用");
+                    contextMenu.add(0,5,0,"卸载应用");
+                } catch (PackageManager.NameNotFoundException e) {
+                    contextMenu.add(0,6,0,"尝试安装应用");
+                }
             }
         });
 
+    }
+
+    //安装本地文件
+    private void installLocalPKG(){
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
+        alertDialog.setTitle("提示");
+        alertDialog.setMessage("正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
+        AlertDialog show = alertDialog.show();
+        preventDismissDialog(show);
+        nowItemView.post(new Runnable() {
+            @Override
+            public void run() {
+                makeWP makewp = new makeWP();
+                int hit=0;
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    if(checkboxs.get(i)){
+                        PKGINFO pkginfo = pkginfos.get(i);
+                        CMD cmd = new CMD(makewp.getInstallLocalPkgCMD(uid, pkginfo.getApkpath()));
+                        checkCMDResult(cmd,"成功安装","安装失败");
+                        hit++;
+                    }
+                }
+                if(hit ==0){
+                    PKGINFO pkginfo = pkginfos.get(nowItemIndex);
+                    CMD cmd = new CMD(makewp.getInstallLocalPkgCMD(uid, pkginfo.getApkpath()));
+                    checkCMDResult(cmd,"成功安装","安装失败");
+                }
+                multiFunc.dismissDialog(show);
+            }
+        });
+    }
+
+    private void checkCMDResult(CMD cmd,String msg , String msg2){
+        if( cmd.getResultCode() ==0){
+            Toast.makeText(appopsActivity.this, msg, Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(appopsActivity.this, msg2+" :: "+cmd.getResult(), Toast.LENGTH_SHORT).show();
+        }
     }
 
     //卸载应用
@@ -262,14 +312,14 @@ public class appopsActivity extends AppCompatActivity {
                     if(checkboxs.get(i)){
                         PKGINFO pkginfo = pkginfos.get(i);
                         CMD cmd = new CMD(makewp.getUninstallPkgByUIDCMD(uid, pkginfo.getPkgname()));
-                        cmd.getResultCode();
+                        checkCMDResult(cmd,"成功卸载","卸载失败");
                         hit++;
                     }
                 }
                 if(hit ==0){
                     PKGINFO pkginfo = pkginfos.get(nowItemIndex);
                     CMD cmd = new CMD(makewp.getUninstallPkgByUIDCMD(uid, pkginfo.getPkgname()));
-                    cmd.getResultCode();
+                    checkCMDResult(cmd,"成功卸载","卸载失败");
                 }
                 multiFunc.dismissDialog(show);
             }
@@ -346,7 +396,7 @@ public class appopsActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(multiFunc.writeDataToPath(sb.toString(),outFile,isApp)){
+            if(fileTools.writeDataToPath(sb.toString(),outFile,isApp)){
                 Toast.makeText(this, "保存在: " + outFile, Toast.LENGTH_SHORT).show();
             }else{
                 Toast.makeText(this, "失败", Toast.LENGTH_SHORT).show();
@@ -378,7 +428,9 @@ public class appopsActivity extends AppCompatActivity {
             case 5:
                 uninstallPKG();
                 break;
-
+            case 6:
+                installLocalPKG();
+                break;
 
         }
         return super.onContextItemSelected(item);
@@ -482,7 +534,8 @@ public class appopsActivity extends AppCompatActivity {
         menu.add(Menu.NONE,1,1,"显示所有应用(包括禁用)");
         menu.add(Menu.NONE,2,2,"显示用户安装的应用");
         menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
-        menu.add(Menu.NONE,4,4,"退出");
+        menu.add(Menu.NONE,4,4,"选择本地应用");
+        menu.add(Menu.NONE,5,5,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -520,7 +573,7 @@ public class appopsActivity extends AppCompatActivity {
                                 } catch (PackageManager.NameNotFoundException e) {
                                     e.printStackTrace();
                                 }
-                                checkBoxs(pkginfos, checkboxs, packageInfo.applicationInfo, pm);
+                                checkBoxs(pkginfos, checkboxs, packageInfo, pm);
                             }
                         };
                         cacheThreadPool.execute(runnable);
@@ -551,6 +604,11 @@ public class appopsActivity extends AppCompatActivity {
 
     }
 
+    private void selectLocalFile(){
+        permissionRequest.getExternalStorageManager(appopsActivity.this);
+        execFileSelect(appopsActivity.this,appopsActivity.this,"请选择要安装的文件");
+    }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
@@ -575,7 +633,7 @@ public class appopsActivity extends AppCompatActivity {
                 break;
             case 2:
                 if(uid == null|| uid.equals(getMyUID())){
-                    getUserPKGS();
+                    getUserEnablePKGS();
                     showPKGS(lv1);
                 }else{
                     getPKGByUID(wp.getUserPkgByUIDCMD(uid));
@@ -584,7 +642,7 @@ public class appopsActivity extends AppCompatActivity {
                 break;
             case 3:
                 if(uid == null|| uid.equals(getMyUID())){
-                    getUserEnablePKGS();
+                    getUserPKGS();
                     showPKGS(lv1);
                 }else{
                     getPKGByUID(wp.getUserPkgByUIDCMD(uid));
@@ -592,6 +650,9 @@ public class appopsActivity extends AppCompatActivity {
 
                 break;
             case 4:
+                selectLocalFile();
+                break;
+            case 5:
                 fuckActivity.getIns().killall();
                 ;
         }
@@ -603,5 +664,30 @@ public class appopsActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode == Activity.RESULT_OK){
+            clearList(pkginfos,checkboxs);
+            PackageManager pm = getPackageManager();
+            String storage = Environment.getExternalStorageDirectory().toString();
+            if(data.getClipData() != null) {//有选择多个文件
+                int count = data.getClipData().getItemCount();
+                for(int i =0;i<count;i++){
+                    Uri uri = data.getClipData().getItemAt(i).getUri();
+                    String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
+                    PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
+                    checkBoxs(pkginfos,checkboxs,packageInfo,pm);
+                }
 
+            } else if(data.getData() != null) {//只有一个文件咯
+                Uri uri = data.getData();
+                String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
+                PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
+                checkBoxs(pkginfos,checkboxs,packageInfo,pm);
+            }
+            showPKGS(lv1);
+
+        }
+    }
 }

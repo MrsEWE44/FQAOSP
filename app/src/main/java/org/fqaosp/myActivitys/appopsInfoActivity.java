@@ -40,7 +40,6 @@ import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 
 import java.util.ArrayList;
-import java.util.Locale;
 
 public class appopsInfoActivity extends AppCompatActivity {
 

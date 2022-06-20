@@ -34,8 +34,6 @@ import org.fqaosp.utils.multiFunc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -282,7 +280,7 @@ public class workProfileManageActivity extends AppCompatActivity {
                                             } catch (PackageManager.NameNotFoundException e) {
                                                 e.printStackTrace();
                                             }
-                                            checkBoxsHashMap(pkginfoHashMap, checkboxs, packageInfo.applicationInfo, pm);
+                                            checkBoxsHashMap(pkginfoHashMap, checkboxs, packageInfo, pm);
                                         }
                                     };
                                     cacheThreadPool.execute(runnable);

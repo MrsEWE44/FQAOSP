@@ -1,13 +1,9 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.copyFile;
-import static org.fqaosp.utils.multiFunc.extactAssetsFile;
-import static org.fqaosp.utils.multiFunc.getMyHomeFilesPath;
+import static org.fqaosp.utils.fileTools.extactAssetsFile;
+import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.jump;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 
-import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Process;
@@ -22,7 +18,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
 import org.fqaosp.threads.alertDialogThread;
-import org.fqaosp.threads.cmdThread;
 import org.fqaosp.utils.fuckActivity;
 
 import java.io.File;

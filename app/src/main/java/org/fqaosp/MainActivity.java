@@ -56,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         jump(mappops,this, appopsActivity.class);
         jump(imgtool,this, imgToolMenuActivity.class);
         jump(sqliteb,this, sqliteManageActivity.class);
+
     }
 
 

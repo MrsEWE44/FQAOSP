@@ -7,29 +7,16 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.AssetManager;
-import android.net.Uri;
-import android.os.Environment;
 import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.Toast;
 
 import org.fqaosp.entity.PKGINFO;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -66,54 +53,6 @@ public class multiFunc {
             }
         });
     }
-
-    //复制文件
-    public static Boolean copyFile(InputStream is, String outfile)  {
-        return  copyFile(is,new File(outfile));
-    }
-
-    //复制文件
-    public static Boolean copyFile(InputStream is, File outFile)  {
-        try {
-            return copyFile(is,new FileOutputStream(outFile));
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    //复制文件
-    public static Boolean copyFile(InputStream is, OutputStream os)  {
-        try {
-            byte[] buffer = new byte[1024];
-            int length;
-            while ((length = is.read(buffer)) > 0) {
-                os.write(buffer, 0, length);
-            }
-            os.close();
-            is.close();
-            return true;
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-        return false;
-    }
-
-    //复制文件
-    public static Boolean copyFile(String srcFile , String outFile){
-        return copyFile(new File(srcFile),new File(outFile));
-    }
-    //复制文件
-    public static Boolean copyFile(File srcFile , File outFile){
-        try {
-            return copyFile(new FileInputStream(srcFile),outFile);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
 
     //移除uid多余字符串
     public static String getUID(String str){
@@ -155,7 +94,6 @@ public class multiFunc {
         Collections.sort(us,String::compareTo);
 
     }
-
 
     //查询当前机主安装的应用
     public static void queryPKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
@@ -209,18 +147,21 @@ public class multiFunc {
         return pkginfos2;
     }
 
-    public static void checkBoxs(ArrayList<PKGINFO> pkginfos,ArrayList<Boolean> checkboxs,ApplicationInfo applicationInfo,PackageManager packageManager){
+    public static void checkBoxs(ArrayList<PKGINFO> pkginfos,ArrayList<Boolean> checkboxs,PackageInfo packageInfo,PackageManager packageManager){
         if(checkboxs != null){
             checkboxs.add(false);
         }
-        pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir,applicationInfo.uid+"", applicationInfo.loadIcon(packageManager))) ;
+        ApplicationInfo applicationInfo = packageInfo.applicationInfo;
+        pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir,applicationInfo.uid+"",packageInfo.versionName, applicationInfo.loadIcon(packageManager),new File(applicationInfo.sourceDir).length())) ;
     }
 
-    public static void checkBoxsHashMap(HashMap<String,PKGINFO> pkginfos, ArrayList<Boolean> checkboxs, ApplicationInfo applicationInfo, PackageManager packageManager){
+    public static void checkBoxsHashMap(HashMap<String,PKGINFO> pkginfos, ArrayList<Boolean> checkboxs, PackageInfo packageInfo, PackageManager packageManager){
         if(checkboxs != null){
             checkboxs.add(false);
         }
-        pkginfos.put(applicationInfo.packageName, new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid+"",applicationInfo.loadIcon(packageManager))) ;
+        ApplicationInfo applicationInfo = packageInfo.applicationInfo;
+        pkginfos.put(applicationInfo.packageName,
+                new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir,applicationInfo.uid+"",packageInfo.versionName, applicationInfo.loadIcon(packageManager),new File(applicationInfo.sourceDir).length())) ;
     }
 
     public static void appInfoAdd(PackageManager packageManager,PackageInfo packageInfo,ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer state){
@@ -228,29 +169,38 @@ public class multiFunc {
         switch (state){
             case 0:
                 if(applicationInfo.enabled){
-                    checkBoxs(pkginfos,checkboxs,applicationInfo,packageManager);
+                    checkBoxs(pkginfos,checkboxs,packageInfo,packageManager);
                 }
                 break;
             case 1:
                 if(!applicationInfo.enabled){
-                    checkBoxs(pkginfos,checkboxs,applicationInfo,packageManager);
+                    checkBoxs(pkginfos,checkboxs,packageInfo,packageManager);
                 }
                 break;
             case 2:
                 if((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0 && applicationInfo.enabled){
-                    checkBoxs(pkginfos,checkboxs,applicationInfo,packageManager);
+                    checkBoxs(pkginfos,checkboxs,packageInfo,packageManager);
                 }
                 break;
             case 3:
                 if((applicationInfo.flags & ApplicationInfo.FLAG_SYSTEM) == 0){
-                    checkBoxs(pkginfos,checkboxs,applicationInfo,packageManager);
+                    checkBoxs(pkginfos,checkboxs,packageInfo,packageManager);
                 }
                 break;
             case 4:
-                checkBoxs(pkginfos,checkboxs,applicationInfo,packageManager);
+                checkBoxs(pkginfos,checkboxs,packageInfo,packageManager);
                 break;
         }
 
+    }
+
+    public static void sortPKGINFOS(ArrayList<PKGINFO> pkginfos){
+        Collections.sort(pkginfos, new Comparator<PKGINFO>() {
+            @Override
+            public int compare(PKGINFO pkginfo, PKGINFO t1) {
+                return pkginfo.getAppname().compareTo(t1.getAppname());
+            }
+        });
     }
 
     public static void queryPKGSCore(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types,Integer state){
@@ -259,12 +209,7 @@ public class multiFunc {
         for (PackageInfo packageInfo : installedPackages) {
             appInfoAdd(packageManager,packageInfo,pkginfos,checkboxs,state);
         }
-        Collections.sort(pkginfos, new Comparator<PKGINFO>() {
-            @Override
-            public int compare(PKGINFO pkginfo, PKGINFO t1) {
-                return pkginfo.getAppname().compareTo(t1.getAppname());
-            }
-        });
+        sortPKGINFOS(pkginfos);
     }
 
     //查询当前机主安装的应用,启用部分
@@ -290,52 +235,6 @@ public class multiFunc {
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-    //调用系统文件选择器
-    public static void execFileSelect(Context context,Activity activity , String msg){
-        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
-        intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE,true);//打开多个文件
-        intent.addCategory(Intent.CATEGORY_DEFAULT);
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        activity.startActivityForResult(intent, 0);
-    }
-
-    //获取在内部存储的自家路径
-    public static String getMyStorageHomePath(Context context){
-        String s = Environment.getExternalStorageDirectory().toString();
-        return s+"/Android/data/"+context.getPackageName();
-    }
-
-    //获取自家data的files路径
-    public static String getMyHomeFilesPath(Context context){
-        String datadir="/data/data/"+context.getPackageName();
-        return datadir+"/files";
-    }
-
-    //选择文件时，判断是否为理想类型
-    public static void selectFile(Context context, String storage , Uri uri , ArrayList<String> list , ArrayList<Boolean> checkboxs , String msg , String equalstr){
-        String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
-        String fileName = getPathByLastNameType(filePath);
-        if(fileName.equals(equalstr)){
-//            filePath=filePath.substring(0,filePath.lastIndexOf("/"));
-            list.add(filePath);
-            checkboxs.add(false);
-        }else{
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    //获取文件结尾类型
-    public static String getPathByLastNameType(String filePath){
-        return filePath.substring(filePath.lastIndexOf(".")+1);
-    }
-
-    //获取路径文件名称
-    public static String getPathByLastName(String filePath){
-        return filePath.substring(filePath.lastIndexOf("/")+1);
     }
 
     /**
@@ -423,19 +322,6 @@ public class multiFunc {
         }
     }
 
-    //释放资源文件
-    public static  void extactAssetsFile(Context context, String fileName,String toPath){
-        AssetManager assets = context.getAssets();
-        InputStream stream = null;
-        try {
-            stream = assets.open(fileName);
-            copyFile(stream,toPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
     public static void queryRunningPKGS(Activity activity, ArrayList<PKGINFO> pkginfos){
         queryRunningPKGS(activity,pkginfos,null,0);
     }
@@ -445,29 +331,18 @@ public class multiFunc {
             ApplicationInfo applicationInfo = packageInfo.applicationInfo;
             if (isAll) {
                 if (((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)) {
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid + "", applicationInfo.loadIcon(packageManager)));
-                    if (checkboxs != null) {
-                        checkboxs.add(false);
-                    }
+                    checkBoxs(pkginfos,checkboxs,packageInfo,packageManager);
                 }
             } else {
                 if (((ApplicationInfo.FLAG_SYSTEM & applicationInfo.flags) == 0)
                         && ((ApplicationInfo.FLAG_UPDATED_SYSTEM_APP & applicationInfo.flags) == 0)
                         && ((ApplicationInfo.FLAG_STOPPED & applicationInfo.flags) == 0)) {
-                    pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(packageManager).toString(), applicationInfo.sourceDir, applicationInfo.uid + "", applicationInfo.loadIcon(packageManager)));
-                    if (checkboxs != null) {
-                        checkboxs.add(false);
-                    }
+                    checkBoxs(pkginfos,checkboxs,packageInfo,packageManager);
                 }
 
             }
         }
-        Collections.sort(pkginfos, new Comparator<PKGINFO>() {
-            @Override
-            public int compare(PKGINFO pkginfo, PKGINFO t1) {
-                return pkginfo.getAppname().compareTo(t1.getAppname());
-            }
-        });
+      sortPKGINFOS(pkginfos);
     }
 
     //查询当前运行在后台的应用，用户安装部分
@@ -477,46 +352,11 @@ public class multiFunc {
         queryRunningPKGSCore(installedPackages,pkginfos,checkboxs,packageManager,false);
     }
 
-
     //查询当前运行在后台的应用，所有
     public static void queryAllRunningPKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
         PackageManager packageManager = activity.getPackageManager();
         List<PackageInfo> installedPackages = packageManager.getInstalledPackages(types);
         queryRunningPKGSCore(installedPackages,pkginfos,checkboxs,packageManager,true);
-    }
-
-    //读取文件
-    public static String readFileToPath(String filePath){
-        StringBuilder stringBuilder = new StringBuilder();
-        try {
-            BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath));
-            String line =null;
-            while((line=bufferedReader.readLine()) != null){
-                stringBuilder.append(line+"\n");
-            }
-            bufferedReader.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return stringBuilder.toString();
-    }
-
-    //读取文件
-    public static Boolean writeDataToPath(String data, String filePath, Boolean isApp){
-        try {
-            FileWriter writer =null;
-            if(isApp){
-                writer = new FileWriter(filePath,true);
-            }else{
-                writer = new FileWriter(filePath);
-            }
-            writer.write(data,0,data.length());
-            writer.close();
-            return true;
-        } catch (IOException e) {
-            Log.e(TAG,e.getMessage());
-        }
-        return false;
     }
 
 }

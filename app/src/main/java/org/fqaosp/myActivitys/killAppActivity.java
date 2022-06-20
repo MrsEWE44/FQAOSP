@@ -1,8 +1,16 @@
 package org.fqaosp.myActivitys;
 
+import static org.fqaosp.utils.fileTools.extactAssetsFile;
+import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -27,6 +35,7 @@ import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +59,6 @@ public class killAppActivity extends AppCompatActivity {
         setTitle("后台管理");
         initBt();
         getRunning(1);
-        showPKGS(lv1);
     }
 
     private void initBt(){
@@ -164,7 +172,6 @@ public class killAppActivity extends AppCompatActivity {
                         }
                         Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
                         getRunning(1);
-                        showPKGS(lv1);
                     }
                 });
             }
@@ -204,14 +211,79 @@ public class killAppActivity extends AppCompatActivity {
         }
     }
 
+    //获取在后台运行的程序
     private void getRunning(int ss){
-        checkboxs.clear();
-        pkginfos.clear();
-        //这里是设置了一个阈值参数，如果等于1，就默认列出用户安装的应用，否则就列出所有应用
-        if(ss == 1){
-            multiFunc.queryRunningPKGS(this,pkginfos,checkboxs,0);
-        }else{
-            multiFunc.queryAllRunningPKGS(this,pkginfos,checkboxs,0);
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(killAppActivity.this);
+        alertDialog.setTitle("提示");
+        alertDialog.setMessage("正在获取后台应用,请稍后(可能会出现无响应，请耐心等待)....");
+        AlertDialog show = alertDialog.show();
+        preventDismissDialog(show);
+        Handler handler = new Handler(){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if(msg.what==0){
+                    showPKGS(lv1);
+                    multiFunc.dismissDialog(show);
+                }
+            }
+        };
+        Activity activity = this;
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                checkboxs.clear();
+                pkginfos.clear();
+                //这里是设置了一个阈值参数，如果等于1，就默认列出用户安装的应用，否则就列出所有应用
+                if(ss == 1){
+                    multiFunc.queryRunningPKGS(activity,pkginfos,checkboxs,0);
+                }else{
+                    multiFunc.queryAllRunningPKGS(activity,pkginfos,checkboxs,0);
+                }
+                checkRunningPKG();
+                Message msg = new Message();
+                msg.what=0;
+                handler.sendMessage(msg);
+            }
+        }).start();
+
+    }
+
+    private void checkRunningPKG(){
+        String filesPath = getMyHomeFilesPath(killAppActivity.this);
+        String busyboxFile = filesPath+"/busybox";
+        File busyF = new File(busyboxFile);
+        File filesP = new File(filesPath);
+        if(!filesP.exists()){
+            filesP.mkdirs();
+        }
+        if(!busyF.exists()){
+            extactAssetsFile(this,"busybox",busyboxFile);
+        }
+        String cmdstr="chmod 755 "+busyboxFile +" && "+busyboxFile+" ps  && exit 0;";
+        CMD cmd = new CMD(cmdstr);
+//        Log.d("cmd",cmd.getResultCode() + " -- " +cmd.getResult());
+        if(cmd.getResultCode() == 0){
+            String[] split = cmd.getResult().split("\n");
+            for (int i = 0; i < pkginfos.size(); i++) {
+                PKGINFO pkginfo = pkginfos.get(i);
+                for (String s : split) {
+                    if(s.indexOf(pkginfo.getPkgname()) != -1){
+                        String[] s1 = s.split(" ");
+                        if(s1[s1.length-1].equals(pkginfo.getPkgname())){
+                            String pid = s1[0];
+                            if(pid == null || pid.isEmpty()){
+                                pid=s1[1];
+                            }
+                            String proc_pid_status_cmd="cat /proc/"+pid+"/status |grep 'VmRSS' | "+busyboxFile+" awk '{print $2}'  && exit 0;";
+                            CMD cmd1 = new CMD(proc_pid_status_cmd);
+                            if(cmd1.getResultCode() == 0){
+//                                Log.d("ppp",pkginfo.getAppname()+ " -- " + cmd1.getResult());
+                                pkginfos.get(i).setFilesize((Long.parseLong(cmd1.getResult().trim())*1024));
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 

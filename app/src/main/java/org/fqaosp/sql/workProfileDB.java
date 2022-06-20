@@ -1,19 +1,15 @@
 package org.fqaosp.sql;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import androidx.annotation.Nullable;
 
 import org.fqaosp.entity.workProfileDBEntity;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.TreeMap;
 
 public class workProfileDB  extends SQLiteOpenHelper {
 

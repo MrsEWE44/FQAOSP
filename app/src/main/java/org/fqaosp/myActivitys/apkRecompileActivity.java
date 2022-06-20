@@ -1,23 +1,15 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.execFileSelect;
-import static org.fqaosp.utils.multiFunc.getMyHomeFilesPath;
-import static org.fqaosp.utils.multiFunc.getPathByLastName;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
-import static org.fqaosp.utils.multiFunc.selectFile;
+import static org.fqaosp.utils.fileTools.execFileSelect;
+import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.fileTools.getPathByLastName;
+import static org.fqaosp.utils.fileTools.selectFile;
 
-import android.Manifest;
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.Settings;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,18 +20,14 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.threads.alertDialogThread;
-import org.fqaosp.threads.cmdThread;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 
 public class apkRecompileActivity extends AppCompatActivity {

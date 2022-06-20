@@ -1,12 +1,10 @@
 package org.fqaosp.threads;
 
-import static org.fqaosp.utils.multiFunc.dismissDialog;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 
 import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Looper;
-import android.widget.Toast;
 
 public class alertDialogThread extends  Thread{
 

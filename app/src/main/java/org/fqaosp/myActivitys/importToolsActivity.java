@@ -1,11 +1,10 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.copyFile;
-import static org.fqaosp.utils.multiFunc.execFileSelect;
-import static org.fqaosp.utils.multiFunc.extactAssetsFile;
-import static org.fqaosp.utils.multiFunc.getMyHomeFilesPath;
-import static org.fqaosp.utils.multiFunc.getMyUID;
-import static org.fqaosp.utils.multiFunc.selectFile;
+import static org.fqaosp.utils.fileTools.copyFile;
+import static org.fqaosp.utils.fileTools.execFileSelect;
+import static org.fqaosp.utils.fileTools.extactAssetsFile;
+import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.fileTools.selectFile;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -13,7 +12,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Process;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,9 +24,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
 import org.fqaosp.threads.alertDialogThread;
-import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
-import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
@@ -67,7 +63,7 @@ public class importToolsActivity extends AppCompatActivity {
         itab1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String filesPath = multiFunc.getMyHomeFilesPath(importToolsActivity.this);
+                String filesPath = getMyHomeFilesPath(importToolsActivity.this);
                 String fqtoolsd = filesPath+"/fqtools";
                 File file = new File(fqtoolsd);
                 itatv1.setText(file.exists() ? "fqtools已经安装" : "fqtools未安装,请前往 https://github.com/MrsEWE44/FQAOSP/releases 下载相关工具包");
@@ -84,7 +80,7 @@ public class importToolsActivity extends AppCompatActivity {
         itab3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String filesPath = multiFunc.getMyHomeFilesPath(importToolsActivity.this);
+                String filesPath = getMyHomeFilesPath(importToolsActivity.this);
                 String fqtoolsd = filesPath+"/jdk";
                 File file = new File(fqtoolsd);
                 itatv2.setText(file.exists() ? "jdk已经安装" : "jdk未安装,请前往 https://github.com/MrsEWE44/FQAOSP/releases 下载相关工具包");

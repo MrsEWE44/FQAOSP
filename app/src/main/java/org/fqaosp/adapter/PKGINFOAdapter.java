@@ -43,6 +43,17 @@ public class PKGINFOAdapter extends BaseAdapter {
         return i;
     }
 
+    private String getSize(double size,int count){
+        String size_type[] = {"b","KB","MB","GB","TB","PB"};
+        if(size > 1024){
+            double d_size= size/1024;
+            count = count + 1;
+            return getSize(d_size,count);
+        }
+        String sizestr=String.format("%.2f",size)+size_type[count];
+        return sizestr;
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         convertView = LayoutInflater.from(context).inflate(R.layout.list_view_item_activity,null);
@@ -50,8 +61,14 @@ public class PKGINFOAdapter extends BaseAdapter {
         CheckBox checkBox=convertView.findViewById(R.id.lviacb1);
         TextView text = convertView.findViewById(R.id.lviatv1);
         TextView text2 = convertView.findViewById(R.id.lviatv2);
-        text.setText(pkginfos.get(position).getAppname());
-        text2.setText(pkginfos.get(position).getPkgname());
+        TextView text3 = convertView.findViewById(R.id.lviatv3);
+        TextView text4 = convertView.findViewById(R.id.lviatv4);
+        PKGINFO pkginfo = pkginfos.get(position);
+        text.setText(pkginfo.getAppname());
+        text2.setText(pkginfo.getPkgname());
+        text3.setText(pkginfo.getAppversionname());
+        text4.setText(getSize(pkginfo.getFilesize(),0));
+
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {

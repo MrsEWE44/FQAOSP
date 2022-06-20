@@ -1,6 +1,5 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.dismissDialog;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.queryUSERS;
 
@@ -9,7 +8,6 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,17 +27,14 @@ import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.entity.workProfileDBEntity;
 import org.fqaosp.sql.workProfileDB;
-import org.fqaosp.threads.alertDialogThread;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeWP;
 import org.fqaosp.utils.multiFunc;
 
 import java.util.ArrayList;
-import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -75,8 +70,6 @@ public class workProfileActivity extends AppCompatActivity {
         EditText editText1 = findViewById(R.id.wpet1);
         EditText editText2 = findViewById(R.id.wpet2);
         showDialogWaring();
-
-
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

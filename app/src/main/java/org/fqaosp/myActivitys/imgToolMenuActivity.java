@@ -1,6 +1,6 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.getMyHomeFilesPath;
+import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.jump;
 
 import android.os.Bundle;

@@ -1,12 +1,11 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.execFileSelect;
-import static org.fqaosp.utils.multiFunc.getMyHomeFilesPath;
-import static org.fqaosp.utils.multiFunc.getMyStorageHomePath;
-import static org.fqaosp.utils.multiFunc.getPathByLastName;
-import static org.fqaosp.utils.multiFunc.getPathByLastNameType;
+import static org.fqaosp.utils.fileTools.execFileSelect;
+import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
+import static org.fqaosp.utils.fileTools.getPathByLastName;
+import static org.fqaosp.utils.fileTools.selectFile;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
-import static org.fqaosp.utils.multiFunc.selectFile;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -14,7 +13,6 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;

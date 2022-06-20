@@ -1,5 +1,6 @@
 package org.fqaosp.myActivitys;
 
+import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 
@@ -8,7 +9,6 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -249,7 +249,7 @@ public class appDisableActivity extends AppCompatActivity {
            fileD.mkdirs();
         }
         if(!sysupF.exists()){
-           multiFunc.extactAssetsFile(this,"startupsystem.sh",sysupfile);
+           extactAssetsFile(this,"startupsystem.sh",sysupfile);
         }
         return sysupF.exists();
     }

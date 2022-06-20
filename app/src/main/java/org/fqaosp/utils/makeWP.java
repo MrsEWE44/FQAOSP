@@ -1,16 +1,16 @@
 package org.fqaosp.utils;
 
-import static org.fqaosp.utils.multiFunc.*;
+import static org.fqaosp.utils.multiFunc.checkBoxs;
+import static org.fqaosp.utils.multiFunc.getMyUID;
+import static org.fqaosp.utils.multiFunc.queryUSERS;
 
 import android.app.Activity;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.util.Log;
 
 import org.fqaosp.entity.PKGINFO;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 
 /**
@@ -75,6 +75,11 @@ public class makeWP {
         return "pm install --user "+uid+" -r \"$(pm path "+pkgname+" | cut -d':' -f2 )\"";
     }
 
+    public String getInstallLocalPkgCMD(String uid , String apkPath){
+        String localTmpFile="/data/local/tmp/fqaosp.apk";
+        return "cp \""+apkPath+"\" " + localTmpFile +" && pm install --user "+uid+" " + localTmpFile + " && exit 0;";
+    }
+
     //同步传过来的pkginfo对象，将对应的apk都同步安装到其他用户空间里面
     public void syncapk(Activity activity, PKGINFO pkginfo){
         ArrayList<String> list = new ArrayList<>();
@@ -110,7 +115,7 @@ public class makeWP {
                 for (String s : cmd.getResult().split("\n")) {
                     PackageManager pm = activity.getPackageManager();
                     PackageInfo packageInfo = pm.getPackageInfo(s, 0);
-                    checkBoxs(pkginfos,checkboxs,packageInfo.applicationInfo,pm);
+                    checkBoxs(pkginfos,checkboxs,packageInfo,pm);
                 }
             }
         } catch (PackageManager.NameNotFoundException e) {
