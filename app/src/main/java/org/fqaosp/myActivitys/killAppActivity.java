@@ -272,11 +272,14 @@ public class killAppActivity extends AppCompatActivity {
                             if(pid == null || pid.isEmpty()){
                                 pid=s1[1];
                             }
-                            String proc_pid_status_cmd="cat /proc/"+pid+"/status |grep 'VmRSS' | "+busyboxFile+" awk '{print $2}'  && exit 0;";
-                            CMD cmd1 = new CMD(proc_pid_status_cmd);
-                            if(cmd1.getResultCode() == 0){
+                            pid=pid.replaceAll("\\s+","");
+                            if(!pid.isEmpty()){
+                                String proc_pid_status_cmd="cat /proc/"+pid+"/status |grep 'VmRSS' | "+busyboxFile+" awk '{print $2}'  && exit 0;";
+                                CMD cmd1 = new CMD(proc_pid_status_cmd);
+                                if(cmd1.getResultCode() == 0){
 //                                Log.d("ppp",pkginfo.getAppname()+ " -- " + cmd1.getResult());
-                                pkginfos.get(i).setFilesize((Long.parseLong(cmd1.getResult().trim())*1024));
+                                    pkginfos.get(i).setFilesize((Long.parseLong(cmd1.getResult().trim())*1024));
+                                }
                             }
                         }
                     }
