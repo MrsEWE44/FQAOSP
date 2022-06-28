@@ -3,6 +3,7 @@ package org.fqaosp.myActivitys;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -213,10 +214,7 @@ public class killAppActivity extends AppCompatActivity {
 
     //获取在后台运行的程序
     private void getRunning(int ss){
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(killAppActivity.this);
-        alertDialog.setTitle("提示");
-        alertDialog.setMessage("正在获取后台应用,请稍后(可能会出现无响应，请耐心等待)....");
-        AlertDialog show = alertDialog.show();
+        AlertDialog show = showMyDialog(killAppActivity.this,"提示","正在获取后台应用,请稍后(可能会出现无响应，请耐心等待)....");
         preventDismissDialog(show);
         Handler handler = new Handler(){
             @Override

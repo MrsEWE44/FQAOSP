@@ -1,11 +1,14 @@
 package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -49,12 +52,17 @@ public class mountLocalImageActivity extends AppCompatActivity {
         setTitle("U盘模式");
         Button b1 = findViewById(R.id.mliab1);
         ListView lv1 = findViewById(R.id.mlialv1);
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(mountLocalImageActivity.this);
-        alertDialog.setTitle("提示");
-        alertDialog.setMessage("正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
-        AlertDialog show = alertDialog.show();
+        AlertDialog show = showMyDialog(mountLocalImageActivity.this,"提示","正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
         preventDismissDialog(show);
-
+        Handler handler = new Handler(){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if(msg.what==0){
+                    showImgs(lv1);
+                    multiFunc.dismissDialog(show);
+                }
+            }
+        };
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -72,14 +80,15 @@ public class mountLocalImageActivity extends AppCompatActivity {
             }
         });
         permissionRequest.getExternalStorageManager(mountLocalImageActivity.this);
-        runOnUiThread(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 getImgs();
-                showImgs(lv1);
-                multiFunc.dismissDialog(show);
+                Message msg = new Message();
+                msg.what=0;
+                handler.sendMessage(msg);
             }
-        });
+        }).start();
 
     }
 

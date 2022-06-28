@@ -2,12 +2,15 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.checkBoxsHashMap;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -67,10 +70,7 @@ public class workProfileManageActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(workProfileManageActivity.this);
-                alertDialog.setTitle("提示");
-                alertDialog.setMessage("正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
-                AlertDialog show = alertDialog.show();
+                AlertDialog show = showMyDialog(workProfileManageActivity.this,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
                 preventDismissDialog(show);
                 view.post(new Runnable() {
                     @Override
@@ -142,10 +142,7 @@ public class workProfileManageActivity extends AppCompatActivity {
         b2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(workProfileManageActivity.this);
-                alertDialog.setTitle("提示");
-                alertDialog.setMessage("正在删除应用,请稍后(可能会出现无响应，请耐心等待)....");
-                AlertDialog show = alertDialog.show();
+                AlertDialog show =showMyDialog(workProfileManageActivity.this,"提示","正在删除应用,请稍后(可能会出现无响应，请耐心等待)....");
                 preventDismissDialog(show);
                 view.post(new Runnable() {
                     @Override
@@ -249,12 +246,19 @@ public class workProfileManageActivity extends AppCompatActivity {
         if(list.size() == 0){
             getUsers();
         }
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(workProfileManageActivity.this);
-        alertDialog.setTitle("提示");
-        alertDialog.setMessage("正在检索用户下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
-        AlertDialog show = alertDialog.show();
+        AlertDialog show =showMyDialog(workProfileManageActivity.this,"提示","正在检索用户下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
         preventDismissDialog(show);
-        runOnUiThread(new Runnable() {
+        Handler handler = new Handler(){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if(msg.what==0){
+                    showPKGS(lv2);
+                    multiFunc.dismissDialog(show);
+                }
+            }
+        };
+
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 for (String uid : list) {
@@ -313,8 +317,9 @@ public class workProfileManageActivity extends AppCompatActivity {
                         for (PKGINFO pkginfo : pkginfos) {
                             checkboxs.add(false);
                         }
-                        showPKGS(lv2);
-                        multiFunc.dismissDialog(show);
+                        Message msg = new Message();
+                        msg.what=0;
+                        handler.sendMessage(msg);
                         break;
                     }
                     try {
@@ -324,10 +329,7 @@ public class workProfileManageActivity extends AppCompatActivity {
                     }
                 }
             }
-        });
-
-
-
+        }).start();
     }
 
 

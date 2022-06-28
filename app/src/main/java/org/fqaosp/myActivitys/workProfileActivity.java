@@ -2,6 +2,7 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.queryUSERS;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
 import android.content.ClipboardManager;
@@ -73,11 +74,7 @@ public class workProfileActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(workProfileActivity.this);
-                alertDialog.setTitle("提示");
-                alertDialog.setMessage("正在创建分身空间,请稍后(可能会出现无响应，请耐心等待)....");
-                AlertDialog show = alertDialog.show();
+                AlertDialog show = showMyDialog(workProfileActivity.this,"提示","正在创建分身空间,请稍后(可能会出现无响应，请耐心等待)....");
                 preventDismissDialog(show);
                 view.post(new Runnable() {
                     @Override

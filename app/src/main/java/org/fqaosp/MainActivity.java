@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.fqaosp.myActivitys.apkDecompileMenuActivity;
 import org.fqaosp.myActivitys.appDisableActivity;
 import org.fqaosp.myActivitys.appopsActivity;
+import org.fqaosp.myActivitys.backupRestoreActivity;
 import org.fqaosp.myActivitys.imgToolMenuActivity;
 import org.fqaosp.myActivitys.importToolsActivity;
 import org.fqaosp.myActivitys.killAppActivity;
@@ -47,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
         Button mappops = findViewById(R.id.mappops);
         Button imgtool = findViewById(R.id.imgtool);
         Button sqliteb = findViewById(R.id.sqliteb);
+        Button brbutton = findViewById(R.id.brbutton);
 
         jump(b1,this,workProfileMenuActivity.class);
         jump(b3,this, killAppActivity.class);
@@ -56,6 +58,8 @@ public class MainActivity extends AppCompatActivity {
         jump(mappops,this, appopsActivity.class);
         jump(imgtool,this, imgToolMenuActivity.class);
         jump(sqliteb,this, sqliteManageActivity.class);
+        jump(sqliteb,this, sqliteManageActivity.class);
+        jump(brbutton,this, backupRestoreActivity.class);
 
     }
 

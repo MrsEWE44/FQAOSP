@@ -1,6 +1,7 @@
 package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
+import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 
@@ -56,8 +57,7 @@ public class appDisableActivity extends AppCompatActivity {
         setTitle("应用程序禁用");
         buttoninit();
         hideButton();
-        String datadir="/data/data/"+getPackageName();
-        String filesDir = datadir+"/files";
+        String filesDir =getMyHomeFilesPath(this);
         String sysupfile = filesDir+"/startupsystem.sh";
         hideButtonClick(filesDir);
         if(extractAssertFile(sysupfile,filesDir)){

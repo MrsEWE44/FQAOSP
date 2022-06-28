@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.myActivitys.backupRestoreActivity;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -358,5 +359,14 @@ public class multiFunc {
         List<PackageInfo> installedPackages = packageManager.getInstalledPackages(types);
         queryRunningPKGSCore(installedPackages,pkginfos,checkboxs,packageManager,true);
     }
+
+    //显示提示框
+    public static AlertDialog showMyDialog(Context context,String title , String msg){
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+        alertDialog.setTitle(title);
+        alertDialog.setMessage(msg);
+        return alertDialog.show();
+    }
+
 
 }

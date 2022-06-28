@@ -10,18 +10,28 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.copyFile;
 import static org.fqaosp.utils.fileTools.execFileSelect;
+import static org.fqaosp.utils.fileTools.extactAssetsFile;
+import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.fileTools.getPathByLastName;
+import static org.fqaosp.utils.fileTools.getPathByLastNameType;
 import static org.fqaosp.utils.multiFunc.checkBoxs;
 import static org.fqaosp.utils.multiFunc.clearList;
 import static org.fqaosp.utils.multiFunc.getMyUID;
+import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -44,6 +54,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
@@ -139,10 +150,7 @@ public class appopsActivity extends AppCompatActivity {
         apopsab4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
-                alertDialog.setTitle("提示");
-                alertDialog.setMessage("正在禁用应用联网,请稍后(可能会出现无响应，请耐心等待)....");
-                AlertDialog show = alertDialog.show();
+                AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在禁用应用联网,请稍后(可能会出现无响应，请耐心等待)....");
                 preventDismissDialog(show);
                view.post(new Runnable() {
                    @Override
@@ -170,10 +178,7 @@ public class appopsActivity extends AppCompatActivity {
         apopsab5.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
-                alertDialog.setTitle("提示");
-                alertDialog.setMessage("正在启用应用联网,请稍后(可能会出现无响应，请耐心等待)....");
-                AlertDialog show = alertDialog.show();
+                AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在启用应用联网,请稍后(可能会出现无响应，请耐心等待)....");
                 preventDismissDialog(show);
                view.post(new Runnable() {
                    @Override
@@ -212,7 +217,6 @@ public class appopsActivity extends AppCompatActivity {
                     Toast.makeText(appopsActivity.this, "未安装该应用", Toast.LENGTH_SHORT).show();
                 }
 
-                
             }
         });
 
@@ -258,12 +262,53 @@ public class appopsActivity extends AppCompatActivity {
 
     }
 
+    private Boolean extractAssertFile(String sysupfile,String filesDir){
+        File sysupF = new File(sysupfile);
+        File fileD = new File(filesDir);
+        if(!fileD.exists()){
+            fileD.mkdirs();
+        }
+        if(!sysupF.exists()){
+            extactAssetsFile(this,"bar.sh",sysupfile);
+        }
+        return sysupF.exists();
+    }
+
+    private boolean installAPKS(String apksFilePath){
+        String filesDir =getMyHomeFilesPath(this);
+        String barfile = filesDir+"/bar.sh";
+        if(extractAssertFile(barfile,filesDir)){
+            Toast.makeText(this, "禁用脚本已存在", Toast.LENGTH_SHORT).show();
+            String cmdstr = "sh "+barfile+" inapks " + apksFilePath;
+            CMD cmd = new CMD(cmdstr);
+            return cmd.getResultCode() ==0;
+        }else{
+            Toast.makeText(this, "apks安装脚本无法获取，请退出重试或者重新安装app", Toast.LENGTH_SHORT).show();
+            AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
+            alertDialog.setTitle("警告");
+            alertDialog.setMessage("apks安装脚本没有找到,请补全脚本再尝试安装.");
+            alertDialog.setPositiveButton("继续", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.dismiss();
+                    jump(appopsActivity.this,importToolsActivity.class);
+                }
+            });
+            alertDialog.setNegativeButton("补全组件脚本", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.dismiss();
+                    jump(appopsActivity.this,importToolsActivity.class);
+                }
+            });
+            alertDialog.show();
+        }
+     return false;
+    }
+
     //安装本地文件
     private void installLocalPKG(){
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
-        alertDialog.setTitle("提示");
-        alertDialog.setMessage("正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
-        AlertDialog show = alertDialog.show();
+        AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
         preventDismissDialog(show);
         nowItemView.post(new Runnable() {
             @Override
@@ -273,15 +318,24 @@ public class appopsActivity extends AppCompatActivity {
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if(checkboxs.get(i)){
                         PKGINFO pkginfo = pkginfos.get(i);
-                        CMD cmd = new CMD(makewp.getInstallLocalPkgCMD(uid, pkginfo.getApkpath()));
-                        checkCMDResult(cmd,"成功安装","安装失败");
+                        if(getPathByLastNameType(pkginfo.getApkpath()).equals("apks")){
+                            installAPKS(pkginfo.getApkpath());
+                        }else{
+                            CMD cmd = new CMD(makewp.getInstallLocalPkgCMD(uid, pkginfo.getApkpath()));
+                            checkCMDResult(cmd,"成功安装","安装失败");
+                        }
                         hit++;
                     }
                 }
                 if(hit ==0){
                     PKGINFO pkginfo = pkginfos.get(nowItemIndex);
-                    CMD cmd = new CMD(makewp.getInstallLocalPkgCMD(uid, pkginfo.getApkpath()));
-                    checkCMDResult(cmd,"成功安装","安装失败");
+                    if(getPathByLastNameType(pkginfo.getApkpath()).equals("apks")){
+                        installAPKS(pkginfo.getApkpath());
+                    }else{
+                        CMD cmd = new CMD(makewp.getInstallLocalPkgCMD(uid, pkginfo.getApkpath()));
+                        checkCMDResult(cmd,"成功安装","安装失败");
+                    }
+
                 }
                 multiFunc.dismissDialog(show);
             }
@@ -298,10 +352,7 @@ public class appopsActivity extends AppCompatActivity {
 
     //卸载应用
     private void uninstallPKG(){
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
-        alertDialog.setTitle("提示");
-        alertDialog.setMessage("正在卸载应用,请稍后(可能会出现无响应，请耐心等待)....");
-        AlertDialog show = alertDialog.show();
+        AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在卸载应用,请稍后(可能会出现无响应，请耐心等待)....");
         preventDismissDialog(show);
         nowItemView.post(new Runnable() {
             @Override
@@ -328,10 +379,7 @@ public class appopsActivity extends AppCompatActivity {
 
     //提取apk文件
     private void extractPKGFileToLocal(){
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
-        alertDialog.setTitle("提示");
-        alertDialog.setMessage("正在提取应用,请稍后(可能会出现无响应，请耐心等待)....");
-        AlertDialog show = alertDialog.show();
+        AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在提取应用,请稍后(可能会出现无响应，请耐心等待)....");
         preventDismissDialog(show);
         File cacheDir = this.getExternalCacheDir();
         nowItemView.post(new Runnable() {
@@ -540,10 +588,7 @@ public class appopsActivity extends AppCompatActivity {
     }
 
     private void getPKGByUID(String cmdstr){
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
-        alertDialog.setTitle("提示");
-        alertDialog.setMessage("正在检索用户 "+uid+" 下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
-        AlertDialog show = alertDialog.show();
+        AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在检索用户 "+uid+" 下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
         preventDismissDialog(show);
         Handler handler = new Handler(){
             @Override
@@ -676,15 +721,32 @@ public class appopsActivity extends AppCompatActivity {
                 for(int i =0;i<count;i++){
                     Uri uri = data.getClipData().getItemAt(i).getUri();
                     String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
-                    PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
-                    checkBoxs(pkginfos,checkboxs,packageInfo,pm);
+                    if(getPathByLastNameType(filePath).equals("apks") || getPathByLastNameType(filePath).equals("apk")){
+                        try {
+                            PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
+                            checkBoxs(pkginfos,checkboxs,packageInfo,pm);
+                        }catch (Exception e){
+                            Drawable d = ContextCompat.getDrawable(appopsActivity.this,R.drawable.ic_launcher_foreground);
+                            pkginfos.add(new PKGINFO(getPathByLastName(filePath),"未知",filePath,"未知","未知", d,new File(filePath).length()));
+                            checkboxs.add(false);
+                        }
+                    }
+
                 }
 
             } else if(data.getData() != null) {//只有一个文件咯
                 Uri uri = data.getData();
                 String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
-                PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
-                checkBoxs(pkginfos,checkboxs,packageInfo,pm);
+                if(getPathByLastNameType(filePath).equals("apks") || getPathByLastNameType(filePath).equals("apk")){
+                    try {
+                        PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
+                        checkBoxs(pkginfos,checkboxs,packageInfo,pm);
+                    }catch (Exception e){
+                        Drawable d = ContextCompat.getDrawable(appopsActivity.this,R.drawable.ic_launcher_foreground);
+                        pkginfos.add(new PKGINFO(getPathByLastName(filePath),"未知",filePath,"未知","未知", d,new File(filePath).length()));
+                        checkboxs.add(false);
+                    }
+                }
             }
             showPKGS(lv1);
 

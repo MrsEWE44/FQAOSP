@@ -1,6 +1,7 @@
 package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -88,11 +89,7 @@ public class sqliteManageActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
-
-                AlertDialog.Builder alertDialog = new AlertDialog.Builder(sqliteManageActivity.this);
-                alertDialog.setTitle("提示");
-                alertDialog.setMessage("正在更新数据库,请稍后(可能会出现无响应，请耐心等待)....");
-                AlertDialog show = alertDialog.show();
+                AlertDialog show = showMyDialog(sqliteManageActivity.this,"提示","正在更新数据库,请稍后(可能会出现无响应，请耐心等待)....");
                 preventDismissDialog(show);
 
                 view.post(new Runnable() {

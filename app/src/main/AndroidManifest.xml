@@ -44,6 +44,7 @@
         <activity android:name=".myActivitys.importToolsActivity"/>
         <activity android:name=".myActivitys.workProfileManageActivity"/>
         <activity android:name=".myActivitys.sqliteManageActivity"/>
+        <activity android:name=".myActivitys.backupRestoreActivity"/>
 
     </application>
 
