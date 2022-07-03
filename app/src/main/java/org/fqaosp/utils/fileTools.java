@@ -97,8 +97,8 @@ public class fileTools {
 
     //获取自家data的files路径
     public static String getMyHomeFilesPath(Context context){
-        String datadir="/data/data/"+context.getPackageName();
-        return datadir+"/files";
+        String datadir="/data/data/"+context.getPackageName()+"/files";
+        return datadir;
     }
 
     //选择文件时，判断是否为理想类型
@@ -153,7 +153,6 @@ public class fileTools {
         }catch (Exception e){
             e.printStackTrace();
         }
-
         return false;
     }
 

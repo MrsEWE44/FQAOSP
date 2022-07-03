@@ -16,6 +16,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Process;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,6 +37,7 @@ import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.naive.term;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
@@ -43,11 +46,16 @@ import org.fqaosp.utils.permissionRequest;
 import java.io.File;
 import java.util.ArrayList;
 
-
 /**
  *
  * 应用程序备份与恢复
  * 2022年6月28日14点11分
+ *
+ * 在備份的時候會出現無法訪問/data/data/路徑下完整文件夾的問題
+ * 需要從面具的“挂在命名空間模式”那裏修改，修改為“全局命名空間”
+ *
+ * 參考neobackup: https://github.com/NeoApplications/Neo-Backup/blob/bee23171beaac044bcb34e2b8371d832a9c4709c/FAQ.md#at-restore-the-data-directory-of-the-app-does-not-exist
+ *
  * */
 
 public class backupRestoreActivity extends AppCompatActivity {
@@ -343,6 +351,7 @@ public class backupRestoreActivity extends AppCompatActivity {
         });
 
     }
+
     private Boolean extractAssertFile(String sysupfile,String filesDir){
         File sysupF = new File(sysupfile);
         File fileD = new File(filesDir);
@@ -385,13 +394,12 @@ public class backupRestoreActivity extends AppCompatActivity {
         return false;
     }
 
-
     private boolean backupByPKGNAME(String pkgname){
         String filesDir =getMyHomeFilesPath(this);
         String barfile = filesDir+"/bar.sh";
         String cmdstr = "sh "+barfile+" backup " + pkgname;
         CMD cmd = new CMD(cmdstr);
-        return cmd.getResultCode() ==0;
+        return cmd.getResultCode()==0;
     }
 
     private boolean restoryByFileName(String filename){

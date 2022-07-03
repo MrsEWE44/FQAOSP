@@ -2,10 +2,13 @@ package org.fqaosp.utils;
 
 import android.util.Log;
 
+import org.fqaosp.naive.term;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.concurrent.ExecutionException;
 
 /**
  *
@@ -19,40 +22,45 @@ public class CMD {
     private Process exec=null;
     private Integer resultCode=-1;
 
-    //运行命令
-    public CMD(String cmd , Boolean root){
-        try {
-            String cmdhead ="/system/bin/sh";
-            Log.i("cmd ::: ",cmd);
-            if(root){
-                cmdhead="su";
+    /**
+     * @param cmd 你要執行的命令
+     * @param root 是否以root權限運行命令
+     * @param isterm 是否使用jni運行命令
+     *
+     * */
+    public CMD(String cmd , Boolean root , Boolean isterm){
+        String cmdhead = root ?"su":"/system/bin/sh" ;
+        Log.i("cmd ::: ",cmd);
+        if(isterm){
+            sb.append(term.runcmd(cmdhead+" -c \""+cmd+"\" && exit;",resultCode));
+        }else{
+            try{
+                String cmds[] = {cmdhead,"-c",cmd};
+                ProcessBuilder processBuilder = new ProcessBuilder(cmds);
+                processBuilder.redirectErrorStream(true);
+                exec = processBuilder.start();
+                DataOutputStream dos  = new DataOutputStream(exec.getOutputStream());
+                dos.writeBytes(cmd + "\n");
+                dos.flush();
+                dos.writeBytes("exit\n");
+                dos.flush();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(exec.getInputStream(),"UTF-8"));
+                String line="";
+                while((line=reader.readLine()) != null){
+                    sb.append(line+"\n");
+                }
+                resultCode = exec.waitFor();
+                reader.close();
+            }catch (Exception e){
+                e.printStackTrace();
             }
-            String cmds[] = {cmdhead,"-c",cmd};
-            ProcessBuilder processBuilder = new ProcessBuilder(cmds);
-            processBuilder.redirectErrorStream(true);
-            exec = processBuilder.start();
-            DataOutputStream dos  = new DataOutputStream(exec.getOutputStream());
-            dos.writeBytes(cmd + "\n");
-            dos.flush();
-            dos.writeBytes("exit\n");
-            dos.flush();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(exec.getInputStream(),"UTF-8"));
-            String line="";
-            while((line=reader.readLine()) != null){
-                sb.append(line+"\n");
-            }
-            resultCode = exec.waitFor();
-            reader.close();
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
     //默认以root身份运行命令
     public CMD(String cmd){
-        this(cmd,true);
+        this(cmd,true,true);
     }
-
 
     //获取执行完命令后的状态码
     public Integer getResultCode(){

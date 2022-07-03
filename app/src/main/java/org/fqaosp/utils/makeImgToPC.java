@@ -1,5 +1,7 @@
 package org.fqaosp.utils;
 
+import android.util.Log;
+
 /**
  *
  * 挂载手机上的镜像文件到电脑上面
@@ -13,12 +15,12 @@ public class makeImgToPC {
 
     //Android8以后实现
     private  Boolean mode1(String filePath){
-        CMD cmd = new CMD("[ -d "+config_path1+" ] && cd "+config_path1 +" && find ./ -name configu*");
+        CMD cmd = new CMD("[ -d "+config_path1+" ] && cd "+config_path1 +" && find ./ -name configu*",true,false);
         String configpath=cmd.getResult();
         if(!configpath.isEmpty()){
-            CMD cmd1 = new CMD("echo -n 'msc' > "+config_path1+"/"+configpath);
+            CMD cmd1 = new CMD("echo -n 'msc' > "+config_path1+"/"+configpath,true,false);
             if(cmd1.getResultCode()==0){
-                CMD cmd2 = new CMD("cd "+config_path1+" && for f in configs/b.1/f*; do rm $f; done && ln -s functions/mass_storage.0 configs/b.1/f1 && echo -n \""+filePath+"\" > configs/b.1/f1/lun.0/file");
+                CMD cmd2 = new CMD("cd "+config_path1+" && for f in configs/b.1/f*; do rm $f; done && ln -s functions/mass_storage.0 configs/b.1/f1 && echo -n \""+filePath+"\" > configs/b.1/f1/lun.0/file",true,false);
                 return cmd2.getResultCode() == 0;
             }
         }
@@ -27,7 +29,7 @@ public class makeImgToPC {
 
     //Android8以前实现
     private  Boolean mode2(String filePath){
-        CMD cmd = new CMD("[ -d "+config_path2+" ] && cd "+config_path1 +" && echo -n 0 >enable && echo -n '"+filePath+"' >f_mass_storage/lun/file && echo -n 'mass_storage' >functions && echo -n 1 >enable");
+        CMD cmd = new CMD("[ -d "+config_path2+" ] && cd "+config_path1 +" && echo -n 0 >enable && echo -n '"+filePath+"' >f_mass_storage/lun/file && echo -n 'mass_storage' >functions && echo -n 1 >enable",true,false);
         return cmd.getResultCode()==0;
     }
 

@@ -593,7 +593,7 @@ public class appopsActivity extends AppCompatActivity {
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
-                if(msg.what==PKGByUIDCompleted){
+                if(msg.what==0){
                     showPKGS(lv1);
                     multiFunc.dismissDialog(show);
                 }
@@ -602,48 +602,32 @@ public class appopsActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
                 pkginfos.clear();
                 checkboxs.clear();
                 CMD cmd = new CMD(cmdstr);
-                if(cmd.getResultCode() ==0){
+                String result = cmd.getResult();
+                String[] split = result.split("\n");
+                if(split != null){
                     for (String s : cmd.getResult().split("\n")) {
-                        Runnable runnable = new Runnable() {
-                            @Override
-                            public void run() {
-                                PackageManager pm = getPackageManager();
-                                PackageInfo packageInfo = null;
-                                try {
-                                    packageInfo = pm.getPackageInfo(s, 0);
-                                } catch (PackageManager.NameNotFoundException e) {
-                                    e.printStackTrace();
-                                }
-                                checkBoxs(pkginfos, checkboxs, packageInfo, pm);
-                            }
-                        };
-                        cacheThreadPool.execute(runnable);
-                    }
-                    cacheThreadPool.shutdown();
-                    while(true){
-                        if(cacheThreadPool.isTerminated()){
-                            Collections.sort(pkginfos, new Comparator<PKGINFO>() {
-                                @Override
-                                public int compare(PKGINFO pkginfo, PKGINFO t1) {
-                                    return pkginfo.getAppname().compareTo(t1.getAppname());
-                                }
-                            });
-                            Message msg = new Message();
-                            msg.what=PKGByUIDCompleted;
-                            handler.sendMessage(msg);
-                            break;
-                        }
+                        PackageManager pm = getPackageManager();
+                        PackageInfo packageInfo = null;
                         try {
-                            Thread.sleep(100);
-                        } catch (InterruptedException e) {
+                            packageInfo = pm.getPackageInfo(s, 0);
+                        } catch (PackageManager.NameNotFoundException e) {
                             e.printStackTrace();
                         }
+                        checkBoxs(pkginfos, checkboxs, packageInfo, pm);
                     }
+                    Collections.sort(pkginfos, new Comparator<PKGINFO>() {
+                        @Override
+                        public int compare(PKGINFO pkginfo, PKGINFO t1) {
+                            return pkginfo.getAppname().compareTo(t1.getAppname());
+                        }
+                    });
                 }
+                Message msg = new Message();
+                msg.what=0;
+                handler.sendMessage(msg);
             }
         }).start();
 

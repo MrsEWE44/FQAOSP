@@ -5,13 +5,19 @@ import static org.fqaosp.utils.fileTools.execFileSelect;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.selectFile;
+import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.os.Process;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -23,8 +29,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
-import org.fqaosp.threads.alertDialogThread;
+import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
+import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
@@ -66,7 +73,7 @@ public class importToolsActivity extends AppCompatActivity {
                 String filesPath = getMyHomeFilesPath(importToolsActivity.this);
                 String fqtoolsd = filesPath+"/fqtools";
                 File file = new File(fqtoolsd);
-                itatv1.setText(file.exists() ? "fqtools已经安装" : "fqtools未安装,请前往 https://github.com/MrsEWE44/FQAOSP/releases 下载相关工具包");
+                itatv1.setText(file.exists() ? "fqtools已经安装" : "fqtools未安装,请前往 https://github.com/MrsEWE44/FQAOSP/releases 下载最新工具包");
             }
         });
         itab2.setOnClickListener(new View.OnClickListener() {
@@ -83,7 +90,7 @@ public class importToolsActivity extends AppCompatActivity {
                 String filesPath = getMyHomeFilesPath(importToolsActivity.this);
                 String fqtoolsd = filesPath+"/jdk";
                 File file = new File(fqtoolsd);
-                itatv2.setText(file.exists() ? "jdk已经安装" : "jdk未安装,请前往 https://github.com/MrsEWE44/FQAOSP/releases 下载相关工具包");
+                itatv2.setText(file.exists() ? "jdk已经安装" : "jdk未安装,请複製 https://github.com/MrsEWE44/FQAOSP/releases/download/V1.0-test-1/jdk.tar.xz 下载工具包");
             }
         });
         itab4.setOnClickListener(new View.OnClickListener() {
@@ -100,9 +107,10 @@ public class importToolsActivity extends AppCompatActivity {
         checkboxs.clear();
     }
 
-    private void extractFile(String s,String fff){
+    private void extractFile(String s, String fff){
         String myuid = Process.myUid()+"";
         String filesPath = getMyHomeFilesPath(importToolsActivity.this);
+        new File(filesPath).mkdirs();
         String outName = filesPath+"/"+fff;
         if(copyFile(s,outName)){
             String busyboxFile = filesPath+"/busybox";
@@ -116,8 +124,25 @@ public class importToolsActivity extends AppCompatActivity {
                 extactAssetsFile(this,"extract.sh",extractScriptFile);
             }
             String cmd = "cd " + filesPath + " && sh extract.sh && cd ../ && chown -R "+myuid+":"+myuid+ " files/";
-            alertDialogThread dialogThread = new alertDialogThread(importToolsActivity.this, "解压 " + fff + " ...", cmd, "提示", "解压成功", "解压失败");
-            dialogThread.start();
+            AlertDialog show = showMyDialog(importToolsActivity.this,"提示","正在安装插件,请稍后(可能会出现无响应，请耐心等待)....");
+            preventDismissDialog(show);
+            Handler handler = new Handler(){
+                @Override
+                public void handleMessage(@NonNull Message msg) {
+                    if(msg.what==0){
+                        multiFunc.dismissDialog(show);
+                    }
+                }
+            };
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    CMD cmd1 = new CMD(cmd);
+                    Message msg = new Message();
+                    msg.what=0;
+                    handler.sendMessage(msg);
+                }
+            }).start();
         }
     }
 
@@ -149,7 +174,6 @@ public class importToolsActivity extends AppCompatActivity {
                 if(s.indexOf(fqfile) != -1){
                     extractFile(s,fqfile);
                 }
-
                 if(s.indexOf(jdkfile) != -1){
                     extractFile(s,jdkfile);
                 }

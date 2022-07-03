@@ -37,8 +37,6 @@ import org.fqaosp.utils.multiFunc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class workProfileManageActivity extends AppCompatActivity {
 
@@ -72,68 +70,42 @@ public class workProfileManageActivity extends AppCompatActivity {
             public void onClick(View view) {
                 AlertDialog show = showMyDialog(workProfileManageActivity.this,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
                 preventDismissDialog(show);
+                Handler handler = new Handler(){
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        if(msg.what==0){
+                            getPKGByUID(1);
+                            multiFunc.dismissDialog(show);
+                        }
+                    }
+                };
                 view.post(new Runnable() {
                     @Override
                     public void run() {
-                        ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
                         makeWP wp = new makeWP();
                         for (int i = 0; i < checkboxs.size(); i++) {
                             if(checkboxs.get(i)){
                                 PKGINFO pkginfo = pkginfos.get(i);
                                 String pkgname = pkginfo.getPkgname();
-                                Runnable runnable = new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ExecutorService cacheThreadPool2 = Executors.newFixedThreadPool(4);
-                                        for (int i1 = 0; i1 < checkboxsByUser.size(); i1++) {
-                                            if(checkboxsByUser.get(i1)){
-                                                String s = list.get(i1);
-                                                Runnable runnable1 = new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        CMD cmd = new CMD(wp.getInstallPkgCMD(s, pkgname));
-                                                        //判断该用户下有没有安装该应用,如果有就跳过
-                                                        ArrayList<workProfileDBEntity> select = workProfiledb.select(pkgname, Integer.valueOf(s));
-                                                        if(select.size() == 0 && cmd.getResultCode() == 0){
-                                                            workProfiledb.insert(pkgname,Integer.valueOf(s));
-                                                        }else{
-                                                            Log.d("wpma insert error ::: ",pkgname + " --  uid ::: " + s + " -- " +select.size() + " -- cmd :::  " + cmd.getResultCode() + " -- " + cmd.getResult());
-                                                        }
-                                                    }
-                                                };
-                                                cacheThreadPool2.execute(runnable1);
-                                            }
-                                        }
-                                        cacheThreadPool2.shutdown();
-                                        while(true){
-                                            if(cacheThreadPool2.isTerminated()){
-                                                break;
-                                            }
-                                            try {
-                                                Thread.sleep(100);
-                                            } catch (InterruptedException e) {
-                                                e.printStackTrace();
-                                            }
+                                for (int i1 = 0; i1 < checkboxsByUser.size(); i1++) {
+                                    if(checkboxsByUser.get(i1)){
+                                        String s = list.get(i1);
+                                        CMD cmd = new CMD(wp.getInstallPkgCMD(s, pkgname));
+                                        //判断该用户下有没有安装该应用,如果有就跳过
+                                        ArrayList<workProfileDBEntity> select = workProfiledb.select(pkgname, Integer.valueOf(s));
+                                        if(select.size() == 0 ){
+                                            workProfiledb.insert(pkgname,Integer.valueOf(s));
+                                        }else{
+                                            Log.d("wpma insert error ::: ",pkgname + " --  uid ::: " + s + " -- " +select.size() + " -- cmd :::  " + cmd.getResultCode() + " -- " + cmd.getResult());
                                         }
                                     }
-                                };
-                                cacheThreadPool.execute(runnable);
+                                }
                             }
 
                         }
-                        cacheThreadPool.shutdown();
-                        while (true){
-                            if(cacheThreadPool.isTerminated()){
-                                getPKGByUID(1);
-                                multiFunc.dismissDialog(show);
-                                break;
-                            }
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                        Message msg = new Message();
+                        msg.what=0;
+                        handler.sendMessage(msg);
                     }
                 });
             }
@@ -144,68 +116,41 @@ public class workProfileManageActivity extends AppCompatActivity {
             public void onClick(View view) {
                 AlertDialog show =showMyDialog(workProfileManageActivity.this,"提示","正在删除应用,请稍后(可能会出现无响应，请耐心等待)....");
                 preventDismissDialog(show);
+                Handler handler = new Handler(){
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        if(msg.what==0){
+                            getPKGByUID(1);
+                            multiFunc.dismissDialog(show);
+                        }
+                    }
+                };
                 view.post(new Runnable() {
                     @Override
                     public void run() {
-                        ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
                         makeWP wp = new makeWP();
                         for (int i = 0; i < checkboxs.size(); i++) {
                             if(checkboxs.get(i)){
                                 PKGINFO pkginfo = pkginfos.get(i);
                                 String pkgname = pkginfo.getPkgname();
-                                Runnable runnable = new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        ExecutorService cacheThreadPool2 = Executors.newFixedThreadPool(4);
-                                        for (int i1 = 0; i1 < checkboxsByUser.size(); i1++) {
-                                            if(checkboxsByUser.get(i1)){
-                                                String s = list.get(i1);
-                                                Runnable runnable1 = new Runnable() {
-                                                    @Override
-                                                    public void run() {
-                                                        CMD cmd = new CMD(wp.getUninstallPkgByUIDCMD(s,pkgname));
-                                                        //判断该用户下有没有安装该应用,如果有就跳过
-                                                        ArrayList<workProfileDBEntity> select = workProfiledb.select(pkgname, Integer.valueOf(s));
-                                                        if(select.size() > 0 && cmd.getResultCode() == 0){
-                                                            workProfiledb.delete(pkgname,Integer.valueOf(s));
-                                                        }else{
-                                                            Log.d("wpma delete error ::: ",pkgname + " --  uid ::: " + s + " -- " +select.size() + " -- cmd :::  " + cmd.getResultCode() + " -- " + cmd.getResult());
-                                                        }
-                                                    }
-                                                };
-                                                cacheThreadPool2.execute(runnable1);
-                                            }
-                                        }
-                                        cacheThreadPool2.shutdown();
-                                        while(true){
-                                            if(cacheThreadPool2.isTerminated()){
-                                                break;
-                                            }
-                                            try {
-                                                Thread.sleep(100);
-                                            } catch (InterruptedException e) {
-                                                e.printStackTrace();
-                                            }
+                                for (int i1 = 0; i1 < checkboxsByUser.size(); i1++) {
+                                    if(checkboxsByUser.get(i1)){
+                                        String s = list.get(i1);
+                                        CMD cmd = new CMD(wp.getUninstallPkgByUIDCMD(s,pkgname));
+                                        //判断该用户下有没有安装该应用,如果有就跳过
+                                        ArrayList<workProfileDBEntity> select = workProfiledb.select(pkgname, Integer.valueOf(s));
+                                        if(select.size() > 0 ){
+                                            workProfiledb.delete(pkgname,Integer.valueOf(s));
+                                        }else{
+                                            Log.d("wpma delete error ::: ",pkgname + " --  uid ::: " + s + " -- " +select.size() + " -- cmd :::  " + cmd.getResultCode() + " -- " + cmd.getResult());
                                         }
                                     }
-                                };
-                                cacheThreadPool.execute(runnable);
-                            }
-
-                        }
-                        cacheThreadPool.shutdown();
-                        while (true){
-                            if(cacheThreadPool.isTerminated()){
-                                getPKGByUID(1);
-                                multiFunc.dismissDialog(show);
-                                break;
-                            }
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
+                                }
                             }
                         }
+                        Message msg = new Message();
+                        msg.what=0;
+                        handler.sendMessage(msg);
                     }
                 });
             }
@@ -241,7 +186,6 @@ public class workProfileManageActivity extends AppCompatActivity {
         pkginfos.clear();
         checkboxs.clear();
         pkginfoHashMap.clear();
-        ExecutorService cacheThreadPool2 = Executors.newFixedThreadPool(4);
         makeWP wp = new makeWP();
         if(list.size() == 0){
             getUsers();
@@ -266,68 +210,34 @@ public class workProfileManageActivity extends AppCompatActivity {
                     if(state == 1){
                         cmdstr = wp.getUserPkgByUIDCMD(uid);
                     }
-                    String finalCmdstr = cmdstr;
-                    Runnable runnable2 = new Runnable() {
-                        @Override
-                        public void run() {
-                            ExecutorService cacheThreadPool = Executors.newFixedThreadPool(6);
-                            CMD cmd = new CMD(finalCmdstr);
-                            if (cmd.getResultCode() == 0) {
-                                for (String s : cmd.getResult().split("\n")) {
-                                    Runnable runnable = new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            PackageManager pm = getPackageManager();
-                                            PackageInfo packageInfo = null;
-                                            try {
-                                                packageInfo = pm.getPackageInfo(s, 0);
-                                            } catch (PackageManager.NameNotFoundException e) {
-                                                e.printStackTrace();
-                                            }
-                                            checkBoxsHashMap(pkginfoHashMap, checkboxs, packageInfo, pm);
-                                        }
-                                    };
-                                    cacheThreadPool.execute(runnable);
-                                }
-
+                    CMD cmd = new CMD(cmdstr);
+                    String result = cmd.getResult();
+                    String[] split = result.split("\n");
+                    if (null != split) {
+                        for (String s : cmd.getResult().split("\n")) {
+                            PackageManager pm = getPackageManager();
+                            PackageInfo packageInfo = null;
+                            try {
+                                packageInfo = pm.getPackageInfo(s, 0);
+                            } catch (PackageManager.NameNotFoundException e) {
+                                e.printStackTrace();
                             }
-                            cacheThreadPool.shutdown();
-                            while (true) {
-                                if (cacheThreadPool.isTerminated()) {
-                                    break;
-                                }
-                                try {
-                                    Thread.sleep(100);
-                                } catch (InterruptedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
+                            checkBoxsHashMap(pkginfoHashMap, checkboxs, packageInfo, pm);
                         }
-                    };
-                    cacheThreadPool2.execute(runnable2);
+
+                    }
 
                 }
-
-                cacheThreadPool2.shutdown();
-                while(true){
-                    if(cacheThreadPool2.isTerminated()){
-                        pkginfos.clear();
-                        checkboxs.clear();
-                        pkginfos.addAll(pkginfoHashMap.values());
-                        for (PKGINFO pkginfo : pkginfos) {
-                            checkboxs.add(false);
-                        }
-                        Message msg = new Message();
-                        msg.what=0;
-                        handler.sendMessage(msg);
-                        break;
-                    }
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
+                pkginfos.clear();
+                checkboxs.clear();
+                pkginfos.addAll(pkginfoHashMap.values());
+                for (PKGINFO pkginfo : pkginfos) {
+                    checkboxs.add(false);
                 }
+                Message msg = new Message();
+                msg.what=0;
+                handler.sendMessage(msg);
+
             }
         }).start();
     }
