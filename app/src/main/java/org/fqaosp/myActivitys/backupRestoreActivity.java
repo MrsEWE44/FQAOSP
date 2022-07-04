@@ -109,7 +109,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                     for (File listFile : file.listFiles()) {
                         String s1 = listFile.toString();
                         if(s1.indexOf(file_end) != -1){
-                            list.add(s);
+                            list.add(s1);
                             checkboxs.add(false);
                         }
                     }
