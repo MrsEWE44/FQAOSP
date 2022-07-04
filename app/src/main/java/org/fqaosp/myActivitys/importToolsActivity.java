@@ -5,7 +5,9 @@ import static org.fqaosp.utils.fileTools.execFileSelect;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.selectFile;
+import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
@@ -36,6 +38,7 @@ import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class importToolsActivity extends AppCompatActivity {
 
@@ -125,22 +128,13 @@ public class importToolsActivity extends AppCompatActivity {
             }
             String cmd = "cd " + filesPath + " && sh extract.sh && cd ../ && chown -R "+myuid+":"+myuid+ " files/";
             AlertDialog show = showMyDialog(importToolsActivity.this,"提示","正在安装插件,请稍后(可能会出现无响应，请耐心等待)....");
-            preventDismissDialog(show);
-            Handler handler = new Handler(){
-                @Override
-                public void handleMessage(@NonNull Message msg) {
-                    if(msg.what==0){
-                        multiFunc.dismissDialog(show);
-                    }
-                }
-            };
+            Handler handler = dismissDialogHandler(0,show);
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     CMD cmd1 = new CMD(cmd);
-                    Message msg = new Message();
-                    msg.what=0;
-                    handler.sendMessage(msg);
+                    cmd1.getResultCode();
+                    sendHandlerMSG(handler,0);
                 }
             }).start();
         }

@@ -1,6 +1,7 @@
 package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
@@ -85,9 +86,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
             @Override
             public void run() {
                 getImgs();
-                Message msg = new Message();
-                msg.what=0;
-                handler.sendMessage(msg);
+                sendHandlerMSG(handler,0);
             }
         }).start();
 

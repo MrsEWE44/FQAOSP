@@ -38,7 +38,7 @@ public class makeWP {
 
     //初始化工作资料空间最大可创建数量为1024
     public Boolean init(){
-        CMD cmd = new CMD(getInitCMD(),true,false);
+        CMD cmd = new CMD(getInitCMD());
         return cmd.getResultCode() == 0;
     }
 
@@ -48,7 +48,7 @@ public class makeWP {
 
     //创建一个工作空间
     public Boolean createWP(){
-        CMD cmd = new CMD(getCreateWPCMD(),true,false);
+        CMD cmd = new CMD(getCreateWPCMD());
         return cmd.getResultCode() == 0;
     }
 
@@ -58,7 +58,7 @@ public class makeWP {
 
     //删除一个用户,需要指定uid
     public Boolean removeWP(String uid){
-        CMD cmd = new CMD(getRemoveWPCMD(uid),true,false);
+        CMD cmd = new CMD(getRemoveWPCMD(uid));
         return cmd.getResultCode() == 0;
     }
 
@@ -68,7 +68,7 @@ public class makeWP {
 
     //运行一个用户空间，也可以理解为激活
     public Boolean startWP(String uid){
-        CMD cmd = new CMD(getStartWPCMD(uid),true,false);
+        CMD cmd = new CMD(getStartWPCMD(uid));
         return cmd.getResultCode() == 0;
     }
 
@@ -88,7 +88,7 @@ public class makeWP {
         for (String userid : list) {
             startWP(userid);
             String pkgname = pkginfo.getPkgname();
-            CMD cmd = new CMD(getInstallPkgCMD(userid,pkgname),true,false);
+            CMD cmd = new CMD(getInstallPkgCMD(userid,pkgname));
             cmd.getResultCode();
         }
     }
@@ -110,7 +110,7 @@ public class makeWP {
 
     public void addCMDResult(String cmdstr , Activity activity,ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs){
         try {
-            CMD cmd = new CMD(cmdstr,true,false);
+            CMD cmd = new CMD(cmdstr);
             if(cmd.getResultCode() ==0){
                 pkginfos.clear();
                 for (String s : cmd.getResult().split("\n")) {

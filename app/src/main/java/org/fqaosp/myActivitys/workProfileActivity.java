@@ -1,7 +1,9 @@
 package org.fqaosp.myActivitys;
 
+import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.queryUSERS;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
@@ -9,6 +11,8 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -52,12 +56,7 @@ public class workProfileActivity extends AppCompatActivity {
 
     private ListView listView1;
 
-    private ExecutorService executorService = Executors.newFixedThreadPool(4);
-    private ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
-
     private workProfileDB workProfiledb = new workProfileDB(workProfileActivity.this, "workProfile", null, 1);
-
-
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -75,7 +74,7 @@ public class workProfileActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 AlertDialog show = showMyDialog(workProfileActivity.this,"提示","正在创建分身空间,请稍后(可能会出现无响应，请耐心等待)....");
-                preventDismissDialog(show);
+                Handler handler = dismissDialogHandler(0,show);
                 view.post(new Runnable() {
                     @Override
                     public void run() {
@@ -86,65 +85,38 @@ public class workProfileActivity extends AppCompatActivity {
                             if(makewp.init()){
                                 for(int j=0;j<num;j++){
                                     //创建工作资料空间
-                                    Runnable runnable = new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if(makewp.createWP()){
-                                                Log.d("workP "," is create ok !!!");
-                                            }
-                                        }
-                                    };
-                                    executorService.execute(runnable);
+                                    if(makewp.createWP()){
+                                        Log.d("workP "," is create ok !!!");
+                                    }
                                 }
-
                             }
-                            executorService.shutdown();
                             try {
-                                while(true){
-                                    if(executorService.isTerminated()){
-                                        queryUSERS(workProfileActivity.this,users);
-                                        for (int i = 0; i < checkboxs.size(); i++) {
-                                            if (checkboxs.get(i)) {
-                                                PKGINFO pkginfo = pkginfos.get(i);
-                                                //同步所有空间都安装选中的应用
+                                queryUSERS(workProfileActivity.this,users);
+                                for (int i = 0; i < checkboxs.size(); i++) {
+                                    if (checkboxs.get(i)) {
+                                        PKGINFO pkginfo = pkginfos.get(i);
+                                        //同步所有空间都安装选中的应用
 //                                                makewp.syncapk(workProfileActivity.this,pkginfo);
-                                                for (String userid : users) {
-                                                    Runnable runnable = new Runnable() {
-                                                        @Override
-                                                        public void run() {
-                                                            makewp.startWP(userid);
-                                                            String pkgname = pkginfo.getPkgname();
-                                                            //从数据库里查询，如果不存在该用户以及相关包名，则允许安装与插入数据库
-                                                            ArrayList<workProfileDBEntity> select = workProfiledb.select(pkgname, Integer.valueOf(userid));
-                                                            if(select.size() == 0){
-                                                                CMD cmd = new CMD(makewp.getInstallPkgCMD(userid,pkgname));
-                                                                if(cmd.getResultCode() == 0){
-                                                                    workProfiledb.insert(pkgname,Integer.valueOf(userid));
-                                                                }else{
-                                                                    Log.d("error wp cmd ::: ",cmd.getResultCode() + " -- " + cmd.getResult());
-                                                                }
-                                                            }
-                                                        }
-                                                    };
-                                                    cacheThreadPool.execute(runnable);
+                                        for (String userid : users) {
+                                            makewp.startWP(userid);
+                                            String pkgname = pkginfo.getPkgname();
+                                            //从数据库里查询，如果不存在该用户以及相关包名，则允许安装与插入数据库
+                                            ArrayList<workProfileDBEntity> select = workProfiledb.select(pkgname, Integer.valueOf(userid));
+                                            if(select.size() == 0){
+                                                CMD cmd = new CMD(makewp.getInstallPkgCMD(userid,pkgname));
+                                                if(cmd.getResultCode() == 0){
+                                                    workProfiledb.insert(pkgname,Integer.valueOf(userid));
+                                                }else{
+                                                    Log.d("error wp cmd ::: ",cmd.getResultCode() + " -- " + cmd.getResult());
                                                 }
                                             }
                                         }
-                                        cacheThreadPool.shutdown();
-                                        while(true){
-                                            if(cacheThreadPool.isTerminated()){
-                                                checkUser(makewp);
-                                                editText1.setText("");
-                                                Toast.makeText(workProfileActivity.this, "全部新增成功", Toast.LENGTH_LONG).show();
-                                                multiFunc.dismissDialog(show);
-                                                break;
-                                            }
-                                            Thread.sleep(100);
-                                        }
-                                        break;
                                     }
-                                    Thread.sleep(100);
                                 }
+                                checkUser(makewp);
+                                editText1.setText("");
+                                Toast.makeText(workProfileActivity.this, "全部新增成功", Toast.LENGTH_LONG).show();
+                                sendHandlerMSG(handler,0);
                             }catch (Exception e){
                                 Toast.makeText(workProfileActivity.this, "wpa :: "+e.getMessage(), Toast.LENGTH_SHORT).show();
                             }

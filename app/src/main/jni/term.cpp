@@ -113,31 +113,6 @@ static int create_subprocess(JNIEnv *env,
     }
 }
 
-extern "C"
-JNIEXPORT jstring JNICALL
-Java_org_fqaosp_naive_term_runcmd(JNIEnv *env, jclass clazz, jstring cmd, jint code) {
-    FILE *pResultStr = NULL;
-    char szBuf[1024] = {0};
-
-    /* 创建子进程，执行shell命令 */
-    pResultStr = popen(env->GetStringUTFChars(cmd, 0), "r");
-    if (NULL == pResultStr) {
-//        printf("popen faild. (%d, %s)\n",errno, strerror(errno));
-        code = -1;
-        return str2jstring(env, "popen faild");
-    }
-    /* 获取返回结果 */
-    fread(szBuf, 1, sizeof(szBuf), pResultStr);
-
-    /* 打印命令返回内容 */
-//    printf("Info: %s\n", szBuf);
-
-    /* 不要忘记关闭句柄 */
-    pclose(pResultStr);
-    code = 0;
-    return str2jstring(env, szBuf);
-}
-
 jstring str2jstring(JNIEnv *env, char pat[1024]) {
     //定义java String类 strClass
     jclass strClass = (env)->FindClass("java/lang/String");
@@ -251,4 +226,40 @@ Java_org_fqaosp_naive_term_setPtyUTF8Mode(JNIEnv *env, jclass clazz, jint fd) {
         tios.c_iflag |= IUTF8;
         tcsetattr(fd, TCSANOW, &tios);
     }
+}
+
+extern "C"
+JNIEXPORT jint JNICALL
+Java_org_fqaosp_naive_term_system_1runcmd(JNIEnv *env, jclass clazz, jstring cmd) {
+    return system(env->GetStringUTFChars(cmd,0));
+}
+extern "C"
+JNIEXPORT jobject JNICALL
+Java_org_fqaosp_naive_term_runcmd(JNIEnv *env, jclass clazz, jstring cmd) {
+    //通过调用Java反射实现hashmap功能
+    jclass class_hashmap = env->FindClass("java/util/HashMap");
+    jmethodID hashmap_init = env->GetMethodID(class_hashmap, "<init>", "()V");
+    jobject HashMap = env->NewObject(class_hashmap, hashmap_init);
+    jmethodID HashMap_put = env->GetMethodID(class_hashmap, "put","(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
+
+    FILE *pResultStr = NULL;
+    char szBuf[1024] = {0};
+
+    /* 创建子进程，执行shell命令 */
+    pResultStr = popen(env->GetStringUTFChars(cmd, 0), "r");
+    if (NULL == pResultStr) {
+//        printf("popen faild. (%d, %s)\n",errno, strerror(errno));
+        env->CallObjectMethod(HashMap, HashMap_put, env->NewStringUTF("-1"), str2jstring(env, "popen faild") );
+        return HashMap;
+    }
+    /* 获取返回结果 */
+    fread(szBuf, 1, sizeof(szBuf), pResultStr);
+
+    /* 打印命令返回内容 */
+//    printf("Info: %s\n", szBuf);
+
+    /* 不要忘记关闭句柄 */
+    pclose(pResultStr);
+    env->CallObjectMethod(HashMap, HashMap_put, env->NewStringUTF("0"), str2jstring(env, szBuf));
+    return HashMap;
 }

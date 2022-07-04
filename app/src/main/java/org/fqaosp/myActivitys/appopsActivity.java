@@ -19,6 +19,7 @@ import static org.fqaosp.utils.multiFunc.clearList;
 import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
@@ -613,10 +614,10 @@ public class appopsActivity extends AppCompatActivity {
                         PackageInfo packageInfo = null;
                         try {
                             packageInfo = pm.getPackageInfo(s, 0);
+                            checkBoxs(pkginfos, checkboxs, packageInfo, pm);
                         } catch (PackageManager.NameNotFoundException e) {
                             e.printStackTrace();
                         }
-                        checkBoxs(pkginfos, checkboxs, packageInfo, pm);
                     }
                     Collections.sort(pkginfos, new Comparator<PKGINFO>() {
                         @Override
@@ -625,9 +626,7 @@ public class appopsActivity extends AppCompatActivity {
                         }
                     });
                 }
-                Message msg = new Message();
-                msg.what=0;
-                handler.sendMessage(msg);
+                sendHandlerMSG(handler,0);
             }
         }).start();
 

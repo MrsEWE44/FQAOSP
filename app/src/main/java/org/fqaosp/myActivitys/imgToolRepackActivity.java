@@ -6,6 +6,7 @@ import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.selectFile;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -69,6 +70,7 @@ public class imgToolRepackActivity extends AppCompatActivity {
                             file.mkdirs();
                         }
                         String cmd = "cd " + filesPath + " && sh repack.sh "+inputDir + " "+outName+ " " + name;
+
                         alertDialogThread dialogThread = new alertDialogThread(imgToolRepackActivity.this, "正在打包 " + name + " ...", cmd, "提示", "打包成功 " + outName, "打包失败");
                         dialogThread.start();
                     }
@@ -111,10 +113,7 @@ public class imgToolRepackActivity extends AppCompatActivity {
     private void getDefaultImgProject(){
         clearList();
         String homePath = getMyStorageHomePath(imgToolRepackActivity.this);
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(imgToolRepackActivity.this);
-        alertDialog.setTitle("提示");
-        alertDialog.setMessage("请稍后，正在扫描本地镜像工程...");
-        AlertDialog show = alertDialog.show();
+        AlertDialog show = showMyDialog(imgToolRepackActivity.this,"提示","请稍后，正在扫描本地镜像工程...");
         preventDismissDialog(show);
         String cmd = "find " + homePath + "/unpack -type d";
         CMD cmd1 = new CMD(cmd);

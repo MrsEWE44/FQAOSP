@@ -7,12 +7,16 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Handler;
+import android.os.Message;
 import android.os.Process;
 import android.os.UserHandle;
 import android.os.UserManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+
+import androidx.annotation.NonNull;
 
 import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.myActivitys.backupRestoreActivity;
@@ -148,6 +152,19 @@ public class multiFunc {
         return pkginfos2;
     }
 
+    //搜索列表匹配项
+    public static ArrayList<String> indexOfLIST(ArrayList<String> list , ArrayList<Boolean> checkboxs,String findStr){
+        checkboxs.clear();
+        ArrayList<String> strings = new ArrayList<>();
+        for (String s : list) {
+            if(isIndexOfStr(s,findStr)){
+                strings.add(s);
+                checkboxs.add(false);
+            }
+        }
+        return strings;
+    }
+
     public static void checkBoxs(ArrayList<PKGINFO> pkginfos,ArrayList<Boolean> checkboxs,PackageInfo packageInfo,PackageManager packageManager){
         if(checkboxs != null){
             checkboxs.add(false);
@@ -249,6 +266,25 @@ public class multiFunc {
         } catch (Exception e) {
         }
         ddd.dismiss();
+    }
+
+
+    public static Handler dismissDialogHandler(int value,AlertDialog show){
+        preventDismissDialog(show);
+        return new Handler(){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if(msg.what==value){
+                    dismissDialog(show);
+                }
+            }
+        };
+    }
+
+    public static void sendHandlerMSG(Handler handler , int value){
+        Message msg = new Message();
+        msg.what=value;
+        handler.sendMessage(msg);
     }
 
     //调用命令对选项进行相应授权、撤销操作

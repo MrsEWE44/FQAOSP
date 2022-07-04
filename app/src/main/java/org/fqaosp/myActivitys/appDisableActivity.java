@@ -4,6 +4,7 @@ import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
 import android.content.ClipboardManager;
@@ -187,10 +188,7 @@ public class appDisableActivity extends AppCompatActivity {
     }
 
     private  void hideButtonCMD(String cmd,String msg){
-        final AlertDialog.Builder alertDialog = new AlertDialog.Builder(appDisableActivity.this);
-        alertDialog.setTitle("提示");
-        alertDialog.setMessage("请稍后，正在执行禁用策略...");
-        AlertDialog show = alertDialog.show();
+        AlertDialog show = showMyDialog(appDisableActivity.this,"提示","请稍后，正在执行禁用策略...");
         preventDismissDialog(show);
         cmdThread ee = new cmdThread(cmd, msg, msg, appDisableActivity.this, show);
         ee.start();

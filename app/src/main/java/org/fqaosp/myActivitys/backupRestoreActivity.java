@@ -3,8 +3,10 @@ package org.fqaosp.myActivitys;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
+import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
@@ -45,6 +47,8 @@ import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 /**
  *
@@ -67,7 +71,7 @@ public class backupRestoreActivity extends AppCompatActivity {
     private Button b1 ,b2,brasearchb;
     private Switch brasb1,brasb2,brasb3;
     private Boolean brasb1Bool,brasb2Bool,brasb3Bool,isBackup;
-
+    private String file_end=".tar.xz";
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -103,15 +107,16 @@ public class backupRestoreActivity extends AppCompatActivity {
                 if(file.exists()){
                     clearlist();
                     for (File listFile : file.listFiles()) {
-                        list.add(listFile.toString());
-                        checkboxs.add(false);
+                        String s1 = listFile.toString();
+                        if(s1.indexOf(file_end) != -1){
+                            list.add(s);
+                            checkboxs.add(false);
+                        }
                     }
                 }else{
                     Toast.makeText(a, "看样子还没有备份过", Toast.LENGTH_SHORT).show();
                 }
-                Message msg = new Message();
-                msg.what=0;
-                handler.sendMessage(msg);
+                sendHandlerMSG(handler,0);
             }
         }).start();
     }
@@ -133,7 +138,7 @@ public class backupRestoreActivity extends AppCompatActivity {
 
         lv1 = findViewById(R.id.bralv1);
         brasb1Bool=false;
-        brasb2Bool=false;
+        brasb2Bool=true;
         brasb3Bool=false;
         brasb1.setChecked(brasb1Bool);
         brasb2.setChecked(brasb2Bool);
@@ -187,16 +192,7 @@ public class backupRestoreActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 AlertDialog show = showMyDialog(backupRestoreActivity.this,"提示","正在备份应用,请稍后(可能会出现无响应，请耐心等待)....");
-                preventDismissDialog(show);
-                Handler handler = new Handler(){
-                    @Override
-                    public void handleMessage(@NonNull Message msg) {
-                        if(msg.what==0){
-                            multiFunc.dismissDialog(show);
-                        }
-                    }
-                };
-
+                Handler handler = dismissDialogHandler(0,show);
                 view.post(new Runnable() {
                     @Override
                     public void run() {
@@ -250,11 +246,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                         }else{
                             Toast.makeText(backupRestoreActivity.this, "请切换回备份模式", Toast.LENGTH_SHORT).show();
                         }
-
-                        Message msg = new Message();
-                        msg.what=0;
-                        handler.sendMessage(msg);
-
+                        sendHandlerMSG(handler,0);
                     }
                 });
             }
@@ -264,16 +256,7 @@ public class backupRestoreActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 AlertDialog show = showMyDialog(backupRestoreActivity.this,"提示","正在恢复应用,请稍后(可能会出现无响应，请耐心等待)....");
-                preventDismissDialog(show);
-                Handler handler = new Handler(){
-                    @Override
-                    public void handleMessage(@NonNull Message msg) {
-                        if(msg.what==0){
-                            multiFunc.dismissDialog(show);
-                        }
-                    }
-                };
-
+                Handler handler = dismissDialogHandler(0,show);
                 view.post(new Runnable() {
                     @Override
                     public void run() {
@@ -316,9 +299,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                         }else{
                             Toast.makeText(backupRestoreActivity.this, "请切换回恢复模式", Toast.LENGTH_SHORT).show();
                         }
-                        Message msg = new Message();
-                        msg.what=0;
-                        handler.sendMessage(msg);
+                        sendHandlerMSG(handler,0);
                     }
                 });
             }
@@ -328,7 +309,11 @@ public class backupRestoreActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String searchStr = braet1.getText().toString();
-                pkginfos = multiFunc.indexOfPKGS(backupRestoreActivity.this,searchStr,pkginfos,checkboxs,0);
+                if(isBackup){
+                    pkginfos = multiFunc.indexOfPKGS(backupRestoreActivity.this,searchStr,pkginfos,checkboxs,0);
+                }else{
+                    list=multiFunc.indexOfLIST(list,checkboxs,searchStr);
+                }
                 showPKGS(lv1);
             }
         });
@@ -403,7 +388,7 @@ public class backupRestoreActivity extends AppCompatActivity {
     }
 
     private boolean restoryByFileName(String filename){
-        String pkgname = filename.replaceAll(".tar.gz","");
+        String pkgname = filename.replaceAll(file_end,"");
         if(!pkgname.equals(getPackageName())){
            return restoryByPKGNAME(pkgname);
         }

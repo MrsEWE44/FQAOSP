@@ -2,14 +2,21 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.execFileSelect;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.selectFile;
+import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
+import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,6 +31,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.threads.alertDialogThread;
+import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.permissionRequest;
 
@@ -44,30 +52,37 @@ public class apkRecompileActivity extends AppCompatActivity {
         Button b2 = findViewById(R.id.arab2);
         Button b3 = findViewById(R.id.arab3);
         lv1 = findViewById(R.id.aralv1);
-
+        Activity a = this;
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
+                AlertDialog show = showMyDialog(apkRecompileActivity.this,"提示","请稍后，正在反编译中...(可能会出现无响应，请耐心等待)....");
+                Handler handler = dismissDialogHandler(0,show);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
                         String filesDir = getMyHomeFilesPath(apkRecompileActivity.this);
-                        String decompilepath = list.get(i);
-                        String inputDir=decompilepath.substring(0,decompilepath.lastIndexOf("/"));
-                        String outname = getPathByLastName(inputDir);
-                        String storage = Environment.getExternalStorageDirectory().toString();
-                        String outDir = storage+"/Android/data/"+getPackageName()+"/files/recompile";
-                        File file = new File(outDir);
-                        if(!file.exists()){
-                           file.mkdirs();
+                        String myStorageHomePath = getMyStorageHomePath(a);
+                        for (int i = 0; i < checkboxs.size(); i++) {
+                            if(checkboxs.get(i)){
+                                String decompilepath = list.get(i);
+                                String inputDir=decompilepath.substring(0,decompilepath.lastIndexOf("/"));
+                                String outname = getPathByLastName(inputDir);
+                                String outDir = myStorageHomePath+"/files/recompile";
+                                File file = new File(outDir);
+                                if(!file.exists()){
+                                    file.mkdirs();
+                                }
+                                String outFile = outDir+"/"+outname+".apk";
+                                String cmd = "cd " + filesDir + " && sh re.sh " + outFile + " " + inputDir;
+                                CMD cmd1 = new CMD(cmd);
+                                Toast.makeText(apkRecompileActivity.this, cmd1.getResultCode()==0?"回编译成功":"回编译失败", Toast.LENGTH_SHORT).show();
+                            }
                         }
-
-                        String outFile = outDir+"/"+outname+".apk";
-                        String cmd = "cd " + filesDir + " && sh re.sh " + outFile + " " + inputDir;
-                        alertDialogThread dialogThread = new alertDialogThread(apkRecompileActivity.this, "请稍后，正在回编译中...", cmd, "提示", "回编译成功 " + outFile, "回编译失败");
-                        dialogThread.start();
+                        sendHandlerMSG(handler,0);
                     }
-                }
+                });
+
 
             }
         });
@@ -76,8 +91,8 @@ public class apkRecompileActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 clearList();
-                String storage = Environment.getExternalStorageDirectory().toString();
-                String defaultDecompileDir = storage+"/Android/data/"+getPackageName()+"/files/decompile";
+                String myStorageHomePath = getMyStorageHomePath(a);
+                String defaultDecompileDir = myStorageHomePath+"/files/decompile";
                 File file1 = new File(defaultDecompileDir);
                 if(file1.exists()){
                     File[] files = file1.listFiles();

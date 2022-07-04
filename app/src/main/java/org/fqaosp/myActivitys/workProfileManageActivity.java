@@ -2,6 +2,7 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.checkBoxsHashMap;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
@@ -219,14 +220,12 @@ public class workProfileManageActivity extends AppCompatActivity {
                             PackageInfo packageInfo = null;
                             try {
                                 packageInfo = pm.getPackageInfo(s, 0);
+                                checkBoxsHashMap(pkginfoHashMap, checkboxs, packageInfo, pm);
                             } catch (PackageManager.NameNotFoundException e) {
                                 e.printStackTrace();
                             }
-                            checkBoxsHashMap(pkginfoHashMap, checkboxs, packageInfo, pm);
                         }
-
                     }
-
                 }
                 pkginfos.clear();
                 checkboxs.clear();
@@ -234,9 +233,7 @@ public class workProfileManageActivity extends AppCompatActivity {
                 for (PKGINFO pkginfo : pkginfos) {
                     checkboxs.add(false);
                 }
-                Message msg = new Message();
-                msg.what=0;
-                handler.sendMessage(msg);
+               sendHandlerMSG(handler,0);
 
             }
         }).start();

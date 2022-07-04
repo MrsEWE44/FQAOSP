@@ -1,11 +1,15 @@
 package org.fqaosp.naive;
 
+import java.util.HashMap;
+
 public final class term {
     static {
         System.loadLibrary("term");
     }
 
-    public static native String runcmd(String cmd,int code);
+    public static native HashMap<String,String> runcmd(String cmd);
+
+    public static native int system_runcmd(String cmd);
 
     /**
      * Create a subprocess. Differs from {@link ProcessBuilder} in that a pseudoterminal is used to communicate with the

@@ -2,22 +2,30 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.execFileSelect;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.selectFile;
+import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
+import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.queryUserPKGS;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,7 +35,7 @@ import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
-import org.fqaosp.threads.alertDialogThread;
+import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.permissionRequest;
@@ -54,23 +62,32 @@ public class apkDecompileActivity extends AppCompatActivity {
         EditText adaet1 = findViewById(R.id.adaet1);
         lv1 = findViewById(R.id.adalv1);
         permissionRequest.getExternalStorageManager(apkDecompileActivity.this);
+        Activity a = this;
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
+                AlertDialog show = showMyDialog(apkDecompileActivity.this,"提示","请稍后，正在反编译中...(可能会出现无响应，请耐心等待)....");
+                Handler handler = dismissDialogHandler(0,show);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
                         String filesDir = getMyHomeFilesPath(apkDecompileActivity.this);
-                        String filePath = pkginfos.size() > 0 ?pkginfos.get(i).getApkpath() : list.get(i);
                         PackageManager packageManager = getPackageManager();
-                        PackageInfo archiveInfo = packageManager.getPackageArchiveInfo(filePath, 0);
-                        String pkgname =  archiveInfo.packageName;
-                        String storage = Environment.getExternalStorageDirectory().toString();
-                        String outDir = storage+"/Android/data/"+getPackageName()+"/files/decompile/"+pkgname;
-                        String cmd = "cd " + filesDir + " && sh de.sh " + outDir + " " + filePath;
-                        alertDialogThread dialogThread = new alertDialogThread(apkDecompileActivity.this, "请稍后，正在反编译中...", cmd, "提示", "反编译成功 " + outDir, "反编译失败");
-                        dialogThread.start();
+                        String myStorageHomePath = getMyStorageHomePath(a);
+                        for (int i = 0; i < checkboxs.size(); i++) {
+                            if(checkboxs.get(i)){
+                                String filePath = pkginfos.size() > 0 ?pkginfos.get(i).getApkpath() : list.get(i);
+                                PackageInfo archiveInfo = packageManager.getPackageArchiveInfo(filePath, 0);
+                                String pkgname =  archiveInfo.packageName;
+                                String outDir = myStorageHomePath+"/files/decompile/"+pkgname;
+                                String cmd = "cd " + filesDir + " && sh de.sh " + outDir + " " + filePath;
+                                CMD cmd1 = new CMD(cmd);
+                                Toast.makeText(apkDecompileActivity.this, cmd1.getResultCode()==0?"反编译成功":"反编译失败", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        sendHandlerMSG(handler,0);
                     }
-                }
+                });
             }
         });
 

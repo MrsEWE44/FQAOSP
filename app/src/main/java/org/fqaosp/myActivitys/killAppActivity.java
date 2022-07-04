@@ -3,6 +3,7 @@ package org.fqaosp.myActivitys;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
@@ -238,9 +239,7 @@ public class killAppActivity extends AppCompatActivity {
                     multiFunc.queryAllRunningPKGS(activity,pkginfos,checkboxs,0);
                 }
                 checkRunningPKG();
-                Message msg = new Message();
-                msg.what=0;
-                handler.sendMessage(msg);
+                sendHandlerMSG(handler,0);
             }
         }).start();
 

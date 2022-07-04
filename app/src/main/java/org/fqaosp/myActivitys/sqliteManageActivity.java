@@ -91,7 +91,6 @@ public class sqliteManageActivity extends AppCompatActivity {
                 ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
                 AlertDialog show = showMyDialog(sqliteManageActivity.this,"提示","正在更新数据库,请稍后(可能会出现无响应，请耐心等待)....");
                 preventDismissDialog(show);
-
                 view.post(new Runnable() {
                     @Override
                     public void run() {
@@ -116,10 +115,7 @@ public class sqliteManageActivity extends AppCompatActivity {
                             Runnable runnable = new Runnable() {
                                 @Override
                                 public void run() {
-
-
                                     if(mode ==0){
-
                                         if(editText.getText().toString().isEmpty() || editText2.getText().toString().isEmpty()){
                                             killAppdb.delete(finalEntry.getKey(), finalEntry.getValue());
                                         }
@@ -130,7 +126,6 @@ public class sqliteManageActivity extends AppCompatActivity {
                                                 Toast.makeText(me, e.getMessage(), Toast.LENGTH_SHORT).show();
                                             }
                                         }
-
                                     }
 
                                     if(mode == 1){

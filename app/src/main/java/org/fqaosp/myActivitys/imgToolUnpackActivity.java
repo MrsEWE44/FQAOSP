@@ -6,6 +6,7 @@ import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.selectFile;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -57,12 +58,12 @@ public class imgToolUnpackActivity extends AppCompatActivity {
         ituab1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                String mystoragehome = getMyStorageHomePath(imgToolUnpackActivity.this);
+                String filesPath = getMyHomeFilesPath(imgToolUnpackActivity.this);
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if(checkboxs.get(i)){
                         String s = list.get(i);
                         String name = getPathByLastName(s).replaceAll(".img","");
-                        String mystoragehome = getMyStorageHomePath(imgToolUnpackActivity.this);
-                        String filesPath = getMyHomeFilesPath(imgToolUnpackActivity.this);
                         String outPath = mystoragehome+"/files/unpack/"+name;
                         File file = new File(outPath);
                         if(!file.exists()){
@@ -102,10 +103,7 @@ public class imgToolUnpackActivity extends AppCompatActivity {
     private void getLocalImgs(){
         clearList();
         String storage = Environment.getExternalStorageDirectory().toString();
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(imgToolUnpackActivity.this);
-        alertDialog.setTitle("提示");
-        alertDialog.setMessage("请稍后，正在扫描本地镜像文件...");
-        AlertDialog show = alertDialog.show();
+        AlertDialog show = showMyDialog(imgToolUnpackActivity.this,"提示","请稍后，正在扫描本地镜像文件...");
         preventDismissDialog(show);
         String cmd = "find " + storage + "/ -name '*.img'";
         CMD cmd1 = new CMD(cmd);

@@ -1,5 +1,5 @@
 if [ -f "busybox" ];then
-	chmod 755 busybox
+	chmod 777 busybox
 	if [ -f "fqtools.tar" ];then
 		./busybox tar xf fqtools.tar
 		rm -rf fqtools.tar

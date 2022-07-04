@@ -126,6 +126,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity {
                 }
                 Integer myuid = Process.myUid();
                 String cmd = "cd " + filesDir + " && sh make.sh && cd ../ && chown -R "+myuid+":"+myuid+" files/";
+
                 alertDialogThread dialogThread = new alertDialogThread(apkDecompileMenuActivity.this, "请稍后，正在解压apktool相关资源文件", cmd, "提示", "解压成功", "解压失败");
                 dialogThread.start();
             }
