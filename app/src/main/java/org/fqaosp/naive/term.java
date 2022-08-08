@@ -9,7 +9,7 @@ public final class term {
 
     public static native HashMap<String,String> runcmd(String cmd);
 
-    public static native int system_runcmd(String cmd);
+    public static native int systemcmd(String cmd);
 
     /**
      * Create a subprocess. Differs from {@link ProcessBuilder} in that a pseudoterminal is used to communicate with the

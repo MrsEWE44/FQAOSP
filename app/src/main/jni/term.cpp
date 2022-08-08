@@ -230,7 +230,7 @@ Java_org_fqaosp_naive_term_setPtyUTF8Mode(JNIEnv *env, jclass clazz, jint fd) {
 
 extern "C"
 JNIEXPORT jint JNICALL
-Java_org_fqaosp_naive_term_system_1runcmd(JNIEnv *env, jclass clazz, jstring cmd) {
+Java_org_fqaosp_naive_term_systemcmd(JNIEnv *env, jclass clazz, jstring cmd) {
     return system(env->GetStringUTFChars(cmd,0));
 }
 extern "C"

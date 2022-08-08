@@ -10,9 +10,8 @@ if [ -f "busybox" ];then
 		./busybox tar xf jdk.tar.xz
 		rm -rf jdk.tar.xz
 		exit 0;
-	else
-		exit 1;
 	fi
+	exit 1;
 fi
 
 

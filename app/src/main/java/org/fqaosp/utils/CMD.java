@@ -6,10 +6,8 @@ import org.fqaosp.naive.term;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.HashMap;
-import java.util.concurrent.ExecutionException;
 
 /**
  *
@@ -33,7 +31,7 @@ public class CMD {
         String cmdhead = root ?"su":"/system/bin/sh" ;
         Log.i("cmd ::: ",cmd);
         if(isterm){
-            HashMap<String,String> hashMap = term.runcmd(cmdhead+" -c \""+cmd+"\" && exit;");
+            HashMap<String,String> hashMap = term.runcmd(cmdhead+" -c '"+cmd+"' && exit;");
             for (String s : hashMap.keySet()) {
                 resultCode = Integer.valueOf(s.replaceAll("\\s+",""));
                 sb.append(hashMap.get(s));
