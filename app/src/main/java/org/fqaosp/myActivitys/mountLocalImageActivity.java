@@ -2,6 +2,7 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
@@ -122,7 +123,8 @@ public class mountLocalImageActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add("退出");
+        menu.add(Menu.NONE,0,0,"帮助");
+        menu.add(Menu.NONE,1,1,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -131,6 +133,11 @@ public class mountLocalImageActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
+                showInfoMsg(this,"帮助信息","该页面是用于挂载手机上的镜像文件，让电脑识别的，可以当U盘使用，可以给电脑安装系统，需要root权限授权。\r\n" +
+                        "挂载选中的镜像文件，勾选一个镜像文件，然后手机连接电脑，手机进入开发者模式，选择usb默认配置为存储，然后再点击挂载，然后电脑就会有反应，你就可以进行之后的操作了。\r\n"
+                );
+                break;
+            case 1:
                 fuckActivity.getIns().killall();
                 ;
         }

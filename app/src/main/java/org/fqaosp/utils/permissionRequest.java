@@ -2,20 +2,49 @@ package org.fqaosp.utils;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.UriPermission;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.DocumentsContract;
 import android.provider.Settings;
 import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.documentfile.provider.DocumentFile;
+
+import java.util.List;
 
 public class permissionRequest {
 
+    public static void grantAndroidData(Activity context){
+        Uri uri1 = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata");
+        DocumentFile documentFile = DocumentFile.fromTreeUri(context, uri1);
+        Intent intent1 = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent1.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+        intent1.putExtra(DocumentsContract.EXTRA_INITIAL_URI, documentFile.getUri());
+        context.startActivityForResult(intent1,54);
+    }
+
+    public static void grantAndroidObb(Activity context){
+        Uri uri1 = Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fobb");
+        DocumentFile documentFile = DocumentFile.fromTreeUri(context, uri1);
+        Intent intent1 = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        intent1.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION
+                | Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+                | Intent.FLAG_GRANT_PREFIX_URI_PERMISSION);
+        intent1.putExtra(DocumentsContract.EXTRA_INITIAL_URI, documentFile.getUri());
+        context.startActivityForResult(intent1,54);
+    }
 
     public static void intentExternal(Context context){
         intentPKG(context,Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);

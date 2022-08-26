@@ -2,6 +2,7 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
@@ -131,7 +132,8 @@ public class workProfileRemoveActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE,0,0,"显示分身用户");
-        menu.add(Menu.NONE,1,1,"退出");
+        menu.add(Menu.NONE,1,1,"帮助");
+        menu.add(Menu.NONE,2,2,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -144,6 +146,13 @@ public class workProfileRemoveActivity extends AppCompatActivity {
                 showUsers(listView1);
                 break;
             case 1:
+                showInfoMsg(this,"帮助信息","该页面是用于删除分身的，需要root授权。\r\n" +
+                        "1.右上角三个点，显示分身用户，会列出除了当前主用户外的其它用户。\r\n" +
+                        "2.全删了，点击后，会删除列表里所有用户。\r\n" +
+                        "3.删除分身，需要勾选相应分身才能删除，不勾选就不删除。\r\n"
+                );
+                break;
+            case 2:
                 fuckActivity.getIns().killall();
                 ;
         }

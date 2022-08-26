@@ -4,6 +4,7 @@ import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.queryUSERS;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
@@ -212,7 +213,8 @@ public class workProfileActivity extends AppCompatActivity {
         menu.add(Menu.NONE,1,1,"显示所有应用(包括禁用)");
         menu.add(Menu.NONE,2,2,"显示用户安装的应用");
         menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
-        menu.add(Menu.NONE,4,4,"退出");
+        menu.add(Menu.NONE,4,4,"帮助");
+        menu.add(Menu.NONE,5,5,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -237,6 +239,13 @@ public class workProfileActivity extends AppCompatActivity {
                 showPKGS(listView1);
                 break;
             case 4:
+                showInfoMsg(this,"帮助信息","该页面是用于应用分身的，需要root授权。\r\n" +
+                        "1.右上角三个点，显示安装应用，会列出当前用户已经安装的应用。\r\n" +
+                        "2.开启数量，由用户自己输入，但不能超过默认的最高1024个，不然会出错。\r\n" +
+                        "3.搜索框支持中英文搜索，不区分大小写.\r\n"
+                );
+                break;
+            case 5:
                 fuckActivity.getIns().killall();
                 ;
         }

@@ -45,7 +45,20 @@
         <activity android:name=".myActivitys.workProfileManageActivity"/>
         <activity android:name=".myActivitys.sqliteManageActivity"/>
         <activity android:name=".myActivitys.backupRestoreActivity"/>
+        <activity android:name=".myActivitys.fileSearchActivity"/>
 
+        <provider
+            android:authorities="org.fqaosp.provider"
+            android:name="androidx.core.content.FileProvider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/filepath"
+                />
+        </provider>
+        
+        
     </application>
-
 </manifest>
+

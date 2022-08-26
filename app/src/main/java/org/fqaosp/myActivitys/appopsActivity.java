@@ -20,6 +20,7 @@ import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
@@ -584,7 +585,8 @@ public class appopsActivity extends AppCompatActivity {
         menu.add(Menu.NONE,2,2,"显示用户安装的应用");
         menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
         menu.add(Menu.NONE,4,4,"选择本地应用");
-        menu.add(Menu.NONE,5,5,"退出");
+        menu.add(Menu.NONE,5,5,"帮助");
+        menu.add(Menu.NONE,6,6,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -681,6 +683,15 @@ public class appopsActivity extends AppCompatActivity {
                 selectLocalFile();
                 break;
             case 5:
+                showInfoMsg(this,"帮助信息","该页面是用于应用管理的,支持应用提取、详情跳转、卸载应用、导出应用信息、安装apks/apk应用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                        "1.禁用联网，勾选列出来的应用，即可批量禁用联网权限.\r\n" +
+                        "2.启用联网，勾选列出来的应用，即可批量禁用联网权限.\r\n" +
+                        "3.上面有个搜索框，支持中英文搜索，无大小写限制.\r\n" +
+                        "4.长按应用列表会出现相关操作菜单，根据自己需求点击即可。支持批量操作。\r\n" +
+                        "5.右上角\"选择本地应用\",支持选择apks进行安装，传统apk文件可以加载出图标。\r\n" +
+                        "6.点击应用列表，则会进入到应用配置页面.\r\n");
+                break;
+            case 6:
                 fuckActivity.getIns().killall();
                 ;
         }

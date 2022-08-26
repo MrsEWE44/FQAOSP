@@ -7,6 +7,7 @@ import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
@@ -24,10 +25,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.Toast;
 
@@ -70,8 +73,15 @@ public class backupRestoreActivity extends AppCompatActivity {
     private EditText braet1;
     private Button b1 ,b2,brasearchb;
     private Switch brasb1,brasb2,brasb3;
+    private Spinner brasp,brasp2;
     private Boolean brasb1Bool,brasb2Bool,brasb3Bool,isBackup;
-    private String file_end=".tar.xz";
+    private String file_end="";
+    private String [] mode={"全部","数据","安装包"};
+    private String [] mode2={"full","data","apk"};
+    private String [] fileEnd={"tgz","txz","tbz"};
+    private String [] fileEnd2={".tar.gz",".tar.xz",".tar.bz2"};
+    private int mode_index=0,fileEnd_index=0;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -84,6 +94,7 @@ public class backupRestoreActivity extends AppCompatActivity {
 
     private void listLocalBackupFiles(){
         isBackup=false;
+        file_end=fileEnd2[fileEnd_index];
         setTitle("当前为: 恢复");
         permissionRequest.getExternalStorageManager(backupRestoreActivity.this);
         String s = Environment.getExternalStorageDirectory().toString();
@@ -135,7 +146,8 @@ public class backupRestoreActivity extends AppCompatActivity {
         brasb1 =findViewById(R.id.brasb1);
         brasb2 =findViewById(R.id.brasb2);
         brasb3 =findViewById(R.id.brasb3);
-
+        brasp = findViewById(R.id.brasp);
+        brasp2 = findViewById(R.id.brasp2);
         lv1 = findViewById(R.id.bralv1);
         brasb1Bool=false;
         brasb2Bool=true;
@@ -146,7 +158,11 @@ public class backupRestoreActivity extends AppCompatActivity {
 
         //默认是备份模式
         isBackup=true;
-        
+
+
+        brasp.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,mode));
+        brasp2.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,fileEnd));
+
         btClick();
     }
 
@@ -335,6 +351,30 @@ public class backupRestoreActivity extends AppCompatActivity {
             }
         });
 
+        brasp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                mode_index=i;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        brasp2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                fileEnd_index=i;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
     }
 
     private Boolean extractAssertFile(String sysupfile,String filesDir){
@@ -382,12 +422,13 @@ public class backupRestoreActivity extends AppCompatActivity {
     private boolean backupByPKGNAME(String pkgname){
         String filesDir =getMyHomeFilesPath(this);
         String barfile = filesDir+"/bar.sh";
-        String cmdstr = "sh "+barfile+" backup " + pkgname;
+        String cmdstr = "sh "+barfile+" backup " + pkgname +" " + mode2[mode_index] + " " + fileEnd[fileEnd_index];
         CMD cmd = new CMD(cmdstr);
         return cmd.getResultCode()==0;
     }
 
     private boolean restoryByFileName(String filename){
+        file_end=fileEnd2[fileEnd_index];
         String pkgname = filename.replaceAll(file_end,"");
         if(!pkgname.equals(getPackageName())){
            return restoryByPKGNAME(pkgname);
@@ -398,7 +439,7 @@ public class backupRestoreActivity extends AppCompatActivity {
     private boolean restoryByPKGNAME(String pkgname){
         String filesDir =getMyHomeFilesPath(this);
         String barfile = filesDir+"/bar.sh";
-        String cmdstr = "sh "+barfile+" restory " + pkgname;
+        String cmdstr = "sh "+barfile+" restory " + pkgname+" " + mode2[mode_index] + " " + fileEnd[fileEnd_index];
         CMD cmd = new CMD(cmdstr);
         return cmd.getResultCode() ==0;
     }
@@ -445,7 +486,8 @@ public class backupRestoreActivity extends AppCompatActivity {
         menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
         menu.add(Menu.NONE,4,4,"显示已禁用的应用");
         menu.add(Menu.NONE,5,5,"显示本地备份文件");
-        menu.add(Menu.NONE,6,6,"退出");
+        menu.add(Menu.NONE,6,6,"帮助");
+        menu.add(Menu.NONE,7,7,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -480,6 +522,19 @@ public class backupRestoreActivity extends AppCompatActivity {
                 listLocalBackupFiles();
                 break;
             case 6:
+                showInfoMsg(this,"帮助信息","该页面是用于应用备份与恢复的,支持应用备份与恢复，可选择只备份数据、安装包、安装包+数据，也支持仅恢复数据、安装包、安装包+数据，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                        "1.右上角三个点，显示本地备份文件，会列出默认目录下所有通过该软件备份的应用压缩包。\r\n" +
+                        "2.备份，备份应用.\r\n" +
+                        "3.恢复，恢复应用.\r\n" +
+                        "4.所有，不管有没有选中，都会操作当前列表所有应用.\r\n" +
+                        "5.选中，仅操作勾选的应用.\r\n" +
+                        "6.未选中,仅操作勾选以外的应用.\r\n" +
+                        "7.{全部，数据，安装包}，默认是全部，即备份该应用所有数据包括安装包。\r\n" +
+                        "8.{tgz,txz,tbz},默认是采用tar.gz压缩格式，这个速度最快，txz模式速度最慢，tbz中规中矩.\r\n" +
+                        "9.搜索框支持中英文搜索，不区分大小写.\r\n"
+                );
+                break;
+            case 7:
                 fuckActivity.getIns().killall();
                 ;
         }

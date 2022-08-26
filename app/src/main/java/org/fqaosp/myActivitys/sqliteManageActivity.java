@@ -1,6 +1,7 @@
 package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
@@ -296,7 +297,8 @@ public class sqliteManageActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE,0,0,"切换killapp数据库");
         menu.add(Menu.NONE,1,1,"切换应用分身数据库");
-        menu.add(Menu.NONE,2,2,"退出");
+        menu.add(Menu.NONE,2,2,"帮助");
+        menu.add(Menu.NONE,3,3,"退出");
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -312,6 +314,12 @@ public class sqliteManageActivity extends AppCompatActivity {
                 mode=1;
                 break;
             case 2:
+                showInfoMsg(this,"帮助信息","该页面是用于编辑该软件产生的数据库文件。\r\n" +
+                        "1.killapp（后台管理），即保存的默认后台进程信息.\r\n" +
+                        "2.应用分身，即保存的应用分身信息。\r\n"
+                );
+                break;
+            case 3:
                 fuckActivity.getIns().killall();
                 ;
         }

@@ -4,6 +4,7 @@ import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
@@ -296,7 +297,8 @@ public class killAppActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE,0,0,"显示所有进程");
         menu.add(Menu.NONE,1,1,"显示用户进程(用户安装的应用)");
-        menu.add(Menu.NONE,2,2,"退出");
+        menu.add(Menu.NONE,2,2,"帮助");
+        menu.add(Menu.NONE,3,3,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -313,6 +315,17 @@ public class killAppActivity extends AppCompatActivity {
                 showPKGS(lv1);
                 break;
             case 2:
+                showInfoMsg(this,"帮助信息","该页面是用于后台进程终止，需要root授权。\r\n" +
+                        "1.右上角三个点，显示所有进程，会列出所有在后台运行的程序，包括系统应用进程。\r\n" +
+                        "2.右上角三个点，显示用户进程，会列出所有在后台运行的程序，不包括系统应用进程，仅列出用户安装的。\r\n" +
+                        "3.所有，不管有没有选中，都会操作当前列表所有应用.\r\n" +
+                        "4.选中，仅操作勾选的应用.\r\n" +
+                        "5.未选中,仅操作勾选以外的应用.\r\n" +
+                        "6.终止，点击该按钮后，就会终止后台进程,如果没有勾选任何进程，则会默认采用数据库里面的数据，数据库里面的数据，是上一次终止过的应用信息，采用am force-stop命令强行终止。\r\n" +
+                        "7.搜索框支持中英文搜索，不区分大小写.\r\n"
+                );
+                break;
+            case 3:
                 fuckActivity.getIns().killall();
                 ;
         }

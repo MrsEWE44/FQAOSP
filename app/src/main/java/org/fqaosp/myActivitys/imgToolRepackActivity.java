@@ -6,6 +6,7 @@ import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.selectFile;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
@@ -154,7 +155,8 @@ public class imgToolRepackActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add("退出");
+        menu.add(Menu.NONE,0,0,"帮助");
+        menu.add(Menu.NONE,1,1,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -163,6 +165,13 @@ public class imgToolRepackActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
+                showInfoMsg(this,"帮助信息","该页面是用于recovery/boot镜像文件打包，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                        "1.扫描默认解包路径，会列出通过该软件解包后的项目工程名称（推荐）。\r\n" +
+                        "2.选择本地解包文件夹，必须是通过该软件解包后的工程才行，其它的会报错，但是这个路径可以自定义.\r\n" +
+                        "3.开始打包镜像，开始打包.\r\n"
+                );
+                break;
+            case 1:
                 fuckActivity.getIns().killall();
                 ;
         }

@@ -15,63 +15,58 @@
      <LinearLayout
          android:layout_width="fill_parent"
          android:layout_height="fill_parent"
-         android:layout_weight="1" android:orientation="vertical" >
+         android:layout_weight="1"
+         android:orientation="vertical" >
+
          <Button
              android:layout_width="fill_parent"
              android:layout_weight="1"
              android:layout_height="match_parent"
+             android:text="文件搜索"
+             android:layout_marginLeft="5dp"
+             android:id="@+id/mfilesearch"
+             ></Button>
+
+         <Button
+             android:layout_width="fill_parent"
+             android:layout_weight="1"
+             android:layout_height="match_parent"
+             android:layout_marginLeft="5dp"
              android:text="手机分身"
              android:id="@+id/mb1"
              ></Button>
 
+         <Button
+             android:layout_width="fill_parent"
+             android:layout_weight="1"
+             android:layout_height="match_parent"
+             android:text="禁用app"
+             android:layout_marginLeft="5dp"
+             android:id="@+id/mapkdisable"
+             ></Button>
+
          <LinearLayout
+             android:layout_weight="1"
              android:layout_width="fill_parent"
              android:layout_height="fill_parent"
-             android:layout_weight="1"
-             android:orientation="horizontal">
+             android:orientation="vertical">
 
-
-             <LinearLayout
+             <Button
                  android:layout_width="fill_parent"
-                 android:layout_height="fill_parent"
                  android:layout_weight="1"
-                 android:orientation="vertical">
-
-                 <Button
-                     android:layout_width="fill_parent"
-                     android:layout_weight="1"
-                     android:layout_height="match_parent"
-                     android:text="禁用app"
-                     android:layout_marginLeft="5dp"
-                     android:id="@+id/mapkdisable"
-                     ></Button>
-
-                <LinearLayout
-                    android:layout_weight="1"
-                    android:layout_width="fill_parent"
-                    android:layout_height="fill_parent"
-                    android:orientation="vertical">
-
-                    <Button
-                        android:layout_width="fill_parent"
-                        android:layout_weight="1"
-                        android:layout_height="match_parent"
-                        android:text="应用管理"
-                        android:layout_marginLeft="5dp"
-                        android:id="@+id/mappops"
-                        ></Button>
-                    <Button
-                        android:layout_width="fill_parent"
-                        android:layout_weight="1"
-                        android:layout_height="match_parent"
-                        android:text="备份/恢复"
-                        android:layout_marginLeft="5dp"
-                        android:id="@+id/brbutton"
-                        ></Button>
-
-                </LinearLayout>
-
-             </LinearLayout>
+                 android:layout_height="match_parent"
+                 android:text="应用管理"
+                 android:layout_marginLeft="5dp"
+                 android:id="@+id/mappops"
+                 ></Button>
+             <Button
+                 android:layout_width="fill_parent"
+                 android:layout_weight="1"
+                 android:layout_height="match_parent"
+                 android:text="备份/恢复"
+                 android:layout_marginLeft="5dp"
+                 android:id="@+id/brbutton"
+                 ></Button>
 
          </LinearLayout>
 

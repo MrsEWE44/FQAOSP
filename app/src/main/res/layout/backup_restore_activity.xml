@@ -29,7 +29,6 @@
         </LinearLayout>
 
 
-
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -89,6 +88,25 @@
 
             </LinearLayout>
 
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Spinner
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:id="@+id/brasp"
+                ></Spinner>
+            <Spinner
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:id="@+id/brasp2"
+                ></Spinner>
 
         </LinearLayout>
 
@@ -112,6 +130,8 @@
                 android:id="@+id/brab2"
                 ></Button>
         </LinearLayout>
+
+
 
         <ListView
             android:layout_width="fill_parent"

@@ -3,6 +3,7 @@ package org.fqaosp.myActivitys;
 import static org.fqaosp.utils.multiFunc.checkBoxsHashMap;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
@@ -291,7 +292,8 @@ public class workProfileManageActivity extends AppCompatActivity {
         menu.add(Menu.NONE,3,3,"显示主用户安装的应用(包括禁用)");
         menu.add(Menu.NONE,4,4,"显示其他用户所有的应用(包括禁用)");
         menu.add(Menu.NONE,5,5,"显示其他用户安装的应用(包括禁用)");
-        menu.add(Menu.NONE,6,6,"退出");
+        menu.add(Menu.NONE,6,6,"帮助");
+        menu.add(Menu.NONE,7,7,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -323,6 +325,16 @@ public class workProfileManageActivity extends AppCompatActivity {
                 getPKGByUID(1);
                 break;
             case 6:
+                showInfoMsg(this,"帮助信息","该页面是用于管理分身应用的，需要root授权。\r\n" +
+                        "1.右上角三个点，显示主用户安装应用，会列出当前用户已经安装的应用。\r\n" +
+                        "2.右上角三个点，显示其它用户安装应用，会列出当其它分身用户已经安装的应用，但是不会显示多余的，遇到重复的会只列出一个。\r\n" +
+                        "3.同步安装一个应用到分身，从当前主用户已安装的应用当中，批量勾选安装到其它分身用户下面。\r\n" +
+                        "4.从分身删除应用，勾选分身里面的应用，批量进行卸载操作。\r\n" +
+                        "5.搜索框支持中英文搜索，不区分大小写.\r\n" +
+                        "6.点击分身应用，可以进入到该软件自带的应用管理当中，可以进行服务禁用、活动项禁用，权限管控之类的，等等。\r\n"
+                );
+                break;
+            case 7:
                 fuckActivity.getIns().killall();
                 ;
         }

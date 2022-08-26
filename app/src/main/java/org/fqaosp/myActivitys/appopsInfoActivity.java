@@ -8,6 +8,13 @@ package org.fqaosp.myActivitys;
  *
  * */
 
+import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
+
+import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.AppOpsManager;
 import android.content.ComponentName;
 import android.content.Intent;
@@ -18,6 +25,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -89,7 +98,8 @@ public class appopsInfoActivity extends AppCompatActivity {
         menu.add(Menu.NONE,0,0,"显示活动项");
         menu.add(Menu.NONE,1,1,"显示服务项");
         menu.add(Menu.NONE,2,2,"显示权限列表");
-        menu.add(Menu.NONE,3,3,"退出");
+        menu.add(Menu.NONE,3,3,"帮助");
+        menu.add(Menu.NONE,4,4,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -110,6 +120,16 @@ public class appopsInfoActivity extends AppCompatActivity {
                 showListView(lv1);
                 break;
             case 3:
+                showInfoMsg(this,"帮助信息","该页面是用于应用配置的,支持应用权限设置、服务禁/启用、活动项禁/启用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                        "1.右上角三个点，活动项，列出该应用的所有可修改的活动项，支持批量启动或者禁用.\r\n" +
+                        "2.右上角三个点，服务项，列出该应用的所有可修改的服务项，支持批量启动或者禁用.\r\n"+
+                        "3.右上角三个点，权限列表，列出该应用的所有可修改的权限列表，支持批量启动或者禁用.\r\n"+
+                        "4.选中与未选中，选中即是勾选的，未选中即使勾选以外的.\r\n"+
+                        "5.应用更改，点击这个选项后，将会设置相反的状态，即如果该应用有个mm服务，它在现在是启用的状态，但是你勾选并选择了选中，然后点击应用更改，那它就会变成禁用状态了，反之同理。\r\n" +
+                        "6.搜索框，可以搜索相关服务、活动项、权限，不区分大小写.\r\n"
+                );
+                break;
+            case 4:
                 fuckActivity.getIns().killall();
                 ;
         }
@@ -253,6 +273,7 @@ public class appopsInfoActivity extends AppCompatActivity {
 
     private void clickButton(){
 
+        Activity that = this;
         apasb1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
@@ -272,36 +293,51 @@ public class appopsInfoActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //应用更改
+                AlertDialog show = showMyDialog(that, "提示", "正在操作中,请稍后(可能会出现无响应，请耐心等待)....");
+                preventDismissDialog(show);
+                Handler handler = new Handler() {
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        if (msg.what == 0) {
+                            checkMode();
+                            showListView(lv1);
+                            multiFunc.dismissDialog(show);
+                        }
+                    }
+                };
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        //应用更改
 //                clickFun(0,"撤销权限成功","撤销权限失败");
-                if(apasb1Bool){
-                    view.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            for (int i = 0; i < checkboxs.size(); i++) {
-                                if(checkboxs.get(i)){
-                                    multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                        if(apasb1Bool){
+                            view.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    for (int i = 0; i < checkboxs.size(); i++) {
+                                        if(checkboxs.get(i)){
+                                            multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                                        }
+                                    }
                                 }
-                            }
+                            });
                         }
-                    });
-                }
 
-                if(apasb2Bool){
-                    view.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            for (int i = 0; i < checkboxs.size(); i++) {
-                                if(!checkboxs.get(i)){
-                                    multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                        if(apasb2Bool){
+                            view.post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    for (int i = 0; i < checkboxs.size(); i++) {
+                                        if(!checkboxs.get(i)){
+                                            multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                                        }
+                                    }
                                 }
-                            }
+                            });
                         }
-                    });
-                }
-
-                checkMode();
-                showListView(lv1);
+                        sendHandlerMSG(handler,0);
+                    }
+                });
             }
         });
 

@@ -8,6 +8,7 @@ import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.queryUserPKGS;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
@@ -178,7 +179,8 @@ public class apkDecompileActivity extends AppCompatActivity {
         menu.add(Menu.NONE,1,1,"显示所有应用(包括禁用)");
         menu.add(Menu.NONE,2,2,"显示用户安装的应用");
         menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
-        menu.add(Menu.NONE,4,4,"退出");
+        menu.add(Menu.NONE,4,4,"帮助");
+        menu.add(Menu.NONE,5,5,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -203,6 +205,12 @@ public class apkDecompileActivity extends AppCompatActivity {
                 showPKGS(lv1);
                 break;
             case 4:
+                showInfoMsg(this,"帮助信息","该页面是用于apk反编译操作的，需要安装jdk与fqtools，采用传统apktool进行反编译操作,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                        "1.点击右上角三个点，可以列出与之相匹配的应用列表，支持直接批量反编译它们.\r\n" +
+                        "2.点击选择本地文件，可以批量反编译用户本地的apk文件。\r\n" +
+                        "3.上面有个搜索框，支持中英文搜索，无大小写限制.\r\n");
+                break;
+            case 5:
                 fuckActivity.getIns().killall();
                 ;
         }

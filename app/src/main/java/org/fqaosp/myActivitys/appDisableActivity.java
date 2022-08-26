@@ -4,6 +4,7 @@ import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
@@ -236,7 +237,8 @@ public class appDisableActivity extends AppCompatActivity {
         menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
         menu.add(Menu.NONE,4,4,"显示已禁用的应用");
         menu.add(Menu.NONE,5,5,"显示其他禁用选项");
-        menu.add(Menu.NONE,6,6,"退出");
+        menu.add(Menu.NONE,6,6,"帮助");
+        menu.add(Menu.NONE,7,7,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -280,6 +282,13 @@ public class appDisableActivity extends AppCompatActivity {
                 showButton();
                 break;
             case 6:
+                showInfoMsg(this,"帮助信息","该页面是用于apk禁用的，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                        "1.禁用，勾选列出来的应用，即可批量禁用.\r\n" +
+                        "2.启用，勾选列出来的应用，即可批量启用.\r\n" +
+                        "3.点击右上角三个点，可以列出相关应用列表以及隐藏禁用策略.\r\n" +
+                        "4.禁用策略，该功能并不稳定，但是有部分设备是可以支持，里面有提供miui、flyme、myui、color、vivo系统的禁用策略，软件里执行需要root执行，而电脑直接允许脚本则不需要root.\r\n");
+                break;
+            case 7:
                 fuckActivity.getIns().killall();
                 ;
         }

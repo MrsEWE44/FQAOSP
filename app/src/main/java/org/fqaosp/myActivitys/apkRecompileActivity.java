@@ -8,6 +8,7 @@ import static org.fqaosp.utils.fileTools.selectFile;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
@@ -157,7 +158,8 @@ public class apkRecompileActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add("退出");
+        menu.add(Menu.NONE,0,0,"帮助");
+        menu.add(Menu.NONE,1,1,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -166,6 +168,12 @@ public class apkRecompileActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
+                showInfoMsg(this,"帮助信息","该页面是用于apk回编译操作的，需要安装jdk与fqtools，采用传统apktool进行回编译操作,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                        "1.点击选择本地文件夹，可以回编译用户本地反编译后的内容（需要选择带apktool.yml文件的项目工程）。\r\n" +
+                        "2.点击加载默认，可以列出所有从该应用反编译后的项目名称（推荐这个）。\r\n" +
+                        "3.点击上面开始回编译就会开始进行回编译操作.\r\n");
+                break;
+            case 1:
                 fuckActivity.getIns().killall();
                 ;
         }

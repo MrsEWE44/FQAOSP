@@ -9,6 +9,8 @@ import android.os.Environment;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.documentfile.provider.DocumentFile;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -76,6 +78,24 @@ public class fileTools {
             e.printStackTrace();
         }
 
+    }
+
+    //根据路径获得document文件
+    public static DocumentFile getDoucmentFileOnData(Context context, String path) {
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        String path2 = path.replace("/storage/emulated/0/", "").replace("/", "%2F");
+        return DocumentFile.fromTreeUri(context, Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fdata/document/primary%3A" + path2));
+    }
+
+    //根据路径获得document文件
+    public static DocumentFile getDoucmentFileOnObb(Context context, String path) {
+        if (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        String path2 = path.replace("/storage/emulated/0/", "").replace("/", "%2F");
+        return DocumentFile.fromTreeUri(context, Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fobb/document/primary%3A" + path2));
     }
 
     //调用系统文件选择器

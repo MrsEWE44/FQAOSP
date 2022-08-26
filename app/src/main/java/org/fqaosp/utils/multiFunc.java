@@ -1,12 +1,19 @@
 package org.fqaosp.utils;
 
+import static org.fqaosp.utils.permissionRequest.getExternalStorageManager;
+import static org.fqaosp.utils.permissionRequest.grantAndroidData;
+import static org.fqaosp.utils.permissionRequest.grantAndroidObb;
+import static org.fqaosp.utils.permissionRequest.requestExternalStoragePermission;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Process;
@@ -57,6 +64,21 @@ public class multiFunc {
                 jump(srcA,cls);
             }
         });
+    }
+
+    //显示一个弹窗
+    public static void showInfoMsg(Context con,String title , String msg){
+        AlertDialog.Builder ab = new AlertDialog.Builder(con);
+        ab.setTitle(title);
+        ab.setMessage(msg);
+        ab.setNegativeButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+
+            }
+        });
+        ab.create().show();
     }
 
     //移除uid多余字符串
@@ -306,7 +328,7 @@ public class multiFunc {
                 if(uid == null){
                     cmdstr="pm disable \"" +pkgname+"/"+ pkgcate+"\"";
                 }else{
-                    cmdstr="pm disable --user \""+uid+" " +pkgname+"/"+ pkgcate+"\"";
+                    cmdstr="pm disable --user "+uid+" \"" +pkgname+"/"+ pkgcate+"\"";
                 }
 
                 break;
@@ -322,7 +344,7 @@ public class multiFunc {
                 if(uid == null){
                     cmdstr="pm enable " +pkgname+"/"+ pkgcate;
                 }else{
-                    cmdstr="pm enable --user "+uid + " " +pkgname+"/"+ pkgcate;
+                    cmdstr="pm enable --user "+uid + " \"" +pkgname+"/"+ pkgcate+"\"";
                 }
                 break;
         }

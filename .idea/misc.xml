@@ -19,6 +19,11 @@
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/appopsinfo_activity.xml" value="0.33" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/appopsinfo_item_activity.xml" value="0.1734375" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/backup_restore_activity.xml" value="0.33" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/date_select_activity.xml" value="0.20104166666666667" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/file_search_activity.xml" value="0.36614583333333334" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/file_search_item_activity.xml" value="0.33" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/file_select_activity.xml" value="0.20104166666666667" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/file_select_item_activity.xml" value="0.20104166666666667" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/img_tool_menu_activity.xml" value="0.1734375" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/img_tool_repack_activity.xml" value="0.33" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/img_tool_unpack_activity.xml" value="0.39928057553956836" />
@@ -31,12 +36,14 @@
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/mount_local_img_activity.xml" value="0.1875" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/mount_local_img_item_activity.xml" value="0.1875" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/sqlite_manage_activity.xml" value="0.36614583333333334" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/time_select_activity.xml" value="0.20104166666666667" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/work_profile_activity.xml" value="0.36614583333333334" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/work_profile_manage_activity.xml" value="0.25" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/work_profile_menu_activity.xml" value="0.1875" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/work_profile_remove_activity.xml" value="0.25" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/wp_rm_item_activity.xml" value="0.1875" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/xml/accessible_service_config_appops.xml" value="0.1734375" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/xml/filepath.xml" value="0.20104166666666667" />
       </map>
     </option>
   </component>
