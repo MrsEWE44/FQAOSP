@@ -15,12 +15,11 @@ import android.app.AlertDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.os.Process;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,7 +41,7 @@ import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
-import org.fqaosp.naive.term;
+
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
@@ -50,8 +49,6 @@ import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Objects;
-import java.util.function.Consumer;
 
 /**
  *
@@ -76,7 +73,7 @@ public class backupRestoreActivity extends AppCompatActivity {
     private Spinner brasp,brasp2;
     private Boolean brasb1Bool,brasb2Bool,brasb3Bool,isBackup;
     private String file_end="";
-    private String [] mode={"全部","数据","安装包"};
+    private String [] mode={"数据+安装包","数据","安装包"};
     private String [] mode2={"full","data","apk"};
     private String [] fileEnd={"tgz","txz","tbz"};
     private String [] fileEnd2={".tar.gz",".tar.xz",".tar.bz2"};
@@ -213,9 +210,8 @@ public class backupRestoreActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         if(isBackup){
-
                             if(brasb3Bool){
-                                //未选中
+                                //未勾选
                                 for (int i = 0; i < checkboxs.size(); i++) {
                                     if(!checkboxs.get(i)){
                                         PKGINFO pkginfo = pkginfos.get(i);
@@ -227,7 +223,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                             }
 
                             if(brasb2Bool){
-                                //选中
+                                //勾选
                                 for (int i = 0; i < checkboxs.size(); i++) {
                                     if(checkboxs.get(i)){
                                         PKGINFO pkginfo = pkginfos.get(i);
@@ -246,7 +242,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                                     }
                                 }
                             }
-                            //都没有选中
+                            //都没有勾选
                             if(brasb1Bool==false && brasb2Bool ==false && brasb3Bool ==false){
                                 //如果都没有选择，我们就默认走已经勾选的
                                 for (int i = 0; i < checkboxs.size(); i++) {
@@ -263,8 +259,10 @@ public class backupRestoreActivity extends AppCompatActivity {
                             Toast.makeText(backupRestoreActivity.this, "请切换回备份模式", Toast.LENGTH_SHORT).show();
                         }
                         sendHandlerMSG(handler,0);
+
                     }
                 });
+
             }
         });
 
@@ -276,10 +274,11 @@ public class backupRestoreActivity extends AppCompatActivity {
                 view.post(new Runnable() {
                     @Override
                     public void run() {
+
                         if(isBackup == false){
 
                             if(brasb3Bool){
-                                //未选中
+                                //未勾选
                                 for (int i = 0; i < checkboxs.size(); i++) {
                                     if(!checkboxs.get(i)){
                                         restoryByFileName(getPathByLastName(list.get(i)));
@@ -288,7 +287,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                             }
 
                             if(brasb2Bool){
-                                //选中
+                                //勾选
                                 for (int i = 0; i < checkboxs.size(); i++) {
                                     if(checkboxs.get(i)){
                                         restoryByFileName(getPathByLastName(list.get(i)));
@@ -302,7 +301,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                                     restoryByFileName(getPathByLastName(s));
                                 }
                             }
-                            //都没有选中
+                            //都没有勾选
                             if(brasb1Bool==false && brasb2Bool ==false && brasb3Bool ==false){
                                 //如果都没有选择，我们就默认走已经勾选的
                                 for (int i = 0; i < checkboxs.size(); i++) {
@@ -526,10 +525,10 @@ public class backupRestoreActivity extends AppCompatActivity {
                         "1.右上角三个点，显示本地备份文件，会列出默认目录下所有通过该软件备份的应用压缩包。\r\n" +
                         "2.备份，备份应用.\r\n" +
                         "3.恢复，恢复应用.\r\n" +
-                        "4.所有，不管有没有选中，都会操作当前列表所有应用.\r\n" +
-                        "5.选中，仅操作勾选的应用.\r\n" +
-                        "6.未选中,仅操作勾选以外的应用.\r\n" +
-                        "7.{全部，数据，安装包}，默认是全部，即备份该应用所有数据包括安装包。\r\n" +
+                        "4.全选，不管有没有勾选，都会操作当前列表所有应用.\r\n" +
+                        "5.勾选，仅操作勾选的应用.\r\n" +
+                        "6.未勾选,仅操作勾选以外的应用.\r\n" +
+                        "7.{数据+安装包，数据，安装包}，默认是全部，即备份该应用所有数据包括安装包。\r\n" +
                         "8.{tgz,txz,tbz},默认是采用tar.gz压缩格式，这个速度最快，txz模式速度最慢，tbz中规中矩.\r\n" +
                         "9.搜索框支持中英文搜索，不区分大小写.\r\n"
                 );

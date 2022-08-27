@@ -86,6 +86,7 @@ public class fileSearchActivity extends AppCompatActivity {
         fuckActivity.getIns().add(this);
         setTitle("文件搜索");
         initBT();
+        checkPeer(this);
     }
 
     private void initBT() {
@@ -250,42 +251,7 @@ public class fileSearchActivity extends AppCompatActivity {
         fsabt6.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String extstorage = Environment.getExternalStorageDirectory().toString();
-                String s = extstorage + "/Android/data";
-                String s2 = extstorage + "/Android/obb";
-                String s3 = extstorage + "/Android";
-                DocumentFile doucmentFile = fileTools.getDoucmentFileOnData(that, s);
-                DocumentFile doucmentFil2e = fileTools.getDoucmentFileOnObb(that, s2);
-                File file = new File(s3);
-                if (doucmentFile.isDirectory() && doucmentFil2e.isDirectory() && file.isDirectory()) {
-                    showSelectFile(extstorage, null, doucmentFile, doucmentFil2e, that);
-                } else {
-                    AlertDialog.Builder ab = new AlertDialog.Builder(that);
-                    ab.setTitle("提示");
-                    ab.setMessage("没有授权data、obb、内部存储访问权限，是否现在进行授权？");
-                    ab.setNegativeButton("确定", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            requestExternalStoragePermission(that);
-                            getExternalStorageManager(that);
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                                grantAndroidData(that);
-                                grantAndroidObb(that);
-                            }
-                            dialogInterface.cancel();
-                            showInfoMsg(that,"提示","授权完成后，重启应用");
-                        }
-                    });
-                    ab.setPositiveButton("取消", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            dialogInterface.cancel();
-                        }
-                    });
-                    ab.create().show();
-
-                }
-
+                checkPeer(that);
             }
         });
 
@@ -310,6 +276,44 @@ public class fileSearchActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    private void checkPeer(Activity that){
+        String extstorage = Environment.getExternalStorageDirectory().toString();
+        String s = extstorage + "/Android/data";
+        String s2 = extstorage + "/Android/obb";
+        String s3 = extstorage + "/Android";
+        DocumentFile doucmentFile = fileTools.getDoucmentFileOnData(that, s);
+        DocumentFile doucmentFil2e = fileTools.getDoucmentFileOnObb(that, s2);
+        File file = new File(s3);
+        if (doucmentFile.isDirectory() && doucmentFil2e.isDirectory() && file.isDirectory()) {
+            showSelectFile(extstorage, null, doucmentFile, doucmentFil2e, that);
+        } else {
+            AlertDialog.Builder ab = new AlertDialog.Builder(that);
+            ab.setTitle("提示");
+            ab.setMessage("没有授权data、obb、内部存储访问权限，是否现在进行授权？");
+            ab.setNegativeButton("确定", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    requestExternalStoragePermission(that);
+                    getExternalStorageManager(that);
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        grantAndroidData(that);
+                        grantAndroidObb(that);
+                    }
+                    dialogInterface.cancel();
+                    showInfoMsg(that,"提示","授权完成后，重启应用");
+                }
+            });
+            ab.setPositiveButton("取消", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.cancel();
+                }
+            });
+            ab.create().show();
+
+        }
     }
 
     //长按listview中的元素，显示一个菜单选项
