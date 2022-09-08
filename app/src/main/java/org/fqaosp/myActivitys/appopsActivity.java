@@ -9,6 +9,7 @@ package org.fqaosp.myActivitys;
  * */
 
 import static org.fqaosp.utils.fileTools.copyFile;
+import static org.fqaosp.utils.fileTools.execDirSelect;
 import static org.fqaosp.utils.fileTools.execFileSelect;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
@@ -17,27 +18,25 @@ import static org.fqaosp.utils.fileTools.getPathByLastNameType;
 import static org.fqaosp.utils.multiFunc.checkBoxs;
 import static org.fqaosp.utils.multiFunc.clearList;
 import static org.fqaosp.utils.multiFunc.getMyUID;
-import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
@@ -74,8 +73,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class appopsActivity extends AppCompatActivity {
 
@@ -276,6 +273,22 @@ public class appopsActivity extends AppCompatActivity {
         return sysupF.exists();
     }
 
+    //安装文件夹里面所有apk文件
+    private boolean installApkOnDir(String dir){
+        String filesDir =getMyHomeFilesPath(this);
+        String barfile = filesDir+"/bar.sh";
+        if(extractAssertFile(barfile,filesDir)){
+            Toast.makeText(this, "禁用脚本已存在", Toast.LENGTH_SHORT).show();
+            String cmdstr = "sh "+barfile+" inapkonpath " + dir;
+            CMD cmd = new CMD(cmdstr);
+            return cmd.getResultCode() ==0;
+        }else{
+            showImportToolsDialog(this,"apks安装脚本无法获取，请退出重试或者重新安装app","apks安装脚本没有找到,请补全脚本再尝试安装.");
+        }
+        return false;
+    }
+
+    //安装apks文件
     private boolean installAPKS(String apksFilePath){
         String filesDir =getMyHomeFilesPath(this);
         String barfile = filesDir+"/bar.sh";
@@ -285,25 +298,7 @@ public class appopsActivity extends AppCompatActivity {
             CMD cmd = new CMD(cmdstr);
             return cmd.getResultCode() ==0;
         }else{
-            Toast.makeText(this, "apks安装脚本无法获取，请退出重试或者重新安装app", Toast.LENGTH_SHORT).show();
-            AlertDialog.Builder alertDialog = new AlertDialog.Builder(appopsActivity.this);
-            alertDialog.setTitle("警告");
-            alertDialog.setMessage("apks安装脚本没有找到,请补全脚本再尝试安装.");
-            alertDialog.setPositiveButton("继续", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                    jump(appopsActivity.this,importToolsActivity.class);
-                }
-            });
-            alertDialog.setNegativeButton("补全组件脚本", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                    jump(appopsActivity.this,importToolsActivity.class);
-                }
-            });
-            alertDialog.show();
+            showImportToolsDialog(this,"apks/apk安装脚本无法获取，请退出重试或者重新安装app","apks/apk安装脚本没有找到,请补全脚本再尝试安装.");
         }
      return false;
     }
@@ -585,8 +580,9 @@ public class appopsActivity extends AppCompatActivity {
         menu.add(Menu.NONE,2,2,"显示用户安装的应用");
         menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
         menu.add(Menu.NONE,4,4,"选择本地应用");
-        menu.add(Menu.NONE,5,5,"帮助");
-        menu.add(Menu.NONE,6,6,"退出");
+        menu.add(Menu.NONE,5,5,"选择本地安装包文件夹");
+        menu.add(Menu.NONE,6,6,"帮助");
+        menu.add(Menu.NONE,7,7,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -639,6 +635,11 @@ public class appopsActivity extends AppCompatActivity {
         execFileSelect(appopsActivity.this,appopsActivity.this,"请选择要安装的文件");
     }
 
+    private void selectLocalDir(){
+        permissionRequest.getExternalStorageManager(appopsActivity.this);
+        execDirSelect(appopsActivity.this,appopsActivity.this,"请选择要安装的文件");
+    }
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
@@ -677,21 +678,24 @@ public class appopsActivity extends AppCompatActivity {
                 }else{
                     getPKGByUID(wp.getUserPkgByUIDCMD(uid));
                 }
-
                 break;
             case 4:
                 selectLocalFile();
                 break;
             case 5:
+                selectLocalDir();
+                break;
+            case 6:
                 showInfoMsg(this,"帮助信息","该页面是用于应用管理的,支持应用提取、详情跳转、卸载应用、导出应用信息、安装apks/apk应用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
                         "1.禁用联网，勾选列出来的应用，即可批量禁用联网权限.\r\n" +
                         "2.启用联网，勾选列出来的应用，即可批量禁用联网权限.\r\n" +
                         "3.上面有个搜索框，支持中英文搜索，无大小写限制.\r\n" +
                         "4.长按应用列表会出现相关操作菜单，根据自己需求点击即可。支持批量操作。\r\n" +
                         "5.右上角\"选择本地应用\",支持选择apks进行安装，传统apk文件可以加载出图标。\r\n" +
-                        "6.点击应用列表，则会进入到应用配置页面.\r\n");
+                        "6.点击应用列表，则会进入到应用配置页面.\r\n" +
+                        "7.右上角\"选择本地安装包文件夹\"，选择一个文件夹，会自动安装里面所有apk/apks文件.如果你是通过mt直接从/data/app连同文件夹一起提取的，效果会更好。\r\n");
                 break;
-            case 6:
+            case 7:
                 fuckActivity.getIns().killall();
                 ;
         }
@@ -703,47 +707,65 @@ public class appopsActivity extends AppCompatActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
+    private void addPKGINFO(PackageManager pm,Uri uri , String storage){
+        String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
+        String nameType = getPathByLastNameType(filePath);
+        if(nameType.equals("apk")){
+            PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
+            ApplicationInfo applicationInfo = packageInfo.applicationInfo;
+            pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(pm).toString(), applicationInfo.sourceDir,applicationInfo.uid+"",packageInfo.versionName, applicationInfo.loadIcon(pm),new File(filePath).length())) ;
+            checkboxs.add(false);
+        }else if(nameType.equals("apks")){
+            Drawable d = ContextCompat.getDrawable(appopsActivity.this,R.drawable.ic_launcher_foreground);
+            pkginfos.add(new PKGINFO(getPathByLastName(filePath),"未知",filePath,"未知","未知", d,new File(filePath).length()));
+            checkboxs.add(false);
+        }
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode == Activity.RESULT_OK){
+        String storage = Environment.getExternalStorageDirectory().toString();
+        if(requestCode == 0){
             clearList(pkginfos,checkboxs);
             PackageManager pm = getPackageManager();
-            String storage = Environment.getExternalStorageDirectory().toString();
             if(data.getClipData() != null) {//有选择多个文件
                 int count = data.getClipData().getItemCount();
                 for(int i =0;i<count;i++){
                     Uri uri = data.getClipData().getItemAt(i).getUri();
-                    String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
-                    if(getPathByLastNameType(filePath).equals("apks") || getPathByLastNameType(filePath).equals("apk")){
-                        try {
-                            PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
-                            checkBoxs(pkginfos,checkboxs,packageInfo,pm);
-                        }catch (Exception e){
-                            Drawable d = ContextCompat.getDrawable(appopsActivity.this,R.drawable.ic_launcher_foreground);
-                            pkginfos.add(new PKGINFO(getPathByLastName(filePath),"未知",filePath,"未知","未知", d,new File(filePath).length()));
-                            checkboxs.add(false);
-                        }
-                    }
-
+                    addPKGINFO(pm,uri,storage);
                 }
-
             } else if(data.getData() != null) {//只有一个文件咯
                 Uri uri = data.getData();
-                String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
-                if(getPathByLastNameType(filePath).equals("apks") || getPathByLastNameType(filePath).equals("apk")){
-                    try {
-                        PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
-                        checkBoxs(pkginfos,checkboxs,packageInfo,pm);
-                    }catch (Exception e){
-                        Drawable d = ContextCompat.getDrawable(appopsActivity.this,R.drawable.ic_launcher_foreground);
-                        pkginfos.add(new PKGINFO(getPathByLastName(filePath),"未知",filePath,"未知","未知", d,new File(filePath).length()));
-                        checkboxs.add(false);
-                    }
-                }
+                addPKGINFO(pm,uri,storage);
             }
             showPKGS(lv1);
+        }
 
+        if(requestCode == 43){
+            if(data.getData() != null) {//只有一个文件咯
+                Uri uri = data.getData();
+                String filePath = storage + "/" +uri.getPath().replaceAll("/tree/primary:","");
+                AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
+                preventDismissDialog(show);
+                Handler handler = new Handler(){
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        if(msg.what==0){
+                            multiFunc.dismissDialog(show);
+                        }
+                    }
+                };
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Looper.prepare();
+                        installApkOnDir(filePath);
+                        Looper.loop();
+                        sendHandlerMSG(handler,0);
+                    }
+                }).start();
+            }
         }
     }
 }

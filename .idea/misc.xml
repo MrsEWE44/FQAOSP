@@ -33,7 +33,8 @@
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/kill_app_activity.xml" value="0.33" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/kill_app_widget.xml" value="0.1875" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/list_view_item_activity.xml" value="0.1875" />
-        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/mount_local_img_activity.xml" value="0.1875" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/mount_local_img_activity.xml" value="0.33" />
+        <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/mount_local_img_create_img_file_activity.xml" value="0.36614583333333334" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/mount_local_img_item_activity.xml" value="0.1875" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/sqlite_manage_activity.xml" value="0.36614583333333334" />
         <entry key="..\:/androidproject/FQAOSP/app/src/main/res/layout/time_select_activity.xml" value="0.20104166666666667" />

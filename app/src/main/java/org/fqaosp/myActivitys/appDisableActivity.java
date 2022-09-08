@@ -2,15 +2,14 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -65,24 +64,7 @@ public class appDisableActivity extends AppCompatActivity {
         if(extractAssertFile(sysupfile,filesDir)){
             Toast.makeText(this, "禁用脚本已存在", Toast.LENGTH_SHORT).show();
         }else{
-            Toast.makeText(this, "禁用脚本无法获取，请退出重试或者重新安装app", Toast.LENGTH_SHORT).show();
-            AlertDialog.Builder alertDialog = new AlertDialog.Builder(appDisableActivity.this);
-            alertDialog.setTitle("警告");
-            alertDialog.setMessage("禁用脚本没有找到,部分功能使用将受到限制或者异常,要继续使用吗？");
-            alertDialog.setPositiveButton("继续", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                }
-            });
-            alertDialog.setNegativeButton("补全组件脚本", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                    jump(appDisableActivity.this,importToolsActivity.class);
-                }
-            });
-            alertDialog.show();
+            showImportToolsDialog(this,"禁用脚本无法获取，请退出重试或者重新安装app","禁用脚本没有找到,部分功能使用将受到限制或者异常,要继续使用吗？");
         }
 
         ada_disableappb.setOnClickListener(new View.OnClickListener() {

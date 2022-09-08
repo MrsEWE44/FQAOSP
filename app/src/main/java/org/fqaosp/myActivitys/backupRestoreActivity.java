@@ -4,9 +4,9 @@ import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
-import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
@@ -14,8 +14,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -41,7 +39,6 @@ import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
-
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
@@ -152,11 +149,8 @@ public class backupRestoreActivity extends AppCompatActivity {
         brasb1.setChecked(brasb1Bool);
         brasb2.setChecked(brasb2Bool);
         brasb3.setChecked(brasb3Bool);
-
         //默认是备份模式
         isBackup=true;
-
-
         brasp.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,mode));
         brasp2.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,fileEnd));
 
@@ -395,25 +389,7 @@ public class backupRestoreActivity extends AppCompatActivity {
             Toast.makeText(this, "备份跟恢复脚本已存在", Toast.LENGTH_SHORT).show();
             return true;
         }else{
-            Toast.makeText(this, "备份跟恢复脚本无法获取，请退出重试或者重新安装app", Toast.LENGTH_SHORT).show();
-            AlertDialog.Builder alertDialog = new AlertDialog.Builder(backupRestoreActivity.this);
-            alertDialog.setTitle("警告");
-            alertDialog.setMessage("备份跟恢复脚本没有找到,请补全脚本再使用");
-            alertDialog.setPositiveButton("继续", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                    jump(backupRestoreActivity.this,importToolsActivity.class);
-                }
-            });
-            alertDialog.setNegativeButton("补全组件脚本", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.dismiss();
-                    jump(backupRestoreActivity.this,importToolsActivity.class);
-                }
-            });
-            alertDialog.show();
+            showImportToolsDialog(this,"备份跟恢复脚本无法获取，请退出重试或者重新安装app","备份跟恢复脚本没有找到,请补全脚本再使用");
         }
         return false;
     }

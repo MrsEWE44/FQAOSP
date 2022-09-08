@@ -242,7 +242,8 @@ public class workProfileActivity extends AppCompatActivity {
                 showInfoMsg(this,"帮助信息","该页面是用于应用分身的，需要root授权。\r\n" +
                         "1.右上角三个点，显示安装应用，会列出当前用户已经安装的应用。\r\n" +
                         "2.开启数量，由用户自己输入，但不能超过默认的最高1024个，不然会出错。\r\n" +
-                        "3.搜索框支持中英文搜索，不区分大小写.\r\n"
+                        "3.搜索框支持中英文搜索，不区分大小写.\r\n" +
+                        "4.如果创建失败或者只有一个分身，那是因为系统限制的缘故，更换为lineage或者pixel experience再次尝试。（炼妖壶issue连接：https://github.com/oasisfeng/island/issues/382）.\r\n"
                 );
                 break;
             case 5:

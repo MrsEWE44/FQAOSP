@@ -488,8 +488,6 @@ public class fileSearchActivity extends AppCompatActivity {
             }
 
         }
-
-
     }
 
     private void addFlist(DocumentFile dd, ArrayList<String> flist) {
@@ -741,7 +739,7 @@ public class fileSearchActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 54 && data != null) {
+        if ((requestCode == 54 || requestCode == 55) && data != null) {
             Uri uri = data.getData();
             getContentResolver().takePersistableUriPermission(uri, data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION));//关键是这里，这个就是保存这个目录的访问权限
             Log.d(TAG, "grant ok");

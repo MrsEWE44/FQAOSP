@@ -22,11 +22,15 @@ import android.os.UserManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.myActivitys.appDisableActivity;
 import org.fqaosp.myActivitys.backupRestoreActivity;
+import org.fqaosp.myActivitys.importToolsActivity;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -75,10 +79,13 @@ public class multiFunc {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.cancel();
-
             }
         });
-        ab.create().show();
+
+        AlertDialog alertDialog = ab.create();
+        alertDialog.show();
+        TextView tv = alertDialog.getWindow().getDecorView().findViewById(android.R.id.message);
+        tv.setTextIsSelectable(true);
     }
 
     //移除uid多余字符串
@@ -426,5 +433,25 @@ public class multiFunc {
         return alertDialog.show();
     }
 
+    public static void showImportToolsDialog(Context context,String toastMsg , String msg){
+        Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show();
+        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
+        alertDialog.setTitle("警告");
+        alertDialog.setMessage(msg);
+        alertDialog.setPositiveButton("继续", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+            }
+        });
+        alertDialog.setNegativeButton("补全组件脚本", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.dismiss();
+                jump(context, importToolsActivity.class);
+            }
+        });
+        alertDialog.show();
+    }
 
 }

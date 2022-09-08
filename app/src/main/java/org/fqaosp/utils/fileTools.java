@@ -98,6 +98,13 @@ public class fileTools {
         return DocumentFile.fromTreeUri(context, Uri.parse("content://com.android.externalstorage.documents/tree/primary%3AAndroid%2Fobb/document/primary%3A" + path2));
     }
 
+    //调用系统文件选择器选择一个文件夹
+    public static void execDirSelect(Context context, Activity activity , String msg){
+        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+        activity.startActivityForResult(intent, 43);
+    }
+
     //调用系统文件选择器
     public static void execFileSelect(Context context, Activity activity , String msg){
         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
