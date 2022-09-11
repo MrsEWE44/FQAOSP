@@ -16,6 +16,7 @@ import org.fqaosp.myActivitys.appDisableActivity;
 import org.fqaosp.myActivitys.appopsActivity;
 import org.fqaosp.myActivitys.backupRestoreActivity;
 import org.fqaosp.myActivitys.fileSearchActivity;
+import org.fqaosp.myActivitys.fileSharingActivity;
 import org.fqaosp.myActivitys.imgToolMenuActivity;
 import org.fqaosp.myActivitys.importToolsActivity;
 import org.fqaosp.myActivitys.killAppActivity;
@@ -53,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
         Button sqliteb = findViewById(R.id.sqliteb);
         Button brbutton = findViewById(R.id.brbutton);
         Button mfilesearch = findViewById(R.id.mfilesearch);
+        Button mfilesharing = findViewById(R.id.mfilesharing);
 
         jump(b1,this,workProfileMenuActivity.class);
         jump(b3,this, killAppActivity.class);
@@ -65,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
         jump(sqliteb,this, sqliteManageActivity.class);
         jump(brbutton,this, backupRestoreActivity.class);
         jump(mfilesearch,this, fileSearchActivity.class);
+        jump(mfilesharing,this, fileSharingActivity.class);
 
     }
 

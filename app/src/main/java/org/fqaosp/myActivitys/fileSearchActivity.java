@@ -517,8 +517,9 @@ public class fileSearchActivity extends AppCompatActivity {
 
         } else {
             //如果只是授权文件存储权限，则只需要通关file列出所有文件夹即可
-            for (File file : new File(extstorage + "/" + path).listFiles()) {
-                if (file.isDirectory()) {
+            File file1 = new File(extstorage + "/" + path);
+            if(file1.listFiles() != null){
+                for (File file : file1.listFiles()) {
                     flist.add(file.getName());
                 }
             }

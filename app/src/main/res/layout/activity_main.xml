@@ -18,14 +18,28 @@
          android:layout_weight="1"
          android:orientation="vertical" >
 
-         <Button
+         <LinearLayout
              android:layout_width="fill_parent"
+             android:layout_height="fill_parent"
              android:layout_weight="1"
-             android:layout_height="match_parent"
-             android:text="文件搜索"
-             android:layout_marginLeft="5dp"
-             android:id="@+id/mfilesearch"
-             ></Button>
+             android:orientation="horizontal">
+             <Button
+                 android:layout_width="fill_parent"
+                 android:layout_weight="1"
+                 android:layout_height="match_parent"
+                 android:text="文件搜索"
+                 android:layout_marginLeft="5dp"
+                 android:id="@+id/mfilesearch"
+                 ></Button>
+             <Button
+                 android:layout_width="fill_parent"
+                 android:layout_weight="1"
+                 android:layout_height="match_parent"
+                 android:text="文件共享"
+                 android:layout_marginLeft="5dp"
+                 android:id="@+id/mfilesharing"
+                 ></Button>
+         </LinearLayout>
 
          <Button
              android:layout_width="fill_parent"

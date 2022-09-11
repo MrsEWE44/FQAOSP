@@ -29,7 +29,7 @@ public class makeImgToPC {
         }
 
         //Android8以前实现，未测试
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+        if (sdkInt < Build.VERSION_CODES.P) {
             cmdstr="cd "+config_path2 +" && echo -n 0 > enable && echo -n '"+filePath+"' > f_mass_storage/lun/file && echo -n 'mass_storage' >functions && echo -n 1 >enable";
         }
 
