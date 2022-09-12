@@ -20,6 +20,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Looper;
+import android.provider.DocumentsContract;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.Menu;
@@ -34,6 +35,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.FileProvider;
 import androidx.documentfile.provider.DocumentFile;
 import androidx.viewpager.widget.ViewPager;
 
@@ -61,6 +63,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public class fileSharingActivity extends AppCompatActivity {
 
@@ -121,6 +125,9 @@ public class fileSharingActivity extends AppCompatActivity {
     }
 
     private void initBtClick(){
+
+        Activity that = this;
+
         fsab1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -134,9 +141,13 @@ public class fileSharingActivity extends AppCompatActivity {
                             }
                         });
                         fsab1.setText("当前正在运行");
-                        new HttpServer().start();
+                         String extstorage = Environment.getExternalStorageDirectory().toString();
+                         String ssss = extstorage + "/Android/data";
+                        String s2 = extstorage + "/Android/obb";
+                        DocumentFile doucmentFile = fileTools.getDoucmentFileOnData(that, ssss);
+                        DocumentFile doucmentFil2e = fileTools.getDoucmentFileOnObb(that, s2);
 
-
+                        new HttpServer().start(doucmentFile,doucmentFil2e,that);
                     }
                 }).start();
             }
@@ -243,7 +254,11 @@ public class fileSharingActivity extends AppCompatActivity {
             }
         }
         Collections.sort(flist, String::compareTo);
-        flist.add(0,"上一页");
+        if(flist.size() < 1){
+            flist.add("上一页");
+        }else{
+            flist.add(0,"上一页");
+        }
         String finalPath = path;
 
         ListView fsalv = fileView.findViewById(R.id.fsalv);
@@ -252,12 +267,8 @@ public class fileSharingActivity extends AppCompatActivity {
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 String full_path = extstorage + "/" +finalPath +"/" + flist.get(i);
                 File file = new File(full_path);
-                if(file.isDirectory()){
-                    Toast.makeText(context, "暂时不支持添加文件夹", Toast.LENGTH_SHORT).show();
-                }else{
-                    fileList.add(full_path);
-                    Toast.makeText(context, file.getName()+" 已加入分享队列", Toast.LENGTH_SHORT).show();
-                }
+                fileList.add(full_path);
+                Toast.makeText(context, file.getName()+" 已加入分享队列", Toast.LENGTH_SHORT).show();
                 return false;
             }
         });
@@ -302,7 +313,6 @@ public class fileSharingActivity extends AppCompatActivity {
         fsalv.setAdapter(fileselectAdapter);
 
     }
-
 
     //获取对应的应用程序
     private void getUserPKGS(){
@@ -372,14 +382,23 @@ public class fileSharingActivity extends AppCompatActivity {
     //http服务器内部类
     private class HttpServer {
 
+        //保留上一级路径
+        private String parenPath;
+
         //获取端口
         private String s = fsaet2.getText().toString();
+
+        //获取ip
+        private String s2 = fsaet1.getText().toString();
+
+        private String ipAndPort=s2+":"+(s.isEmpty() ? 26456 : s);
 
         //html界面头部
         private  String htmlhead="<html>\n" +
                 "<head>\n" +
                 "\n" +
                 "<h1 style=\"text-align: center;\">fqaosp file download web page</h1>\n" +
+                "<meta charset=\"utf-8\">\n"+
                 "\n" +
                 "</head>\n" +
                 "<body>\n";
@@ -390,13 +409,19 @@ public class fileSharingActivity extends AppCompatActivity {
                 "\n" +
                 "<script>\n" +
                 "function bt(a){\n" +
-                "\tconsole.log(a);\n" +
-                "\twindow.open(\"http://"+fsaet1.getText().toString()+":"+(s.isEmpty() ? 26456 : s)+"/fqaosp?\"+a)\n" +
+                "\twindow.open(\"http://"+ipAndPort+"/fqaosp?file=\"+a)\n" +
                 "}\n" +
                 "</script>";
 
-        public void start(){
+        private DocumentFile dd,obb;
+        private Context context;
+        private HashMap<String,Uri> hashMap = new HashMap<>();
+
+        public void start(DocumentFile ddf , DocumentFile obbf ,Context context2){
             ServerSocket serverSocket;
+            dd=ddf;
+            obb=obbf;
+            context=context2;
             try {
                 serverSocket = new ServerSocket(s.isEmpty() ? 26456 : Integer.valueOf(s));
                 Log.d(fileSharingActivity.class.getName(),"listen port : " + serverSocket.getLocalPort());
@@ -416,7 +441,6 @@ public class fileSharingActivity extends AppCompatActivity {
 
         //http服务解析函数
         public void service(Socket socket) throws Exception {
-
             //读取HTTP请求信息
             InputStream socketIn = socket.getInputStream();
             int size = socketIn.available();
@@ -433,44 +457,91 @@ public class fileSharingActivity extends AppCompatActivity {
                     String path = s.split(" ")[1];
                     if(path.indexOf("fqaosp")!= -1){
                         String parm = path.split("\\?")[1];
-                        Log.d("sss",parm);
-                        File file = new File(fileList.get(Integer.valueOf(parm.trim())));
-                        String contentType = "attachment;filename="+ URLEncoder.encode(file.getName(),"utf-8");
-                        //创建响应头
-                        String responseHeader = "Content-disposition:" + contentType + "\r\n\r\n";
-                        OutputStream socketOut = socket.getOutputStream();
-                        //发送响应协议、状态码及响应头、正文
-                        socketOut.write(httpStatus.getBytes());
-                        socketOut.write(responseHeader.getBytes());
-                        FileInputStream in = new FileInputStream(file);
-                        int len =0;
-                        b = new byte[1024];
-                        while((len=in.read(b))!=-1){
-                            socketOut.write(b,0,len);
-                        }
-                        socketOut.close();
-                    }else{
-                        StringBuilder sb = new StringBuilder();
-                        sb.append(htmlhead);
-                        if(fileList.size() < 1){
-                            sb.append("<h1>还没有选择文件哦!</h1>");
-                        }else{
-                            for (int i = 0; i < fileList.size(); i++) {
-                                File file = new File(fileList.get(i));
-                                sb.append("<div><table border=\"1\"><td><h1>"+file.getName()+"</h1></td><td><h1>"+getSize(file.length(),0)+"</h1></td><td><button onclick=\"bt("+i+")\">下载</button></td></table></div>");
+                        Log.d("parm",parm);
+                        if(parm.indexOf("file") != -1){
+                            parm=parm.split("=")[1];
+                            Integer index = Integer.valueOf(parm.trim());
+                            String data = fileList.get(index);
+                            //判断是否点击的“上一页”
+                            if(data.equals("上一页")){
+                                data = parenPath;
+                                if(data.indexOf("/Android/data") != -1 ) {
+                                    dd=dd.getParentFile();
+                                }
+                                if(data.indexOf("/Android/obb") != -1){
+                                    obb=obb.getParentFile();
+                                }
                             }
-                        }
-                        sb.append(htmlend);
-                        String contentType = "text/html;text/plain;charset=UTF-8";
 
-                        //创建响应头
-                        String responseHeader = "Content-Type:" + contentType + "\r\n\r\n";
-                        OutputStream socketOut = socket.getOutputStream();
-                        //发送响应协议、状态码及响应头、正文
-                        socketOut.write(httpStatus.getBytes());
-                        socketOut.write(responseHeader.getBytes());
-                        socketOut.write(sb.toString().getBytes());
-                        socketOut.close();
+                            data = data.replaceAll("//","/");
+                            File file = new File(data);
+                            if(data.indexOf("/Android/data") != -1){
+                                dd = checkDocum(dd,file);
+                            }
+
+                            if(data.indexOf("/Android/obb") != -1){
+                                obb = checkDocum(obb,file);
+                            }
+                            parenPath=file.getParent();
+
+//                            Log.d("data",data + " -- " + parenPath + " -- " + file.getAbsolutePath());
+                            if(file.isDirectory()){
+                                fileList.clear();
+                                hashMap.clear();
+                                if (data.indexOf("/Android/data") != -1) {
+                                    addDocum(dd,data);
+                                } else if (data.indexOf("/Android/obb") != -1) {
+                                    addDocum(obb,data);
+                                } else {
+                                    File[] files = file.listFiles();
+                                    if(files != null && files.length > 0){
+                                        for (File listFile : files) {
+                                            fileList.add(listFile.getAbsolutePath());
+                                        }
+                                    }
+                                }
+                                Collections.sort(fileList,String::compareTo);
+                                if(fileList.size() < 1){
+                                    fileList.add("上一页");
+                                }else{
+                                    fileList.add(0,"上一页");
+                                }
+                                returnFileList(fileList,httpStatus,socket);
+
+                            }else{
+                                String contentType = "attachment;filename="+ URLEncoder.encode(file.getName(),"utf-8");
+                                //创建响应头
+                                String responseHeader = "Content-disposition:" + contentType + "\r\nContent-Length: "+file.length()+"\r\n\r\n";
+                                OutputStream socketOut = socket.getOutputStream();
+                                //发送响应协议、状态码及响应头、正文
+                                socketOut.write(httpStatus.getBytes());
+                                socketOut.write(responseHeader.getBytes());
+                                InputStream in = null;
+                                //判断文件路径是否为data跟obb，如果是，则用存有完整路径与对应uri类型的hashmap重新复制inpustream对象。
+                                if(data.indexOf("/Android/data") != -1 || data.indexOf("/Android/obb") != -1) {
+                                    for (Map.Entry<String, Uri> stringUriEntry : hashMap.entrySet()) {
+                                        if(stringUriEntry.getKey().equals(data)){
+                                            in = context.getContentResolver().openInputStream(stringUriEntry.getValue());
+                                            break;
+                                        }
+                                    }
+                                }else{
+                                    in = new FileInputStream(file);
+                                }
+                                int len =0;
+                                b = new byte[1024];
+                                while((len=in.read(b))!=-1){
+                                    socketOut.write(b,0,len);
+                                }
+                                socketOut.close();
+                            }
+
+                        }else{
+                            returnText(httpStatus,socket,"参数错误.");
+                        }
+
+                    }else{
+                        returnFileList(fileList,httpStatus,socket);
                     }
 
                 }
@@ -478,6 +549,57 @@ public class fileSharingActivity extends AppCompatActivity {
             socket.close();
 
         }
+
+        public void addDocum(DocumentFile dd2 ,String data){
+            for (DocumentFile df : dd2.listFiles()) {
+                String docum_path =data+"/"+ df.getName();
+                fileList.add(docum_path);
+                hashMap.put(docum_path,df.getUri());
+            }
+        }
+
+        public DocumentFile checkDocum(DocumentFile dd2 , File file){
+            for (DocumentFile documentFile : dd2.listFiles()) {
+                if (documentFile.getName().equals(file.getName())) {
+                    return documentFile;
+                }
+            }
+            return dd2;
+        }
+
+        //返回文件列表
+        public void returnFileList(ArrayList<String> slist , String httpStatus , Socket socket) throws Exception {
+            StringBuilder sb = new StringBuilder();
+            sb.append(htmlhead);
+            if(slist.size() < 1){
+                sb.append("<h1>还没有选择文件哦!</h1>");
+            }else{
+                for (int i = 0; i < slist.size(); i++) {
+                    File file = new File(slist.get(i));
+                    if(file.isDirectory() || file.toString().equals("上一页")){
+                        sb.append("<div><table border=\"1\"><td><a href=\""+"http://"+ipAndPort+"/fqaosp?file="+i+"\" <h1>"+file.getName()+"</h1></a></td></table></div>");
+                    }else{
+                        sb.append("<div><table border=\"1\"><td>"+file.getName()+"</td><td>"+getSize(file.length(),0)+"</td><td><button onclick=\"bt("+i+")\">下载</button></td></table></div>");
+                    }
+                }
+            }
+            sb.append(htmlend);
+            returnText(httpStatus,socket,sb.toString());
+        }
+
+        //返回文本内容给浏览器
+        public void returnText(String httpStatus , Socket socket , String text) throws Exception {
+            String contentType = "text/html;text/plain;charset=UTF-8";
+            //创建响应头
+            String responseHeader = "Content-Type:" + contentType + "\r\n\r\n";
+            OutputStream socketOut = socket.getOutputStream();
+            //发送响应协议、状态码及响应头、正文
+            socketOut.write(httpStatus.getBytes());
+            socketOut.write(responseHeader.getBytes());
+            socketOut.write(text.getBytes());
+            socketOut.close();
+        }
+
     }
 
 }
