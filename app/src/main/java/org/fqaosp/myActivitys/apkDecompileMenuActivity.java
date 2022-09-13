@@ -1,140 +1,333 @@
 package org.fqaosp.myActivitys;
 
+import static org.fqaosp.utils.fileTools.execFileSelect;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
+import static org.fqaosp.utils.fileTools.selectFile;
+import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.jump;
+import static org.fqaosp.utils.multiFunc.queryUserPKGS;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
+import static org.fqaosp.utils.multiFunc.showMyDialog;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.Process;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager.widget.ViewPager;
 
 import org.fqaosp.R;
+import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
+import org.fqaosp.adapter.PKGINFOAdapter;
+import org.fqaosp.adapter.USERAdapter;
+import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.threads.alertDialogThread;
+import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
+import org.fqaosp.utils.multiFunc;
+import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class apkDecompileMenuActivity extends AppCompatActivity {
+
+    private ViewPager admavp;
+    private ArrayList<View> views = new ArrayList<>();
+    private ArrayList<String> slist = new ArrayList<>();
+    private Integer viewPageIndex = 0;
+    private View deView, reView;
+    private ListView delv, relv;
+    private ArrayList<String> list = new ArrayList<>();
+    private ArrayList<Boolean> checkboxs = new ArrayList<>();
+    private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.apk_decompile_menu_activity);
         fuckActivity.getIns().add(this);
-        setTitle("apktool菜单");
-        Button b1 = findViewById(R.id.admab1);
-        Button b2 = findViewById(R.id.admab2);
-        jump(b1,this,apkDecompileActivity.class);
-        jump(b2,this,apkRecompileActivity.class);
+        setTitle("软件反编译");
         extractAssetsFiles();
+        initViews();
     }
 
-
-//    private  Boolean checkjdkfile(File storageHomeJDKF){
-//        if (!storageHomeJDKF.exists()){
-//            AlertDialog.Builder alertDialog2 = new AlertDialog.Builder(apkDecompileMenuActivity.this);
-//            alertDialog2.setTitle("提示");
-//            alertDialog2.setMessage("请下载该连接jdk文件 https://github.com/MrsEWE44/FQAOSP/releases/tag/V1.0-test-1 并把jdk.tar.xz放置在 "+storageHomeJDKF.toString());
-//            alertDialog2.setNegativeButton("已下载", new DialogInterface.OnClickListener() {
-//                @Override
-//                public void onClick(DialogInterface dialogInterface, int i) {
-//                    dialogInterface.dismiss();
-//                    if(storageHomeJDKF.exists()){
-//                        Toast.makeText(apkDecompileMenuActivity.this, "请重新进入app", Toast.LENGTH_LONG).show();
-//                        fuckActivity.getIns().killall();
-//                    }else{
-//                        checkjdkfile(storageHomeJDKF);
-//                    }
-//                }
-//            });
-//            alertDialog2.show();
-//        }else{
-//            return true;
-//        }
-//        return false;
-//    }
-
-    private  void extractAssetsFiles()  {
+    private void extractAssetsFiles() {
         try {
             String filesDir = getMyHomeFilesPath(apkDecompileMenuActivity.this);
-            String busyboxFile = filesDir+"/busybox";
-            String jdkFile = filesDir+"/jdk.tar.xz";
-            String jdkDir = filesDir+"/jdk";
-            String storage = Environment.getExternalStorageDirectory().toString();
-            String storageHome = storage+"/Download";
-            String storageHomeJDKFile = storageHome+"/jdk.tar.xz";
-            String makeScriptFile = filesDir+"/make.sh";
-            String deScriptFile = filesDir+"/de.sh";
-            String reScriptFile = filesDir+"/re.sh";
-            String apktoolFile = filesDir+ "/apktool.jar";
+            String jdkDir = filesDir + "/jdk";
+            String apktoolFile = filesDir + "/apktool.jar";
             File file1 = new File(filesDir);
-            File bboxF = new File(busyboxFile);
-            File jdkF = new File(jdkFile);
             File jdkD = new File(jdkDir);
-            File storageHomeJDKF = new File(storageHomeJDKFile);
-            File storageHomeDir = new File(storageHome);
-            File deScriptF = new File(deScriptFile);
-            File reScriptF = new File(reScriptFile);
-            File makeScriptF = new File(makeScriptFile);
             File apkToolF = new File(apktoolFile);
-            if(!storageHomeDir.exists()){
-               storageHomeDir.mkdirs();
+            if (!file1.exists()) {
+                file1.mkdirs();
             }
-            if(!file1.exists()){
-               file1.mkdirs();
+            if (!jdkD.exists() ) {
+                Toast.makeText(this, "未找到jdk，请重新导入工具包后再执行此项", Toast.LENGTH_LONG).show();
+                jump(apkDecompileMenuActivity.this, importToolsActivity.class);
             }
-
-            if (!jdkD.exists() && !jdkF.exists() ){
-//                if(checkjdkfile(storageHomeJDKF)){
-//                    if(copyFile(storageHomeJDKFile,jdkFile)){
-//                        Toast.makeText(this, "发现jdk!", Toast.LENGTH_SHORT).show();
-//                        extractAssetsFiles();
-//                    }
-//                }
-                Toast.makeText(this, "未找到 jdk.tar.xz ，请重新导入工具包后再执行此项", Toast.LENGTH_LONG).show();
-                jump(apkDecompileMenuActivity.this,importToolsActivity.class);
-            }else{
-                if(!bboxF.exists() ){
-                    extactAssetsFile(this,"busybox",busyboxFile);
-                }
-                if(jdkD.exists() && jdkF.exists()){
-                    jdkF.delete();
-                }
-                if(!makeScriptF.exists()){
-                    Toast.makeText(this, "未找到make.sh，请重新导入工具包后再执行此项", Toast.LENGTH_LONG).show();
-                    jump(apkDecompileMenuActivity.this,importToolsActivity.class);
-                }
-                if(!apkToolF.exists()){
-                    Toast.makeText(this, "未找到apktool.jar，请重新导入工具包后再执行此项", Toast.LENGTH_LONG).show();
-                    jump(apkDecompileMenuActivity.this,importToolsActivity.class);
-                }
-                if(!deScriptF.exists()){
-                    Toast.makeText(this, "未找到de.sh，请重新导入工具包后再执行此项", Toast.LENGTH_LONG).show();
-                    jump(apkDecompileMenuActivity.this,importToolsActivity.class);
-                }
-                if(!reScriptF.exists()){
-                    Toast.makeText(this, "未找到re.sh，请重新导入工具包后再执行此项", Toast.LENGTH_LONG).show();
-                    jump(apkDecompileMenuActivity.this,importToolsActivity.class);
-                }
-                Integer myuid = Process.myUid();
-                String cmd = "cd " + filesDir + " && sh make.sh && cd ../ && chown -R "+myuid+":"+myuid+" files/";
-
-                alertDialogThread dialogThread = new alertDialogThread(apkDecompileMenuActivity.this, "请稍后，正在解压apktool相关资源文件", cmd, "提示", "解压成功", "解压失败");
-                dialogThread.start();
+            if (!apkToolF.exists()) {
+                Toast.makeText(this, "未找到apktool.jar，请重新导入工具包后再执行此项", Toast.LENGTH_LONG).show();
+                jump(apkDecompileMenuActivity.this, importToolsActivity.class);
             }
-
-
+            Integer myuid = Process.myUid();
+            String cmd = "cd " + filesDir + " && sh make.sh && cd ../ && chown -R " + myuid + ":" + myuid + " files/";
+            alertDialogThread dialogThread = new alertDialogThread(apkDecompileMenuActivity.this, "请稍后，正在解压apktool相关资源文件", cmd, "提示", "工具已存在", "解压失败");
+            dialogThread.start();
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void initViews() {
+        admavp = findViewById(R.id.admavp);
+        deView = getLayoutInflater().inflate(R.layout.apk_decompile_activity, null);
+        reView = getLayoutInflater().inflate(R.layout.apk_recompile_activity, null);
+        views.add(deView);
+        views.add(reView);
+        slist.add("反编译");
+        slist.add("回编译");
+        FILESHARINGVIEWPAGERAdapter adapter = new FILESHARINGVIEWPAGERAdapter(views, slist);
+        admavp.setAdapter(adapter);
+        initOnListen();
+        initDecompileView();
+        initRecompileView();
+    }
+
+    private void initOnListen() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            admavp.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+                @Override
+                public void onScrollChange(View view, int i, int i1, int i2, int i3) {
+                    viewPageIndex = admavp.getCurrentItem();
+                }
+            });
+        }
+    }
+
+    //初始化反编译界面与功能
+    private void initDecompileView() {
+        Activity activity = this;
+        Context context = this;
+        Button b1 = deView.findViewById(R.id.adab1);
+        Button b2 = deView.findViewById(R.id.adab2);
+        Button b3 = deView.findViewById(R.id.adab3);
+        Button b4 = deView.findViewById(R.id.adab4);
+        EditText adaet1 = deView.findViewById(R.id.adaet1);
+        delv = deView.findViewById(R.id.adalv1);
+        permissionRequest.getExternalStorageManager(context);
+        b1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog show = showMyDialog(context, "提示", "请稍后，正在反编译中...(可能会出现无响应，请耐心等待)....");
+                Handler handler = dismissDialogHandler(0, show);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        String filesDir = getMyHomeFilesPath(context);
+                        PackageManager packageManager = getPackageManager();
+                        String myStorageHomePath = getMyStorageHomePath(activity);
+                        for (int i = 0; i < checkboxs.size(); i++) {
+                            if (checkboxs.get(i)) {
+                                String filePath = pkginfos.size() > 0 ? pkginfos.get(i).getApkpath() : list.get(i);
+                                PackageInfo archiveInfo = packageManager.getPackageArchiveInfo(filePath, 0);
+                                String pkgname = archiveInfo.packageName;
+                                String outDir = myStorageHomePath + "/files/decompile/" + pkgname;
+                                String cmd = "cd " + filesDir + " && sh de.sh " + outDir + " " + filePath;
+                                CMD cmd1 = new CMD(cmd);
+                                Toast.makeText(context, cmd1.getResultCode() == 0 ? "反编译成功" : "反编译失败", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        sendHandlerMSG(handler, 0);
+                    }
+                });
+            }
+        });
+
+        b2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                getUserEnablePKGS();
+                showPKGS(delv);
+            }
+        });
+
+        b3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                execFileSelect(context, activity, "请选择.apk文件");
+            }
+        });
+
+        b4.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String searchStr = adaet1.getText().toString();
+                pkginfos = multiFunc.indexOfPKGS(activity, searchStr, pkginfos, checkboxs, 0);
+                showPKGS(delv);
+            }
+        });
+    }
+
+    //初始化回编译界面与功能
+    private void initRecompileView() {
+        Context context = this;
+        Activity activity = this;
+        Button b1 = reView.findViewById(R.id.arab1);
+        Button b2 = reView.findViewById(R.id.arab2);
+        Button b3 = reView.findViewById(R.id.arab3);
+        relv = reView.findViewById(R.id.aralv1);
+        b1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog show = showMyDialog(context, "提示", "请稍后，正在反编译中...(可能会出现无响应，请耐心等待)....");
+                Handler handler = dismissDialogHandler(0, show);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        String filesDir = getMyHomeFilesPath(context);
+                        String myStorageHomePath = getMyStorageHomePath(activity);
+                        for (int i = 0; i < checkboxs.size(); i++) {
+                            if (checkboxs.get(i)) {
+                                String decompilepath = list.get(i);
+                                String outname = new File(decompilepath).getName();
+                                String outDir = myStorageHomePath + "/files/recompile";
+                                File file = new File(outDir);
+                                if (!file.exists()) {
+                                    file.mkdirs();
+                                }
+                                String outFile = outDir + "/" + outname + ".apk";
+                                String cmd = "cd " + filesDir + " && sh re.sh " + outFile + " " + decompilepath;
+                                CMD cmd1 = new CMD(cmd);
+                                Toast.makeText(context, cmd1.getResultCode() == 0 ? "回编译成功" : "回编译失败", Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                        sendHandlerMSG(handler, 0);
+                    }
+                });
+
+
+            }
+        });
+
+        b2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                clearList();
+                String myStorageHomePath = getMyStorageHomePath(activity);
+                String defaultDecompileDir = myStorageHomePath + "/files/decompile";
+                File file1 = new File(defaultDecompileDir);
+                if (file1.exists()) {
+                    File[] files = file1.listFiles();
+                    if (files.length > 0) {
+                        for (File file : files) {
+                            list.add(file.toString());
+                            checkboxs.add(false);
+                        }
+                        showSelectApkToolPath(relv);
+                    } else {
+                        Toast.makeText(context, "默认路径没有反编译后的内容", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(context, "默认路径没有反编译后的内容", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+        });
+
+        b3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                execFileSelect(context, activity, "请选择 apktool.yml 文件");
+            }
+        });
+        permissionRequest.getExternalStorageManager(context);
+    }
+
+    private void clearList() {
+        checkboxs.clear();
+        pkginfos.clear();
+        list.clear();
+    }
+
+    private void getUserEnablePKGS() {
+        multiFunc.queryUserEnablePKGS(this, pkginfos, checkboxs, 0);
+    }
+
+    private void getEnablePKGS() {
+        multiFunc.queryEnablePKGS(this, pkginfos, checkboxs, 0);
+    }
+
+    //获取对应的应用程序
+    private void getPKGS() {
+        multiFunc.queryPKGS(this, pkginfos, checkboxs, 0);
+    }
+
+    private void getUserPKGS() {
+        queryUserPKGS(this, pkginfos, checkboxs, 0);
+    }
+
+    private void showPKGS(ListView listView) {
+        PKGINFOAdapter pkginfoAdapter = new PKGINFOAdapter(pkginfos, apkDecompileMenuActivity.this, checkboxs);
+        listView.setAdapter(pkginfoAdapter);
+    }
+
+    private void showSelectApkToolPath(ListView listView) {
+        if (list.size() > 0 && checkboxs.size() > 0) {
+            USERAdapter userAdapter = new USERAdapter(list, apkDecompileMenuActivity.this, checkboxs);
+            listView.setAdapter(userAdapter);
+        }
+    }
+
+    private void showSelectApkPath(ListView listView) {
+        if (list.size() > 0 && checkboxs.size() > 0) {
+            USERAdapter userAdapter = new USERAdapter(list, apkDecompileMenuActivity.this, checkboxs);
+            listView.setAdapter(userAdapter);
+        }
+    }
+
+
+    @Override
+    public boolean onMenuOpened(int featureId, Menu menu) {
+        menu.clear();
+        switch (viewPageIndex) {
+            case 0:
+                menu.add(Menu.NONE, 0, 0, "显示所有应用");
+                menu.add(Menu.NONE, 1, 1, "显示所有应用(包括禁用)");
+                menu.add(Menu.NONE, 2, 2, "显示用户安装的应用");
+                menu.add(Menu.NONE, 3, 3, "显示用户安装的应用(包括禁用)");
+                menu.add(Menu.NONE, 4, 4, "帮助");
+                menu.add(Menu.NONE, 5, 5, "退出");
+                break;
+            case 1:
+                menu.add(Menu.NONE, 0, 0, "帮助");
+                menu.add(Menu.NONE, 1, 1, "退出");
+                break;
+        }
+        return super.onMenuOpened(featureId, menu);
     }
 
     @Override
@@ -146,12 +339,90 @@ public class apkDecompileMenuActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-        switch (itemId){
+        switch (viewPageIndex) {
             case 0:
-                fuckActivity.getIns().killall();
-                ;
+                switch (itemId) {
+                    case 0:
+                        getEnablePKGS();
+                        showPKGS(delv);
+                        break;
+                    case 1:
+                        getPKGS();
+                        showPKGS(delv);
+                        break;
+                    case 2:
+                        getUserPKGS();
+                        showPKGS(delv);
+                        break;
+                    case 3:
+                        getUserEnablePKGS();
+                        showPKGS(delv);
+                        break;
+                    case 4:
+                        showInfoMsg(this, "帮助信息", "该页面是用于apk反编译操作的，需要安装jdk与fqtools，采用传统apktool进行反编译操作,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                                "1.点击右上角三个点，可以列出与之相匹配的应用列表，支持直接批量反编译它们.\r\n" +
+                                "2.点击选择本地文件，可以批量反编译用户本地的apk文件。\r\n" +
+                                "3.上面有个搜索框，支持中英文搜索，无大小写限制.\r\n");
+                        break;
+                    case 5:
+                        fuckActivity.getIns().killall();
+                        ;
+                }
+                break;
+            case 1:
+                switch (itemId) {
+                    case 0:
+                        showInfoMsg(this, "帮助信息", "该页面是用于apk回编译操作的，需要安装jdk与fqtools，采用传统apktool进行回编译操作,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                                "1.点击选择本地文件夹，可以回编译用户本地反编译后的内容（需要选择带apktool.yml文件的项目工程）。\r\n" +
+                                "2.点击加载默认，可以列出所有从该应用反编译后的项目名称（推荐这个）。\r\n" +
+                                "3.点击上面开始回编译就会开始进行回编译操作.\r\n");
+                        break;
+                    case 1:
+                        fuckActivity.getIns().killall();
+                        ;
+                }
+                break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == Activity.RESULT_OK) {
+            clearList();
+            String msg = null, eq = null;
+            if(viewPageIndex == 0){
+                msg = "请选择正确的apk文件";
+                eq = "apk";
+            }
+
+            if(viewPageIndex == 1){
+                msg = "请选择正确的apktool.yml文件";
+                eq = "yml";
+            }
+
+            String storage = Environment.getExternalStorageDirectory().toString();
+            if (data.getClipData() != null) {//有选择多个文件
+                int count = data.getClipData().getItemCount();
+                for (int i = 0; i < count; i++) {
+                    Uri uri = data.getClipData().getItemAt(i).getUri();
+                    selectFile(apkDecompileMenuActivity.this, storage, uri, list, checkboxs,msg,eq);
+                }
+            } else if (data.getData() != null) {//只有一个文件咯
+                Uri uri = data.getData();
+                selectFile(apkDecompileMenuActivity.this, storage, uri, list, checkboxs, msg,eq);
+            }
+
+            if(viewPageIndex == 0) {
+                showSelectApkPath(delv);
+            }
+
+            if(viewPageIndex == 1) {
+                showSelectApkToolPath(relv);
+            }
+
+        }
     }
 
 

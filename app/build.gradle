@@ -9,8 +9,8 @@ android {
         applicationId "org.fqaosp"
         minSdk 21
         targetSdk 32
-        versionCode 19
-        versionName "1.1.7a"
+        versionCode 20
+        versionName "1.1.8"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {

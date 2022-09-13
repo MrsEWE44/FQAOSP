@@ -14,7 +14,7 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -34,22 +34,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".myActivitys.workProfileActivity" />
         <activity android:name=".myActivitys.workProfileMenuActivity" />
-        <activity android:name=".myActivitys.workProfileRemoveActivity" />
         <activity android:name=".myActivitys.killAppActivity" />
         <activity android:name=".myActivitys.mountLocalImageActivity" />
         <activity android:name=".myActivitys.apkDecompileMenuActivity"/>
-        <activity android:name=".myActivitys.apkDecompileActivity"/>
-        <activity android:name=".myActivitys.apkRecompileActivity"/>
         <activity android:name=".myActivitys.appDisableActivity"/>
         <activity android:name=".myActivitys.appopsActivity"/>
         <activity android:name=".myActivitys.appopsInfoActivity"/>
         <activity android:name=".myActivitys.imgToolMenuActivity"/>
-        <activity android:name=".myActivitys.imgToolUnpackActivity"/>
-        <activity android:name=".myActivitys.imgToolRepackActivity"/>
         <activity android:name=".myActivitys.importToolsActivity"/>
-        <activity android:name=".myActivitys.workProfileManageActivity"/>
         <activity android:name=".myActivitys.sqliteManageActivity"/>
         <activity android:name=".myActivitys.backupRestoreActivity"/>
         <activity android:name=".myActivitys.fileSearchActivity"/>

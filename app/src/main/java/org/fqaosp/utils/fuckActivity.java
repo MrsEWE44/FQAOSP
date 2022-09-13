@@ -27,6 +27,16 @@ public class fuckActivity {
          list.add(activity);
      }
 
+     //终止一个activity
+     public void kill(Activity activity){
+         for (Activity a : list) {
+             if(a == activity){
+                 a.finish();
+                 list.remove(a);
+             }
+         }
+     }
+
      //终止所保存的activity实例
      public void killall(){
          for (Activity activity : list) {

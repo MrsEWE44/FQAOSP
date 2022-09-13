@@ -1,9 +1,13 @@
 package org.fqaosp.utils;
 
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
+
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.UriPermission;
 import android.content.pm.PackageManager;
@@ -18,6 +22,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
 
+import java.io.File;
 import java.util.List;
 
 public class permissionRequest {
@@ -79,4 +84,31 @@ public class permissionRequest {
             activity.requestPermissions(p,0);
         }
     }
+
+    public static void intoGrantDataOrObb(Activity that){
+        AlertDialog.Builder ab = new AlertDialog.Builder(that);
+        ab.setTitle("提示");
+        ab.setMessage("没有授权data、obb、内部存储访问权限，是否现在进行授权？");
+        ab.setNegativeButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                requestExternalStoragePermission(that);
+                getExternalStorageManager(that);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    grantAndroidData(that);
+                    grantAndroidObb(that);
+                }
+                dialogInterface.cancel();
+                showInfoMsg(that, "提示", "授权完成后，重启应用");
+            }
+        });
+        ab.setPositiveButton("取消", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                dialogInterface.cancel();
+            }
+        });
+        ab.create().show();
+    }
+
 }

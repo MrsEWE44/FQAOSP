@@ -7,46 +7,21 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" android:orientation="horizontal" >
+        android:layout_height="match_parent" android:orientation="vertical" >
+        <androidx.viewpager.widget.ViewPager
+            android:layout_width="match_parent"
+            android:layout_height="fill_parent"
+            android:layout_gravity="center"
+            android:id="@+id/wpmavp"
+            android:layout_weight="1">
 
-       <LinearLayout
-           android:layout_width="fill_parent"
-           android:layout_height="fill_parent"
-           android:layout_weight="1"
-           android:layout_marginRight="10dp"
-           android:orientation="vertical">
+            <androidx.viewpager.widget.PagerTabStrip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/wpmapts"
+                ></androidx.viewpager.widget.PagerTabStrip>
 
-           <Button
-               android:layout_width="fill_parent"
-               android:layout_height="fill_parent"
-               android:text="新增分身"
-               android:layout_weight="1"
-               android:id="@+id/wpmab1"></Button>
-
-           <LinearLayout
-               android:layout_width="fill_parent"
-               android:layout_height="fill_parent"
-               android:layout_weight="1"
-               android:orientation="horizontal">
-
-               <Button
-                   android:layout_width="fill_parent"
-                   android:layout_height="fill_parent"
-                   android:text="删除分身"
-                   android:layout_weight="1"
-                   android:id="@+id/wpmab2"></Button>
-
-               <Button
-                   android:layout_width="fill_parent"
-                   android:layout_height="fill_parent"
-                   android:text="分身管理"
-                   android:layout_weight="1"
-                   android:layout_marginLeft="5dp"
-                   android:id="@+id/wpmab3"></Button>
-
-           </LinearLayout>
-
-       </LinearLayout>
+        </androidx.viewpager.widget.ViewPager>
 
     </LinearLayout>
 

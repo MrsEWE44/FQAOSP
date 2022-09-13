@@ -1,5 +1,6 @@
 package org.fqaosp.myActivitys;
 
+import static org.fqaosp.utils.fileTools.checkDocum;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
@@ -7,6 +8,7 @@ import static org.fqaosp.utils.multiFunc.showMyDialog;
 import static org.fqaosp.utils.permissionRequest.getExternalStorageManager;
 import static org.fqaosp.utils.permissionRequest.grantAndroidData;
 import static org.fqaosp.utils.permissionRequest.grantAndroidObb;
+import static org.fqaosp.utils.permissionRequest.intoGrantDataOrObb;
 import static org.fqaosp.utils.permissionRequest.requestExternalStoragePermission;
 
 import android.app.Activity;
@@ -86,7 +88,6 @@ public class fileSearchActivity extends AppCompatActivity {
         fuckActivity.getIns().add(this);
         setTitle("文件搜索");
         initBT();
-        checkPeer(this);
     }
 
     private void initBT() {
@@ -278,7 +279,7 @@ public class fileSearchActivity extends AppCompatActivity {
 
     }
 
-    private void checkPeer(Activity that){
+    private void checkPeer(Activity that) {
         String extstorage = Environment.getExternalStorageDirectory().toString();
         String s = extstorage + "/Android/data";
         String s2 = extstorage + "/Android/obb";
@@ -289,30 +290,7 @@ public class fileSearchActivity extends AppCompatActivity {
         if (doucmentFile.isDirectory() && doucmentFil2e.isDirectory() && file.isDirectory()) {
             showSelectFile(extstorage, null, doucmentFile, doucmentFil2e, that);
         } else {
-            AlertDialog.Builder ab = new AlertDialog.Builder(that);
-            ab.setTitle("提示");
-            ab.setMessage("没有授权data、obb、内部存储访问权限，是否现在进行授权？");
-            ab.setNegativeButton("确定", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    requestExternalStoragePermission(that);
-                    getExternalStorageManager(that);
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                        grantAndroidData(that);
-                        grantAndroidObb(that);
-                    }
-                    dialogInterface.cancel();
-                    showInfoMsg(that,"提示","授权完成后，重启应用");
-                }
-            });
-            ab.setPositiveButton("取消", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    dialogInterface.cancel();
-                }
-            });
-            ab.create().show();
-
+            intoGrantDataOrObb(that);
         }
     }
 
@@ -354,61 +332,61 @@ public class fileSearchActivity extends AppCompatActivity {
         String nameType = fileTools.getPathByLastNameType(name);
 //        Log.d(TAG,"input parm : [ " + filesize + " , " + filesize2 + " , " + time1 + " , " + time2 + " , " + ftype + " , " + sstr + " ] -- " + name + " -- indexname [ " + checkMap2StrCmp(name, sstr) + " ] -- size [ " + checkSizeCmp(length, filesize, filesize2)+ " ] -- type [ " + checkMap2StrCmp(nameType, ftype) + " ]");
 
-        if(!sstr.isEmpty() && !ftype.isEmpty() && filesize >0 && filesize2 > 0 && time1 > 0 && time2 > 0){
+        if (!sstr.isEmpty() && !ftype.isEmpty() && filesize > 0 && filesize2 > 0 && time1 > 0 && time2 > 0) {
             if (checkMap2StrCmp(name, sstr) && checkSizeCmp(l, time1, time2) && checkSizeCmp(length, filesize, filesize2) && checkMap2StrCmp(nameType, ftype)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
             }
         }
 
-        if(!sstr.isEmpty() && !ftype.isEmpty() && filesize >0 && filesize2 > 0 && time1 == 0 && time2 ==0){
+        if (!sstr.isEmpty() && !ftype.isEmpty() && filesize > 0 && filesize2 > 0 && time1 == 0 && time2 == 0) {
             if (checkMap2StrCmp(name, sstr) && checkSizeCmp(length, filesize, filesize2) && checkMap2StrCmp(nameType, ftype)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
             }
         }
-        if(!sstr.isEmpty() && !ftype.isEmpty() && filesize ==0 && filesize2 == 0&& time1 > 0 && time2 > 0){
+        if (!sstr.isEmpty() && !ftype.isEmpty() && filesize == 0 && filesize2 == 0 && time1 > 0 && time2 > 0) {
             if (checkMap2StrCmp(name, sstr) && checkSizeCmp(l, time1, time2) && checkMap2StrCmp(nameType, ftype)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
             }
         }
 
-        if(!sstr.isEmpty() && !ftype.isEmpty() && filesize ==0 && filesize2 == 0 && time1 == 0 && time2 ==0){
-            if (checkMap2StrCmp(name, sstr) &&  checkMap2StrCmp(nameType, ftype)) {
+        if (!sstr.isEmpty() && !ftype.isEmpty() && filesize == 0 && filesize2 == 0 && time1 == 0 && time2 == 0) {
+            if (checkMap2StrCmp(name, sstr) && checkMap2StrCmp(nameType, ftype)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
             }
         }
 
-        if(!sstr.isEmpty() && ftype.isEmpty() && filesize ==0 && filesize2 == 0 && time1 == 0 && time2 ==0){
-            if (checkMap2StrCmp(name, sstr) ) {
+        if (!sstr.isEmpty() && ftype.isEmpty() && filesize == 0 && filesize2 == 0 && time1 == 0 && time2 == 0) {
+            if (checkMap2StrCmp(name, sstr)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
             }
         }
 //分割线
-        if(sstr.isEmpty() && !ftype.isEmpty() && filesize >0 && filesize2 > 0 && time1 > 0 && time2 > 0){
+        if (sstr.isEmpty() && !ftype.isEmpty() && filesize > 0 && filesize2 > 0 && time1 > 0 && time2 > 0) {
             if (checkSizeCmp(l, time1, time2) && checkSizeCmp(length, filesize, filesize2) && checkMap2StrCmp(nameType, ftype)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
             }
         }
 
-        if(sstr.isEmpty() && !ftype.isEmpty() && filesize >0 && filesize2 > 0 && time1 == 0 && time2 ==0){
+        if (sstr.isEmpty() && !ftype.isEmpty() && filesize > 0 && filesize2 > 0 && time1 == 0 && time2 == 0) {
             if (checkSizeCmp(length, filesize, filesize2) && checkMap2StrCmp(nameType, ftype)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
             }
         }
-        if(sstr.isEmpty() && !ftype.isEmpty() && filesize ==0 && filesize2 == 0&& time1 > 0 && time2 > 0){
+        if (sstr.isEmpty() && !ftype.isEmpty() && filesize == 0 && filesize2 == 0 && time1 > 0 && time2 > 0) {
             if (checkSizeCmp(l, time1, time2) && checkMap2StrCmp(nameType, ftype)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
             }
         }
 
-        if(sstr.isEmpty() && !ftype.isEmpty() && filesize ==0 && filesize2 == 0 && time1 == 0 && time2 ==0){
+        if (sstr.isEmpty() && !ftype.isEmpty() && filesize == 0 && filesize2 == 0 && time1 == 0 && time2 == 0) {
             if (checkMap2StrCmp(nameType, ftype)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
@@ -416,20 +394,20 @@ public class fileSearchActivity extends AppCompatActivity {
         }
 
 //分割线
-        if(sstr.isEmpty() && ftype.isEmpty() && filesize >0 && filesize2 > 0 && time1 > 0 && time2 > 0){
-            if (checkSizeCmp(l, time1, time2) && checkSizeCmp(length, filesize, filesize2) ) {
+        if (sstr.isEmpty() && ftype.isEmpty() && filesize > 0 && filesize2 > 0 && time1 > 0 && time2 > 0) {
+            if (checkSizeCmp(l, time1, time2) && checkSizeCmp(length, filesize, filesize2)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
             }
         }
 
-        if(sstr.isEmpty() && ftype.isEmpty() && filesize >0 && filesize2 > 0 && time1 == 0 && time2 ==0){
-            if (checkSizeCmp(length, filesize, filesize2) ) {
+        if (sstr.isEmpty() && ftype.isEmpty() && filesize > 0 && filesize2 > 0 && time1 == 0 && time2 == 0) {
+            if (checkSizeCmp(length, filesize, filesize2)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
             }
         }
-        if(sstr.isEmpty() && ftype.isEmpty() && filesize ==0 && filesize2 == 0&& time1 > 0 && time2 > 0){
+        if (sstr.isEmpty() && ftype.isEmpty() && filesize == 0 && filesize2 == 0 && time1 > 0 && time2 > 0) {
             if (checkSizeCmp(l, time1, time2)) {
                 searchFileInfos.add(new SearchFileInfo(name, path, nameType, length, l, uri));
                 checkboxs.add(false);
@@ -518,7 +496,7 @@ public class fileSearchActivity extends AppCompatActivity {
         } else {
             //如果只是授权文件存储权限，则只需要通关file列出所有文件夹即可
             File file1 = new File(extstorage + "/" + path);
-            if(file1.listFiles() != null){
+            if (file1.listFiles() != null) {
                 for (File file : file1.listFiles()) {
                     flist.add(file.getName());
                 }
@@ -571,16 +549,9 @@ public class fileSearchActivity extends AppCompatActivity {
                 alertDialog.cancel();
                 DocumentFile dou = dd;
                 DocumentFile dou2 = obb;
-                for (DocumentFile documentFile : dd.listFiles()) {
-                    if (documentFile.getName().equals(flist.get(i))) {
-                        dou = documentFile;
-                    }
-                }
-                for (DocumentFile documentFile : obb.listFiles()) {
-                    if (documentFile.getName().equals(flist.get(i))) {
-                        dou2 = documentFile;
-                    }
-                }
+                String s = flist.get(i);
+                dou = checkDocum(dd, s);
+                dou2 = checkDocum(obb, s);
                 showSelectFile(extstorage, finalPath + "/" + flist.get(i), dou, dou2, context);
             }
         });
@@ -716,7 +687,7 @@ public class fileSearchActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId) {
             case 0:
-                showInfoMsg(a, "帮助信息","该页面是用于文件搜索的，你可以搜索/Android/data或者obb或者/sdcard/里面的文件。\r\n" +
+                showInfoMsg(a, "帮助信息", "该页面是用于文件搜索的，你可以搜索/Android/data或者obb或者/sdcard/里面的文件。\r\n" +
                         "1.如果你需要搜索某个文件，可以直接在搜索框里面输入，然后点击搜索即可，默认是从内置存储目录开始搜索。\r\n" +
                         "2.如果你需要搜索某个类型的文件，可以在\"文件类型\" 一栏输入文件类型的后缀名即可，比如需要搜索\"zip\"压缩包，直接输入zip然后再点击搜索即可.\r\n" +
                         "3.如果你需要搜索某个大小范围内的文件，可以在\"小\"里面输入文件最小值,在\"大\"里面输入文件最大的值，右边有个单位选择，默认是byte(字节),可以选择最高pb，然后再点击搜索即可.\r\n" +

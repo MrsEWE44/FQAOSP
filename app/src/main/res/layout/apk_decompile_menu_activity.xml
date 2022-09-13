@@ -5,29 +5,22 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent" android:orientation="horizontal" >
-
-        <LinearLayout
-            android:layout_width="fill_parent"
+        android:layout_height="match_parent" android:orientation="vertical" >
+        <androidx.viewpager.widget.ViewPager
+            android:layout_width="match_parent"
             android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:orientation="vertical">
+            android:layout_gravity="center"
+            android:id="@+id/admavp"
+            android:layout_weight="1">
 
-            <Button
-                android:layout_width="match_parent"
+            <androidx.viewpager.widget.PagerTabStrip
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="反编译"
-                android:layout_weight="1"
-                android:id="@+id/admab1"></Button>
-            <Button
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="回编译"
-                android:layout_weight="1"
-                android:id="@+id/admab2"></Button>
+                android:id="@+id/admapts"
+                ></androidx.viewpager.widget.PagerTabStrip>
 
-        </LinearLayout>
+        </androidx.viewpager.widget.ViewPager>
+
     </LinearLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
