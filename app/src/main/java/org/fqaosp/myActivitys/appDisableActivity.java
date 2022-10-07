@@ -2,15 +2,20 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,17 +40,10 @@ import org.fqaosp.utils.multiFunc;
 import java.io.File;
 import java.util.ArrayList;
 
-public class appDisableActivity extends AppCompatActivity {
+public class appDisableActivity extends AppCompatActivity implements View.OnClickListener{
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
-    private Button ada_disableappb;
-    private  Button ada_enableappb;
-    private Button ada_disablemiuib;
-    private  Button ada_disableflymeb;
-    private  Button ada_disablemyuib;
-    private  Button ada_disablecolorb;
-    private  Button ada_disablevivob;
-    private Button ada_searchb;
+    private Button ada_disableappb,ada_enableappb, ada_disablemiuib,ada_disableflymeb,ada_disablemyuib, ada_disablecolorb,ada_disablevivob,ada_searchb;
     private EditText ada_et1;
 
     private ListView ada_disablelv;
@@ -60,73 +58,16 @@ public class appDisableActivity extends AppCompatActivity {
         hideButton();
         String filesDir =getMyHomeFilesPath(this);
         String sysupfile = filesDir+"/startupsystem.sh";
-        hideButtonClick(filesDir);
+        hideButtonClick();
         if(extractAssertFile(sysupfile,filesDir)){
             Toast.makeText(this, "禁用脚本已存在", Toast.LENGTH_SHORT).show();
         }else{
             showImportToolsDialog(this,"禁用脚本无法获取，请退出重试或者重新安装app","禁用脚本没有找到,部分功能使用将受到限制或者异常,要继续使用吗？");
         }
 
-        ada_disableappb.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (int i = 0; i < checkboxs.size(); i++) {
-                            if(checkboxs.get(i)){
-                                PKGINFO pkginfo = pkginfos.get(i);
-                                CMD cmd = new CMD("pm disable " + pkginfo.getPkgname());
-                                if(cmd.getResultCode() ==0){
-                                    Toast.makeText(appDisableActivity.this, "禁用 "+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
-                                }else{
-                                    Toast.makeText(appDisableActivity.this, "禁用 "+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        }
-                        getUserEnablePKGS();
-                        showPKGS(ada_disablelv);
-                    }
-                });
-            }
-        });
-        ada_enableappb.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (int i = 0; i < checkboxs.size(); i++) {
-                            if(checkboxs.get(i)){
-                                PKGINFO pkginfo = pkginfos.get(i);
-                                CMD cmd = new CMD("pm enable " + pkginfo.getPkgname());
-                                if(cmd.getResultCode() ==0){
-                                    Toast.makeText(appDisableActivity.this, "启用 "+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
-                                }else{
-                                    Toast.makeText(appDisableActivity.this, "启用 "+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        }
-                        getDisablePKGS();
-                        showPKGS(ada_disablelv);
-                    }
-                });
-            }
-        });
-
-        ada_searchb.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        String searchStr = ada_et1.getText().toString();
-                        pkginfos = multiFunc.indexOfPKGS(appDisableActivity.this,searchStr,pkginfos,checkboxs,0);
-                        showPKGS(ada_disablelv);
-                    }
-                });
-            }
-        });
+        ada_disableappb.setOnClickListener(this);
+        ada_enableappb.setOnClickListener(this);
+        ada_searchb.setOnClickListener(this);
 
         ada_disablelv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -139,6 +80,84 @@ public class appDisableActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    //按钮点击事件
+    private void btClick(Context context , View view ,Activity activity , int mode , boolean isHideBt){
+        if(isHideBt){
+            String filesDir =getMyHomeFilesPath(context);
+            switch (mode){
+                case 0:
+                    hideButtonCMD("cd "+filesDir +" && sh startupsystem.sh miui dis","miui禁用策略已运行结束",view);
+                    break;
+                case 1:
+                    hideButtonCMD("cd "+filesDir +" && sh startupsystem.sh flyme dis","flyme禁用策略已运行结束",view);
+                    break;
+                case 2:
+                    hideButtonCMD("cd "+filesDir +" && sh startupsystem.sh myui dis","myui禁用策略已运行结束",view);
+                    break;
+                case 3:
+                    hideButtonCMD("cd "+filesDir +" && sh startupsystem.sh color dis","color禁用策略已运行结束",view);
+                    break;
+                case 4:
+                    hideButtonCMD("cd "+filesDir +" && sh startupsystem.sh vivo dis","vivo禁用策略已运行结束",view);
+                    break;
+            }
+        }else{
+            if(mode == 6545){
+                String searchStr = ada_et1.getText().toString();
+                pkginfos = multiFunc.indexOfPKGS(activity,searchStr,pkginfos,checkboxs,0);
+                showPKGS(ada_disablelv);
+            }else{
+                AlertDialog show = showMyDialog(context, "提示", "请稍后，正在"+(mode == 0 ? "禁" : "启")+"用中...(可能会出现无响应，请耐心等待)....");
+                preventDismissDialog(show);
+                Handler handler = new Handler(){
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        if (msg.what == 0) {
+                            if(mode == 0){
+                                getUserEnablePKGS();
+                            }
+                            if(mode == 1){
+                                getDisablePKGS();
+                            }
+                            showPKGS(ada_disablelv);
+                            multiFunc.dismissDialog(show);
+                        }
+                    }
+                };
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        for (int i = 0; i < checkboxs.size(); i++) {
+                            if(checkboxs.get(i)){
+                                PKGINFO pkginfo = pkginfos.get(i);
+                                String cmdstr = "";
+                                String statestr="";
+                                if(mode == 0){
+                                    cmdstr = "pm disable " + pkginfo.getPkgname();
+                                    statestr = "禁用 ";
+                                }
+                                if(mode == 1){
+                                    cmdstr = "pm enable " + pkginfo.getPkgname();
+                                    statestr = "启用 ";
+                                }
+                                CMD cmd = new CMD(cmdstr);
+                                if(cmd.getResultCode() ==0){
+                                    Toast.makeText(context, statestr+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
+                                }else{
+                                    Toast.makeText(context, statestr+pkginfo.getAppname() + " 失败", Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        }
+                        sendHandlerMSG(handler, 0);
+                    }
+                });
+
+            }
+
+
+        }
     }
 
     private void buttoninit(){
@@ -170,44 +189,35 @@ public class appDisableActivity extends AppCompatActivity {
         ada_disablevivob.setVisibility(View.VISIBLE);
     }
 
-    private  void hideButtonCMD(String cmd,String msg){
-        AlertDialog show = showMyDialog(appDisableActivity.this,"提示","请稍后，正在执行禁用策略...");
+    private  void hideButtonCMD(String cmd,String msgstr,View view){
+        AlertDialog show = showMyDialog(appDisableActivity.this, "提示", "请稍后，正在执行禁用策略...");
         preventDismissDialog(show);
-        cmdThread ee = new cmdThread(cmd, msg, msg, appDisableActivity.this, show);
-        ee.start();
+        Handler handler = new Handler(){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if (msg.what == 0) {
+                    Toast.makeText(appDisableActivity.this,msgstr,Toast.LENGTH_SHORT).show();
+                    multiFunc.dismissDialog(show);
+                }
+            }
+        };
+        view.post(new Runnable() {
+            @Override
+            public void run() {
+                CMD cmd1 = new CMD(cmd);
+                cmd1.getResultCode();
+                sendHandlerMSG(handler,0);
+            }
+        });
+
     }
 
-    private void hideButtonClick(String filesDir){
-        ada_disablemiuib.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                hideButtonCMD("cd "+filesDir +" && sh startupsystem.sh miui dis","miui禁用策略已运行结束");
-            }
-        });
-        ada_disableflymeb.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                hideButtonCMD("cd "+filesDir +" && sh startupsystem.sh flyme dis","flyme禁用策略已运行结束");
-            }
-        });
-        ada_disablemyuib.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                hideButtonCMD("cd "+filesDir +" && sh startupsystem.sh myui dis","myui禁用策略已运行结束");
-            }
-        });
-        ada_disablecolorb.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                hideButtonCMD("cd "+filesDir +" && sh startupsystem.sh color dis","color禁用策略已运行结束");
-            }
-        });
-        ada_disablevivob.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                hideButtonCMD("cd "+filesDir +" && sh startupsystem.sh vivo dis","vivo禁用策略已运行结束");
-            }
-        });
+    private void hideButtonClick(){
+        ada_disablemiuib.setOnClickListener(this);
+        ada_disableflymeb.setOnClickListener(this);
+        ada_disablemyuib.setOnClickListener(this);
+        ada_disablecolorb.setOnClickListener(this);
+        ada_disablevivob.setOnClickListener(this);
     }
 
     @Override
@@ -307,4 +317,35 @@ public class appDisableActivity extends AppCompatActivity {
         listView.setAdapter(pkginfoAdapter);
     }
 
+    @Override
+    public void onClick(View view) {
+        Context context = this;
+        Activity activity = this;
+        switch (view.getId()) {
+            case R.id.ada_disableappb:
+                btClick(context, view, activity, 0, false);
+                break;
+            case R.id.ada_enableappb:
+                btClick(context, view, activity, 1, false);
+                break;
+            case R.id.ada_searchb1:
+                btClick(context, view, activity, 6545, false);
+                break;
+            case R.id.ada_disablemiuib:
+                btClick(context, view, activity, 0, true);
+                break;
+            case R.id.ada_disableflymeb:
+                btClick(context, view, activity, 1, true);
+                break;
+            case R.id.ada_disablemyuib:
+                btClick(context, view, activity, 2, true);
+                break;
+            case R.id.ada_disablecolorb:
+                btClick(context, view, activity, 3, true);
+                break;
+            case R.id.ada_disablevivob:
+                btClick(context, view, activity, 4, true);
+                break;
+        }
+    }
 }

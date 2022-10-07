@@ -7,10 +7,10 @@ android {
 
     defaultConfig {
         applicationId "org.fqaosp"
-        minSdk 21
+        minSdk 28
         targetSdk 32
-        versionCode 20
-        versionName "1.1.8"
+        versionCode 21
+        versionName "1.1.8a"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {

@@ -17,6 +17,7 @@ import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.getPathByLastNameType;
 import static org.fqaosp.utils.multiFunc.checkBoxs;
 import static org.fqaosp.utils.multiFunc.clearList;
+import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
@@ -24,6 +25,7 @@ import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -275,15 +277,16 @@ public class appopsActivity extends AppCompatActivity {
 
     //安装文件夹里面所有apk文件
     private boolean installApkOnDir(String dir){
-        String filesDir =getMyHomeFilesPath(this);
+        Context that = this;
+        String filesDir =getMyHomeFilesPath(that);
         String barfile = filesDir+"/bar.sh";
         if(extractAssertFile(barfile,filesDir)){
-            Toast.makeText(this, "禁用脚本已存在", Toast.LENGTH_SHORT).show();
+            Log.d("installApkOnDir","禁用脚本已存在");
             String cmdstr = "sh "+barfile+" inapkonpath " + dir;
             CMD cmd = new CMD(cmdstr);
             return cmd.getResultCode() ==0;
         }else{
-            showImportToolsDialog(this,"apks安装脚本无法获取，请退出重试或者重新安装app","apks安装脚本没有找到,请补全脚本再尝试安装.");
+            showImportToolsDialog(that,"apks安装脚本无法获取，请退出重试或者重新安装app","apks安装脚本没有找到,请补全脚本再尝试安装.");
         }
         return false;
     }
@@ -293,7 +296,7 @@ public class appopsActivity extends AppCompatActivity {
         String filesDir =getMyHomeFilesPath(this);
         String barfile = filesDir+"/bar.sh";
         if(extractAssertFile(barfile,filesDir)){
-            Toast.makeText(this, "禁用脚本已存在", Toast.LENGTH_SHORT).show();
+            Log.d("installAPKS","禁用脚本已存在");
             String cmdstr = "sh "+barfile+" inapks " + apksFilePath;
             CMD cmd = new CMD(cmdstr);
             return cmd.getResultCode() ==0;
@@ -341,9 +344,9 @@ public class appopsActivity extends AppCompatActivity {
 
     private void checkCMDResult(CMD cmd,String msg , String msg2){
         if( cmd.getResultCode() ==0){
-            Toast.makeText(appopsActivity.this, msg, Toast.LENGTH_SHORT).show();
+            Log.d("checkCMDResult",msg);
         }else{
-            Toast.makeText(appopsActivity.this, msg2+" :: "+cmd.getResult(), Toast.LENGTH_SHORT).show();
+            Log.d("checkCMDResult",msg2+" :: "+cmd.getResult());
         }
     }
 
@@ -747,21 +750,11 @@ public class appopsActivity extends AppCompatActivity {
                 Uri uri = data.getData();
                 String filePath = storage + "/" +uri.getPath().replaceAll("/tree/primary:","");
                 AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
-                preventDismissDialog(show);
-                Handler handler = new Handler(){
-                    @Override
-                    public void handleMessage(@NonNull Message msg) {
-                        if(msg.what==0){
-                            multiFunc.dismissDialog(show);
-                        }
-                    }
-                };
+                Handler handler = dismissDialogHandler(0,show);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        Looper.prepare();
                         installApkOnDir(filePath);
-                        Looper.loop();
                         sendHandlerMSG(handler,0);
                     }
                 }).start();

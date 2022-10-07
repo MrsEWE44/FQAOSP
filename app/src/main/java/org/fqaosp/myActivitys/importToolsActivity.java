@@ -93,7 +93,7 @@ public class importToolsActivity extends AppCompatActivity {
                 String filesPath = getMyHomeFilesPath(importToolsActivity.this);
                 String fqtoolsd = filesPath+"/jdk";
                 File file = new File(fqtoolsd);
-                itatv2.setText(file.exists() ? "jdk已经安装" : "jdk未安装,请複製 https://github.com/MrsEWE44/FQAOSP/releases/download/V1.0-test-1/jdk.tar.xz 下载工具包");
+                itatv2.setText(file.exists() ? "jdk已经安装" : "jdk未安装\r\n 64位请复制 https://github.com/MrsEWE44/FQAOSP/releases/download/V1.1.8/jdk.tar.xz 下载工具包");
             }
         });
         itab4.setOnClickListener(new View.OnClickListener() {

@@ -5,8 +5,10 @@ import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.selectFile;
+import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
@@ -18,6 +20,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -42,7 +45,7 @@ import org.fqaosp.utils.permissionRequest;
 import java.io.File;
 import java.util.ArrayList;
 
-public class imgToolMenuActivity extends AppCompatActivity {
+public class imgToolMenuActivity extends AppCompatActivity implements View.OnClickListener{
 
     private ViewPager itmavp;
     private ArrayList<View> views = new ArrayList<>();
@@ -122,103 +125,21 @@ public class imgToolMenuActivity extends AppCompatActivity {
         Button ituab3 = unpackView.findViewById(R.id.ituab3);
         itualv = unpackView.findViewById(R.id.itualv1);
         Context context = this;
-        Activity activity = this;
         permissionRequest.getExternalStorageManager(context);
-        ituab1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String mystoragehome = getMyStorageHomePath(context);
-                String filesPath = getMyHomeFilesPath(context);
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if (checkboxs.get(i)) {
-                        String s = list.get(i);
-                        String name = getPathByLastName(s).replaceAll(".img", "");
-                        String outPath = mystoragehome + "/files/unpack/" + name;
-                        File file = new File(outPath);
-                        if (!file.exists()) {
-                            file.mkdirs();
-                        }
-                        String cmd = "cd " + filesPath + " && sh unpack.sh " + s + " " + outPath;
-                        alertDialogThread dialogThread = new alertDialogThread(context, "正在解包 " + name + " ...", cmd, "提示", "解包成功 " + outPath, "解包失败");
-                        dialogThread.start();
-                    }
-                }
-            }
-        });
-
-        ituab2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        getLocalImgs();
-                        showImgs(itualv);
-                    }
-                });
-
-            }
-        });
-
-        ituab3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                execFileSelect(context, activity, "请选择 .img 文件");
-            }
-        });
+        ituab1.setOnClickListener(this);
+        ituab2.setOnClickListener(this);
+        ituab3.setOnClickListener(this);
     }
 
     //初始化打包界面与功能
     private void initRepackView() {
-        Context context = this;
-        Activity activity = this;
         Button itrab1 = repackView.findViewById(R.id.itrab1);
         Button itrab2 = repackView.findViewById(R.id.itrab2);
         Button itrab3 = repackView.findViewById(R.id.itrab3);
         itralv = repackView.findViewById(R.id.itralv1);
-        itrab1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if (checkboxs.get(i)) {
-                        String s = list.get(i);
-                        String name = new File(s).getName();
-                        String mystoragehome = getMyStorageHomePath(context);
-                        String filesPath = getMyHomeFilesPath(context);
-                        String outPath = mystoragehome + "/files/repack/" + name;
-                        String outName = outPath + "/" + name;
-                        File file = new File(outPath);
-                        if (!file.exists()) {
-                            file.mkdirs();
-                        }
-                        String cmd = "cd " + filesPath + " && sh repack.sh " + s + " " + outName + " " + name;
-
-                        alertDialogThread dialogThread = new alertDialogThread(context, "正在打包 " + name + " ...", cmd, "提示", "打包成功 " + outName, "打包失败");
-                        dialogThread.start();
-                    }
-                }
-            }
-        });
-
-        itrab2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        getDefaultImgProject();
-                        showImgs(itralv);
-                    }
-                });
-            }
-        });
-
-        itrab3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                execFileSelect(context, activity, "请选择 boot.txt 文件");
-            }
-        });
+        itrab1.setOnClickListener(this);
+        itrab2.setOnClickListener(this);
+        itrab3.setOnClickListener(this);
 
     }
 
@@ -353,4 +274,80 @@ public class imgToolMenuActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onClick(View view) {
+        Context context =this;
+        Activity activity = this;
+        switch (view.getId()){
+            case R.id.ituab1:
+                btClick(context,view,0);
+                break;
+            case R.id.itrab1:
+                btClick(context,view,1);
+                break;
+            case R.id.ituab2:
+                btClick(context,view,645);
+                break;
+            case R.id.itrab2:
+                btClick(context,view,646);
+                break;
+            case R.id.itrab3:
+                execFileSelect(context, activity, "请选择 boot.txt 文件");
+                break;
+            case R.id.ituab3:
+                execFileSelect(context, activity, "请选择 .img 文件");
+                break;
+        }
+    }
+
+    private void btClick(Context context, View view, int mode) {
+        AlertDialog show = showMyDialog(context, "提示", "请稍后，正在"+(mode == 0 ? "解" : "打")+"包中...(可能会出现无响应，请耐心等待)....");
+        Handler handler = dismissDialogHandler(0, show);
+        view.post(new Runnable() {
+            @Override
+            public void run() {
+                if(mode ==645){
+                    getLocalImgs();
+                    showImgs(itualv);
+                }else if(mode == 646){
+                    getDefaultImgProject();
+                    showImgs(itralv);
+                }else{
+                    String mystoragehome = getMyStorageHomePath(context);
+                    String filesPath = getMyHomeFilesPath(context);
+                    String cmd = null;
+                    String outPath=null;
+                    String msg1=null,msg2=null;
+                    for (int i = 0; i < checkboxs.size(); i++) {
+                        if (checkboxs.get(i)) {
+                            String s = list.get(i);
+                            if(mode ==0){
+                                String name = getPathByLastName(s).replaceAll(".img", "");
+                                outPath = mystoragehome + "/files/unpack/" + name;
+                                cmd = "cd " + filesPath + " && sh unpack.sh " + s + " " + outPath;
+                                msg1="解包成功";
+                                msg2="解包失败";
+                            }
+                            if(mode == 1){
+                                String name = new File(s).getName();
+                                outPath = mystoragehome + "/files/repack/" + name;
+                                String outName = outPath + "/" + name;
+                                cmd = "cd " + filesPath + " && sh repack.sh " + s + " " + outName + " " + name;
+                                msg1="打包成功";
+                                msg2="打包失败";
+                            }
+                            File file = new File(outPath);
+                            if (!file.exists()) {
+                                file.mkdirs();
+                            }
+                            CMD cmd1 = new CMD(cmd);
+                            Toast.makeText(context, cmd1.getResultCode() == 0 ? msg1:msg2, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+                sendHandlerMSG(handler, 0);
+            }
+        });
+
+    }
 }

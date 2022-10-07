@@ -51,7 +51,7 @@ import org.fqaosp.utils.permissionRequest;
 import java.io.File;
 import java.util.ArrayList;
 
-public class apkDecompileMenuActivity extends AppCompatActivity {
+public class apkDecompileMenuActivity extends AppCompatActivity implements View.OnClickListener{
 
     private ViewPager admavp;
     private ArrayList<View> views = new ArrayList<>();
@@ -59,6 +59,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity {
     private Integer viewPageIndex = 0;
     private View deView, reView;
     private ListView delv, relv;
+    private EditText adaet1;
     private ArrayList<String> list = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
@@ -130,141 +131,77 @@ public class apkDecompileMenuActivity extends AppCompatActivity {
 
     //初始化反编译界面与功能
     private void initDecompileView() {
-        Activity activity = this;
         Context context = this;
         Button b1 = deView.findViewById(R.id.adab1);
         Button b2 = deView.findViewById(R.id.adab2);
         Button b3 = deView.findViewById(R.id.adab3);
         Button b4 = deView.findViewById(R.id.adab4);
-        EditText adaet1 = deView.findViewById(R.id.adaet1);
+        adaet1 = deView.findViewById(R.id.adaet1);
         delv = deView.findViewById(R.id.adalv1);
         permissionRequest.getExternalStorageManager(context);
-        b1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AlertDialog show = showMyDialog(context, "提示", "请稍后，正在反编译中...(可能会出现无响应，请耐心等待)....");
-                Handler handler = dismissDialogHandler(0, show);
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        String filesDir = getMyHomeFilesPath(context);
-                        PackageManager packageManager = getPackageManager();
-                        String myStorageHomePath = getMyStorageHomePath(activity);
-                        for (int i = 0; i < checkboxs.size(); i++) {
-                            if (checkboxs.get(i)) {
-                                String filePath = pkginfos.size() > 0 ? pkginfos.get(i).getApkpath() : list.get(i);
-                                PackageInfo archiveInfo = packageManager.getPackageArchiveInfo(filePath, 0);
-                                String pkgname = archiveInfo.packageName;
-                                String outDir = myStorageHomePath + "/files/decompile/" + pkgname;
-                                String cmd = "cd " + filesDir + " && sh de.sh " + outDir + " " + filePath;
-                                CMD cmd1 = new CMD(cmd);
-                                Toast.makeText(context, cmd1.getResultCode() == 0 ? "反编译成功" : "反编译失败", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                        sendHandlerMSG(handler, 0);
-                    }
-                });
-            }
-        });
-
-        b2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getUserEnablePKGS();
-                showPKGS(delv);
-            }
-        });
-
-        b3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                execFileSelect(context, activity, "请选择.apk文件");
-            }
-        });
-
-        b4.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String searchStr = adaet1.getText().toString();
-                pkginfos = multiFunc.indexOfPKGS(activity, searchStr, pkginfos, checkboxs, 0);
-                showPKGS(delv);
-            }
-        });
+        b1.setOnClickListener(this);
+        b2.setOnClickListener(this);
+        b3.setOnClickListener(this);
+        b4.setOnClickListener(this);
     }
 
     //初始化回编译界面与功能
     private void initRecompileView() {
         Context context = this;
-        Activity activity = this;
         Button b1 = reView.findViewById(R.id.arab1);
         Button b2 = reView.findViewById(R.id.arab2);
         Button b3 = reView.findViewById(R.id.arab3);
         relv = reView.findViewById(R.id.aralv1);
-        b1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AlertDialog show = showMyDialog(context, "提示", "请稍后，正在反编译中...(可能会出现无响应，请耐心等待)....");
-                Handler handler = dismissDialogHandler(0, show);
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        String filesDir = getMyHomeFilesPath(context);
-                        String myStorageHomePath = getMyStorageHomePath(activity);
-                        for (int i = 0; i < checkboxs.size(); i++) {
-                            if (checkboxs.get(i)) {
-                                String decompilepath = list.get(i);
-                                String outname = new File(decompilepath).getName();
-                                String outDir = myStorageHomePath + "/files/recompile";
-                                File file = new File(outDir);
-                                if (!file.exists()) {
-                                    file.mkdirs();
-                                }
-                                String outFile = outDir + "/" + outname + ".apk";
-                                String cmd = "cd " + filesDir + " && sh re.sh " + outFile + " " + decompilepath;
-                                CMD cmd1 = new CMD(cmd);
-                                Toast.makeText(context, cmd1.getResultCode() == 0 ? "回编译成功" : "回编译失败", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                        sendHandlerMSG(handler, 0);
-                    }
-                });
-
-
-            }
-        });
-
-        b2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                clearList();
-                String myStorageHomePath = getMyStorageHomePath(activity);
-                String defaultDecompileDir = myStorageHomePath + "/files/decompile";
-                File file1 = new File(defaultDecompileDir);
-                if (file1.exists()) {
-                    File[] files = file1.listFiles();
-                    if (files.length > 0) {
-                        for (File file : files) {
-                            list.add(file.toString());
-                            checkboxs.add(false);
-                        }
-                        showSelectApkToolPath(relv);
-                    } else {
-                        Toast.makeText(context, "默认路径没有反编译后的内容", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(context, "默认路径没有反编译后的内容", Toast.LENGTH_SHORT).show();
-                }
-
-            }
-        });
-
-        b3.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                execFileSelect(context, activity, "请选择 apktool.yml 文件");
-            }
-        });
+        b1.setOnClickListener(this);
+        b2.setOnClickListener(this);
+        b3.setOnClickListener(this);
         permissionRequest.getExternalStorageManager(context);
+    }
+
+
+    //按钮点击事件
+    private void btClick(Context context , View view ,Activity activity , int mode){
+        AlertDialog show = showMyDialog(context, "提示", "请稍后，正在"+(mode == 0 ? "回" : "反")+"编译中...(可能会出现无响应，请耐心等待)....");
+        Handler handler = dismissDialogHandler(0, show);
+        view.post(new Runnable() {
+            @Override
+            public void run() {
+                String filesDir = getMyHomeFilesPath(context);
+                String myStorageHomePath = getMyStorageHomePath(activity);
+                String cmd = null;
+                String msg1=null,msg2=null;
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    if (checkboxs.get(i)) {
+                        if(mode ==0){
+                            String filePath = list.get(i);
+                            String outname = new File(filePath).getName();
+                            String outDir = myStorageHomePath + "/files/recompile";
+                            File file = new File(outDir);
+                            if (!file.exists()) {
+                                file.mkdirs();
+                            }
+                            String outFile = outDir + "/" + outname + ".apk";
+                            cmd = "cd " + filesDir + " && sh re.sh " + outFile + " " + filePath;
+                            msg1="回编译成功";
+                            msg2="回编译失败";
+                        }
+                        if(mode == 1){
+                            String filePath = pkginfos.size() > 0 ? pkginfos.get(i).getApkpath() : list.get(i);
+                            PackageManager packageManager = getPackageManager();
+                            PackageInfo archiveInfo = packageManager.getPackageArchiveInfo(filePath, 0);
+                            String pkgname = archiveInfo.packageName;
+                            String outDir = myStorageHomePath + "/files/decompile/" + pkgname;
+                            cmd = "cd " + filesDir + " && sh de.sh " + outDir + " " + filePath;
+                            msg1="反编译成功";
+                            msg2="反编译失败";
+                        }
+                        CMD cmd1 = new CMD(cmd);
+                        Toast.makeText(context, cmd1.getResultCode() == 0 ? msg1:msg2, Toast.LENGTH_SHORT).show();
+                    }
+                }
+                sendHandlerMSG(handler, 0);
+            }
+        });
     }
 
     private void clearList() {
@@ -426,4 +363,60 @@ public class apkDecompileMenuActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onClick(View view) {
+        Context context =this;
+        Activity activity = this;
+        switch (view.getId()){
+            case R.id.adab1:
+                btClick(context,view,activity,1);
+                break;
+            case R.id.arab1:
+                btClick(context,view,activity,0);
+                break;
+            case R.id.arab3:
+                execFileSelect(context, activity, "请选择 apktool.yml 文件");
+                break;
+            case R.id.adab3:
+                execFileSelect(context, activity, "请选择.apk文件");
+                break;
+            case R.id.adab2:
+                getUserEnablePKGS();
+                showPKGS(delv);
+                break;
+            case R.id.adab4:
+                String searchStr = adaet1.getText().toString();
+                pkginfos = multiFunc.indexOfPKGS(activity, searchStr, pkginfos, checkboxs, 0);
+                showPKGS(delv);
+                break;
+            case R.id.arab2:
+                AlertDialog show = showMyDialog(context,"提示","正在扫描默认路径内容,请稍后(可能会出现无响应，请耐心等待)....");
+                Handler handler = dismissDialogHandler(0,show);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        clearList();
+                        String myStorageHomePath = getMyStorageHomePath(activity);
+                        String defaultDecompileDir = myStorageHomePath + "/files/decompile";
+                        File file1 = new File(defaultDecompileDir);
+                        if (file1.exists()) {
+                            File[] files = file1.listFiles();
+                            if (files.length > 0) {
+                                for (File file : files) {
+                                    list.add(file.toString());
+                                    checkboxs.add(false);
+                                }
+                                showSelectApkToolPath(relv);
+                            } else {
+                                Toast.makeText(context, "默认路径没有反编译后的内容", Toast.LENGTH_SHORT).show();
+                            }
+                        } else {
+                            Toast.makeText(context, "默认路径没有反编译后的内容", Toast.LENGTH_SHORT).show();
+                        }
+                        sendHandlerMSG(handler,0);
+                    }
+                });
+                break;
+        }
+    }
 }
