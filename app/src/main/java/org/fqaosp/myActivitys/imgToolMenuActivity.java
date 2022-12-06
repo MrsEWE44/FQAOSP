@@ -149,7 +149,7 @@ public class imgToolMenuActivity extends AppCompatActivity implements View.OnCli
         String homePath = getMyStorageHomePath(imgToolMenuActivity.this);
         AlertDialog show = showMyDialog(imgToolMenuActivity.this, "提示", "请稍后，正在扫描本地镜像工程...");
         preventDismissDialog(show);
-        String cmd = "find " + homePath + "/files/unpack -type d";
+        String cmd = "find " + homePath + "/cache/unpack -type d";
         CMD cmd1 = new CMD(cmd);
         if (cmd1.getResultCode() == 0) {
             for (String s : cmd1.getResult().split("\n")) {
@@ -323,14 +323,14 @@ public class imgToolMenuActivity extends AppCompatActivity implements View.OnCli
                             String s = list.get(i);
                             if(mode ==0){
                                 String name = getPathByLastName(s).replaceAll(".img", "");
-                                outPath = mystoragehome + "/files/unpack/" + name;
+                                outPath = mystoragehome + "/cache/unpack/" + name;
                                 cmd = "cd " + filesPath + " && sh unpack.sh " + s + " " + outPath;
                                 msg1="解包成功";
                                 msg2="解包失败";
                             }
                             if(mode == 1){
                                 String name = new File(s).getName();
-                                outPath = mystoragehome + "/files/repack/" + name;
+                                outPath = mystoragehome + "/cache/repack/" + name;
                                 String outName = outPath + "/" + name;
                                 cmd = "cd " + filesPath + " && sh repack.sh " + s + " " + outName + " " + name;
                                 msg1="打包成功";

@@ -6,7 +6,6 @@ import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.selectFile;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
@@ -17,35 +16,27 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Message;
 import android.os.Process;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
-import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 
-public class importToolsActivity extends AppCompatActivity {
+public class importToolsActivity extends Activity {
 
     private ArrayList<String> list = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private TextView itatv1 , itatv2;
-    private Button itab1 , itab2,itab3,itab4;
+    private Button itab1 , itab2,itab3,itab4,itab5;
     private int mode;
     private String fqfile="fqtools.tar" , jdkfile="jdk.tar.xz";
 
@@ -54,7 +45,6 @@ public class importToolsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.import_tools_activity);
         fuckActivity.getIns().add(this);
-        setTitle("工具导入与检测");
         initButton();
         permissionRequest.getExternalStorageManager(importToolsActivity.this);
     }
@@ -66,6 +56,7 @@ public class importToolsActivity extends AppCompatActivity {
         itab2 = findViewById(R.id.itab2);
         itab3 = findViewById(R.id.itab3);
         itab4 = findViewById(R.id.itab4);
+        itab5 = findViewById(R.id.itab5);
         clickButton();
     }
 
@@ -101,6 +92,13 @@ public class importToolsActivity extends AppCompatActivity {
             public void onClick(View view) {
                 mode=1;
                 execFileSelect(importToolsActivity.this,importToolsActivity.this,"请选择 "+jdkfile+" 文件");
+            }
+        });
+
+        itab5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                fuckActivity.getIns().killall();
             }
         });
     }
@@ -175,23 +173,5 @@ public class importToolsActivity extends AppCompatActivity {
 
         }
     }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add("退出");
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        int itemId = item.getItemId();
-        switch (itemId){
-            case 0:
-                fuckActivity.getIns().killall();
-                ;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
 
 }

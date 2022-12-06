@@ -1,7 +1,6 @@
 package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.execFileSelect;
-import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.selectFile;
@@ -158,7 +157,6 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
         permissionRequest.getExternalStorageManager(context);
     }
 
-
     //按钮点击事件
     private void btClick(Context context , View view ,Activity activity , int mode){
         AlertDialog show = showMyDialog(context, "提示", "请稍后，正在"+(mode == 0 ? "回" : "反")+"编译中...(可能会出现无响应，请耐心等待)....");
@@ -175,7 +173,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                         if(mode ==0){
                             String filePath = list.get(i);
                             String outname = new File(filePath).getName();
-                            String outDir = myStorageHomePath + "/files/recompile";
+                            String outDir = myStorageHomePath + "/cache/recompile";
                             File file = new File(outDir);
                             if (!file.exists()) {
                                 file.mkdirs();
@@ -190,7 +188,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                             PackageManager packageManager = getPackageManager();
                             PackageInfo archiveInfo = packageManager.getPackageArchiveInfo(filePath, 0);
                             String pkgname = archiveInfo.packageName;
-                            String outDir = myStorageHomePath + "/files/decompile/" + pkgname;
+                            String outDir = myStorageHomePath + "/cache/decompile/" + pkgname;
                             cmd = "cd " + filesDir + " && sh de.sh " + outDir + " " + filePath;
                             msg1="反编译成功";
                             msg2="反编译失败";
@@ -245,7 +243,6 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
             listView.setAdapter(userAdapter);
         }
     }
-
 
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
@@ -397,7 +394,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                     public void run() {
                         clearList();
                         String myStorageHomePath = getMyStorageHomePath(activity);
-                        String defaultDecompileDir = myStorageHomePath + "/files/decompile";
+                        String defaultDecompileDir = myStorageHomePath + "/cache/decompile";
                         File file1 = new File(defaultDecompileDir);
                         if (file1.exists()) {
                             File[] files = file1.listFiles();

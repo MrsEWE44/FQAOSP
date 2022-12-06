@@ -14,10 +14,12 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -34,8 +36,10 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.viewpager.widget.ViewPager;
 
 import org.fqaosp.R;
+import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
@@ -63,12 +67,7 @@ public class backupRestoreActivity extends AppCompatActivity {
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private ArrayList<String> list = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
-    private ListView lv1;
-    private EditText braet1;
-    private Button b1 ,b2,brasearchb;
-    private Switch brasb1,brasb2,brasb3;
-    private Spinner brasp,brasp2;
-    private Boolean brasb1Bool,brasb2Bool,brasb3Bool,isBackup;
+
     private String file_end="";
     private String [] mode={"数据+安装包","数据","安装包"};
     private String [] mode2={"full","data","apk"};
@@ -76,20 +75,329 @@ public class backupRestoreActivity extends AppCompatActivity {
     private String [] fileEnd2={".tar.gz",".tar.xz",".tar.bz2"};
     private int mode_index=0,fileEnd_index=0;
 
+    private ViewPager brmavp;
+    private View backupView, restoreView;
+    private ArrayList<View> views = new ArrayList<>();
+    private ArrayList<String> slist = new ArrayList<>();
+    private ListView backupLv1,restoreLv1;
+    private Integer viewPageIndex = 0;
+    private Boolean switchBool1,switchBool2,switchBool3,isBackup;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.backup_restore_activity);
+        setContentView(R.layout.backup_restore_menu_activity);
         fuckActivity.getIns().add(this);
-        setTitle("当前为: 备份");
-        initBt();
+        setTitle("备份与恢复");
+        initViews();
         checkTools();
     }
 
-    private void listLocalBackupFiles(){
+    private void initViews(){
+        brmavp = findViewById(R.id.brmavp);
+        backupView = getLayoutInflater().inflate(R.layout.backup_activity, null);
+        restoreView = getLayoutInflater().inflate(R.layout.restore_activity, null);
+        views.add(backupView);
+        views.add(restoreView);
+        slist.add("备份");
+        slist.add("恢复");
+        FILESHARINGVIEWPAGERAdapter adapter = new FILESHARINGVIEWPAGERAdapter(views, slist);
+        brmavp.setAdapter(adapter);
+        initOnListen();
+        initBackupView();
+        initRestoreView();
+
+    }
+
+    private void initRestoreView() {
         isBackup=false;
+        Button b1 = restoreView.findViewById(R.id.rabt1);
+        Button brasearchb = restoreView.findViewById(R.id.rasearchb);
+        EditText braet1 = restoreView.findViewById(R.id.raet1);
+        Switch brasb1 =restoreView.findViewById(R.id.rasb1);
+        Switch brasb2 =restoreView.findViewById(R.id.rasb2);
+        Switch brasb3 =restoreView.findViewById(R.id.rasb3);
+        Spinner brasp = restoreView.findViewById(R.id.rasp);
+        Spinner brasp2 = restoreView.findViewById(R.id.rasp2);
+        restoreLv1 = restoreView.findViewById(R.id.ralv1);
+        initBool();
+        setSwitchChecked(brasb1,brasb2,brasb3);
+        initSpinnerBt(brasp,brasp2);
+        clickedSwitchBt(brasb1,brasb2,brasb3);
+
+        b1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog show = showMyDialog(backupRestoreActivity.this,"提示","正在恢复应用,请稍后(可能会出现无响应，请耐心等待)....");
+                Handler handler = dismissDialogHandler(0,show);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(isBackup == false){
+                            if(switchBool3){
+                                //未勾选
+                                for (int i = 0; i < checkboxs.size(); i++) {
+                                    if(!checkboxs.get(i)){
+                                        restoryByFileName(getPathByLastName(list.get(i)));
+                                    }
+                                }
+                            }
+
+                            if(switchBool2){
+                                //勾选
+                                for (int i = 0; i < checkboxs.size(); i++) {
+                                    if(checkboxs.get(i)){
+                                        restoryByFileName(getPathByLastName(list.get(i)));
+                                    }
+                                }
+                            }
+
+                            if(switchBool1){
+                                //所有
+                                for (String s : list) {
+                                    restoryByFileName(getPathByLastName(s));
+                                }
+                            }
+                            //都没有勾选
+                            if(switchBool1==false && switchBool2 ==false && switchBool3 ==false){
+                                //如果都没有选择，我们就默认走已经勾选的
+                                for (int i = 0; i < checkboxs.size(); i++) {
+                                    if(checkboxs.get(i)){
+                                        restoryByFileName(getPathByLastName(list.get(i)));
+                                    }
+                                }
+                            }
+                            Toast.makeText(backupRestoreActivity.this, "所选应用都已恢复 ", Toast.LENGTH_SHORT).show();
+                        }else{
+                            Toast.makeText(backupRestoreActivity.this, "请切换回恢复模式", Toast.LENGTH_SHORT).show();
+                        }
+                        sendHandlerMSG(handler,0);
+                    }
+                });
+            }
+        });
+
+        brasearchb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String searchStr = braet1.getText().toString();
+                list=multiFunc.indexOfLIST(list,checkboxs,searchStr);
+                showPKGS(restoreLv1);
+            }
+        });
+
+        restoreLv1.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                String str = list.get(i);
+                copyText(str);
+                return false;
+            }
+        });
+
+        clickedSpinnerBt(brasp,brasp2);
+    }
+
+    private void initBackupView() {
+        isBackup=true;
+        Button b1 = backupView.findViewById(R.id.babt1);
+        Button brasearchb = backupView.findViewById(R.id.basearchb);
+        EditText braet1 = backupView.findViewById(R.id.baet1);
+        Switch brasb1 =backupView.findViewById(R.id.basb1);
+        Switch brasb2 =backupView.findViewById(R.id.basb2);
+        Switch brasb3 =backupView.findViewById(R.id.basb3);
+        Spinner brasp = backupView.findViewById(R.id.basp);
+        Spinner brasp2 = backupView.findViewById(R.id.basp2);
+        backupLv1 = backupView.findViewById(R.id.balv1);
+        initBool();
+        setSwitchChecked(brasb1,brasb2,brasb3);
+        initSpinnerBt(brasp,brasp2);
+        clickedSwitchBt(brasb1,brasb2,brasb3);
+        b1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog show = showMyDialog(backupRestoreActivity.this,"提示","正在备份应用,请稍后(可能会出现无响应，请耐心等待)....");
+                Handler handler = dismissDialogHandler(0,show);
+                view.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if(isBackup){
+                            if(switchBool3){
+                                //未勾选
+                                for (int i = 0; i < checkboxs.size(); i++) {
+                                    if(!checkboxs.get(i)){
+                                        PKGINFO pkginfo = pkginfos.get(i);
+                                        if(!pkginfo.getPkgname().equals(getPackageName())){
+                                            backupByPKGNAME(pkginfo.getPkgname());
+                                        }
+                                    }
+                                }
+                            }
+
+                            if(switchBool2){
+                                //勾选
+                                for (int i = 0; i < checkboxs.size(); i++) {
+                                    if(checkboxs.get(i)){
+                                        PKGINFO pkginfo = pkginfos.get(i);
+                                        if(!pkginfo.getPkgname().equals(getPackageName())){
+                                            backupByPKGNAME(pkginfo.getPkgname());
+                                        }
+                                    }
+                                }
+                            }
+
+                            if(switchBool1){
+                                //所有
+                                for (PKGINFO pkginfo : pkginfos) {
+                                    if(!pkginfo.getPkgname().equals(getPackageName())){
+                                        backupByPKGNAME(pkginfo.getPkgname());
+                                    }
+                                }
+                            }
+                            //都没有勾选
+                            if(switchBool1==false && switchBool2 ==false && switchBool3 ==false){
+                                //如果都没有选择，我们就默认走已经勾选的
+                                for (int i = 0; i < checkboxs.size(); i++) {
+                                    if(checkboxs.get(i)){
+                                        PKGINFO pkginfo = pkginfos.get(i);
+                                        if(!pkginfo.getPkgname().equals(getPackageName())){
+                                            backupByPKGNAME(pkginfo.getPkgname());
+                                        }
+                                    }
+                                }
+                            }
+                            Toast.makeText(backupRestoreActivity.this, "所选应用都已备份 ", Toast.LENGTH_SHORT).show();
+                        }else{
+                            Toast.makeText(backupRestoreActivity.this, "请切换回备份模式", Toast.LENGTH_SHORT).show();
+                        }
+                        sendHandlerMSG(handler,0);
+
+                    }
+                });
+
+            }
+        });
+
+        brasearchb.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                String searchStr = braet1.getText().toString();
+                pkginfos = multiFunc.indexOfPKGS(backupRestoreActivity.this,searchStr,pkginfos,checkboxs,0);
+                showPKGS(backupLv1);
+            }
+        });
+
+        backupLv1.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                PKGINFO pkginfo = pkginfos.get(i);
+                String str = pkginfo.toString();
+                copyText(str);
+                return false;
+            }
+        });
+
+        clickedSpinnerBt(brasp,brasp2);
+
+    }
+
+    private void copyText(String str){
+        ClipboardManager cpm = (ClipboardManager) backupRestoreActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
+        cpm.setText(str);
+        Toast.makeText(backupRestoreActivity.this, "已复制", Toast.LENGTH_SHORT).show();
+
+    }
+
+    private  void initSpinnerBt(Spinner brasp,Spinner brasp2){
+        brasp.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,mode));
+        brasp2.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,fileEnd));
+
+    }
+
+    private void clickedSpinnerBt(Spinner brasp ,int mode){
+        brasp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                if(mode ==0){
+                    mode_index=i;
+                }else{
+                    fileEnd_index=i;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+    }
+
+    private void clickedSpinnerBt(Spinner brasp,Spinner brasp2){
+        clickedSpinnerBt(brasp,0);
+        clickedSpinnerBt(brasp,1);
+    }
+
+    private void clickedSwitchBt(Switch brasb1,Switch brasb2,Switch brasb3){
+        clickedSwitchBt(brasb1,brasb1,brasb2,brasb3,0);
+        clickedSwitchBt(brasb2,brasb1,brasb2,brasb3,1);
+        clickedSwitchBt(brasb3,brasb1,brasb2,brasb3,2);
+
+    }
+
+    private void clickedSwitchBt(Switch orgbt , Switch brasb1,Switch brasb2,Switch brasb3,int mode){
+        orgbt.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                switch (mode){
+                    case 0:
+                        switchBool1=b;
+                        switchBool2=false;
+                        switchBool3=false;
+                        break;
+                    case 1:
+                        switchBool1=false;
+                        switchBool2=b;
+                        switchBool3=false;
+                        break;
+                    case 2:
+                        switchBool1=false;
+                        switchBool2=false;
+                        switchBool3=b;
+                        break;
+                }
+
+                setSwitchChecked(brasb1,brasb2,brasb3);
+            }
+        });
+
+    }
+
+    private void setSwitchChecked(Switch brasb1,Switch brasb2,Switch brasb3){
+        brasb1.setChecked(switchBool1);
+        brasb2.setChecked(switchBool2);
+        brasb3.setChecked(switchBool3);
+    }
+
+    private void initBool(){
+        switchBool1=false;
+        switchBool2=true;
+        switchBool3=false;
+    }
+
+    private void initOnListen() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            brmavp.setOnScrollChangeListener(new View.OnScrollChangeListener() {
+                @Override
+                public void onScrollChange(View view, int i, int i1, int i2, int i3) {
+                    viewPageIndex = brmavp.getCurrentItem();
+                }
+            });
+        }
+
+    }
+
+    private void listLocalBackupFiles(){
         file_end=fileEnd2[fileEnd_index];
-        setTitle("当前为: 恢复");
         permissionRequest.getExternalStorageManager(backupRestoreActivity.this);
         String s = Environment.getExternalStorageDirectory().toString();
         String localBackupDir= s+"/backup_app";
@@ -100,7 +408,7 @@ public class backupRestoreActivity extends AppCompatActivity {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
-                    showPKGS(lv1);
+                    showPKGS(restoreLv1);
                     multiFunc.dismissDialog(show);
                 }
             }
@@ -130,244 +438,6 @@ public class backupRestoreActivity extends AppCompatActivity {
         list.clear();
         pkginfos.clear();
         checkboxs.clear();
-    }
-
-    private void initBt(){
-        b1 = findViewById(R.id.brab1);
-        b2 = findViewById(R.id.brab2);
-        brasearchb = findViewById(R.id.brasearchb);
-        braet1 = findViewById(R.id.braet1);
-        brasb1 =findViewById(R.id.brasb1);
-        brasb2 =findViewById(R.id.brasb2);
-        brasb3 =findViewById(R.id.brasb3);
-        brasp = findViewById(R.id.brasp);
-        brasp2 = findViewById(R.id.brasp2);
-        lv1 = findViewById(R.id.bralv1);
-        brasb1Bool=false;
-        brasb2Bool=true;
-        brasb3Bool=false;
-        brasb1.setChecked(brasb1Bool);
-        brasb2.setChecked(brasb2Bool);
-        brasb3.setChecked(brasb3Bool);
-        //默认是备份模式
-        isBackup=true;
-        brasp.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,mode));
-        brasp2.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,fileEnd));
-
-        btClick();
-    }
-
-    private void btClick(){
-
-        brasb1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                brasb1Bool=b;
-                brasb2Bool=false;
-                brasb3Bool=false;
-                brasb1.setChecked(brasb1Bool);
-                brasb2.setChecked(brasb2Bool);
-                brasb3.setChecked(brasb3Bool);
-            }
-        });
-
-        brasb2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                brasb1Bool=false;
-                brasb2Bool=b;
-                brasb3Bool=false;
-                brasb1.setChecked(brasb1Bool);
-                brasb2.setChecked(brasb2Bool);
-                brasb3.setChecked(brasb3Bool);
-            }
-        });
-
-        brasb3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                brasb1Bool=false;
-                brasb2Bool=false;
-                brasb3Bool=b;
-                brasb1.setChecked(brasb1Bool);
-                brasb2.setChecked(brasb2Bool);
-                brasb3.setChecked(brasb3Bool);
-            }
-        });
-
-        b1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AlertDialog show = showMyDialog(backupRestoreActivity.this,"提示","正在备份应用,请稍后(可能会出现无响应，请耐心等待)....");
-                Handler handler = dismissDialogHandler(0,show);
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(isBackup){
-                            if(brasb3Bool){
-                                //未勾选
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(!checkboxs.get(i)){
-                                        PKGINFO pkginfo = pkginfos.get(i);
-                                        if(!pkginfo.getPkgname().equals(getPackageName())){
-                                            backupByPKGNAME(pkginfo.getPkgname());
-                                        }
-                                    }
-                                }
-                            }
-
-                            if(brasb2Bool){
-                                //勾选
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(checkboxs.get(i)){
-                                        PKGINFO pkginfo = pkginfos.get(i);
-                                        if(!pkginfo.getPkgname().equals(getPackageName())){
-                                            backupByPKGNAME(pkginfo.getPkgname());
-                                        }
-                                    }
-                                }
-                            }
-
-                            if(brasb1Bool){
-                                //所有
-                                for (PKGINFO pkginfo : pkginfos) {
-                                    if(!pkginfo.getPkgname().equals(getPackageName())){
-                                        backupByPKGNAME(pkginfo.getPkgname());
-                                    }
-                                }
-                            }
-                            //都没有勾选
-                            if(brasb1Bool==false && brasb2Bool ==false && brasb3Bool ==false){
-                                //如果都没有选择，我们就默认走已经勾选的
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(checkboxs.get(i)){
-                                        PKGINFO pkginfo = pkginfos.get(i);
-                                        if(!pkginfo.getPkgname().equals(getPackageName())){
-                                            backupByPKGNAME(pkginfo.getPkgname());
-                                        }
-                                    }
-                                }
-                            }
-                            Toast.makeText(backupRestoreActivity.this, "所选应用都已备份 ", Toast.LENGTH_SHORT).show();
-                        }else{
-                            Toast.makeText(backupRestoreActivity.this, "请切换回备份模式", Toast.LENGTH_SHORT).show();
-                        }
-                        sendHandlerMSG(handler,0);
-
-                    }
-                });
-
-            }
-        });
-
-        b2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AlertDialog show = showMyDialog(backupRestoreActivity.this,"提示","正在恢复应用,请稍后(可能会出现无响应，请耐心等待)....");
-                Handler handler = dismissDialogHandler(0,show);
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-
-                        if(isBackup == false){
-
-                            if(brasb3Bool){
-                                //未勾选
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(!checkboxs.get(i)){
-                                        restoryByFileName(getPathByLastName(list.get(i)));
-                                    }
-                                }
-                            }
-
-                            if(brasb2Bool){
-                                //勾选
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(checkboxs.get(i)){
-                                        restoryByFileName(getPathByLastName(list.get(i)));
-                                    }
-                                }
-                            }
-
-                            if(brasb1Bool){
-                                //所有
-                                for (String s : list) {
-                                    restoryByFileName(getPathByLastName(s));
-                                }
-                            }
-                            //都没有勾选
-                            if(brasb1Bool==false && brasb2Bool ==false && brasb3Bool ==false){
-                                //如果都没有选择，我们就默认走已经勾选的
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(checkboxs.get(i)){
-                                        restoryByFileName(getPathByLastName(list.get(i)));
-                                    }
-                                }
-                            }
-                            Toast.makeText(backupRestoreActivity.this, "所选应用都已恢复 ", Toast.LENGTH_SHORT).show();
-                        }else{
-                            Toast.makeText(backupRestoreActivity.this, "请切换回恢复模式", Toast.LENGTH_SHORT).show();
-                        }
-                        sendHandlerMSG(handler,0);
-                    }
-                });
-            }
-        });
-
-        brasearchb.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String searchStr = braet1.getText().toString();
-                if(isBackup){
-                    pkginfos = multiFunc.indexOfPKGS(backupRestoreActivity.this,searchStr,pkginfos,checkboxs,0);
-                }else{
-                    list=multiFunc.indexOfLIST(list,checkboxs,searchStr);
-                }
-                showPKGS(lv1);
-            }
-        });
-
-        lv1.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                String str = "";
-                if(isBackup){
-                    PKGINFO pkginfo = pkginfos.get(i);
-                    str = pkginfo.toString();
-                }else{
-                    str = list.get(i);
-                }
-                ClipboardManager cpm = (ClipboardManager) backupRestoreActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
-                cpm.setText(str);
-                Toast.makeText(backupRestoreActivity.this, "已复制", Toast.LENGTH_SHORT).show();
-                return false;
-            }
-        });
-
-        brasp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                mode_index=i;
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-
-        brasp2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                fileEnd_index=i;
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
-
     }
 
     private Boolean extractAssertFile(String sysupfile,String filesDir){
@@ -454,65 +524,104 @@ public class backupRestoreActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onMenuOpened(int featureId, Menu menu) {
+        menu.clear();
+        switch (viewPageIndex) {
+            case 0:
+                menu.add(Menu.NONE,0,0,"显示所有应用");
+                menu.add(Menu.NONE,1,1,"显示所有应用(包括禁用)");
+                menu.add(Menu.NONE,2,2,"显示用户安装的应用");
+                menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
+                menu.add(Menu.NONE,4,4,"显示已禁用的应用");
+                menu.add(Menu.NONE,5,5,"帮助");
+                menu.add(Menu.NONE,6,6,"退出");
+                break;
+            case 1:
+                menu.add(Menu.NONE,0,0,"显示本地备份文件");
+                menu.add(Menu.NONE,1,1,"帮助");
+                menu.add(Menu.NONE,2,2,"退出");
+                break;
+        }
+        return super.onMenuOpened(featureId, menu);
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(Menu.NONE,0,0,"显示所有应用");
-        menu.add(Menu.NONE,1,1,"显示所有应用(包括禁用)");
-        menu.add(Menu.NONE,2,2,"显示用户安装的应用");
-        menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
-        menu.add(Menu.NONE,4,4,"显示已禁用的应用");
-        menu.add(Menu.NONE,5,5,"显示本地备份文件");
-        menu.add(Menu.NONE,6,6,"帮助");
-        menu.add(Menu.NONE,7,7,"退出");
+        menu.add("退出");
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
-        isBackup=true;
-        setTitle("当前为: 备份");
-        switch (itemId){
+        clearlist();
+        switch (viewPageIndex) {
             case 0:
-                getEnablePKGS();
-                showPKGS(lv1);
+                isBackup=true;
+                switch (itemId){
+                    case 0:
+                        getEnablePKGS();
+                        showPKGS(backupLv1);
+                        break;
+                    case 1:
+                        getPKGS();
+                        showPKGS(backupLv1);
+                        break;
+                    case 2:
+                        getUserEnablePKGS();
+                        showPKGS(backupLv1);
+                        break;
+                    case 3:
+                        getUserPKGS();
+                        showPKGS(backupLv1);
+                        break;
+                    case 4:
+                        getDisablePKGS();
+                        showPKGS(backupLv1);
+                        break;
+                    case 5:
+                        showInfoMsg(this,"帮助信息","该页面是用于应用备份与恢复的,支持应用备份与恢复，可选择只备份数据、安装包、安装包+数据，也支持仅恢复数据、安装包、安装包+数据，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                                "1.右上角三个点，显示本地备份文件，会列出默认目录下所有通过该软件备份的应用压缩包。\r\n" +
+                                "2.备份，备份应用.\r\n" +
+                                "3.全选，不管有没有勾选，都会操作当前列表所有应用.\r\n" +
+                                "4.勾选，仅操作勾选的应用.\r\n" +
+                                "5.未勾选,仅操作勾选以外的应用.\r\n" +
+                                "6.{数据+安装包，数据，安装包}，默认是全部，即备份该应用所有数据包括安装包。\r\n" +
+                                "7.{tgz,txz,tbz},默认是采用tar.gz压缩格式，这个速度最快，txz模式速度最慢，tbz中规中矩.\r\n" +
+                                "8.搜索框支持中英文搜索，不区分大小写.\r\n"
+                        );
+                        break;
+                    case 6:
+                        fuckActivity.getIns().killall();
+                        ;
+                }
                 break;
             case 1:
-                getPKGS();
-                showPKGS(lv1);
+                isBackup=false;
+                switch (itemId){
+                    case 0:
+                        //列出本地已经备份的文件
+                        listLocalBackupFiles();
+                        break;
+                    case 1:
+                        showInfoMsg(this,"帮助信息","该页面是用于应用备份与恢复的,支持应用备份与恢复，可选择只备份数据、安装包、安装包+数据，也支持仅恢复数据、安装包、安装包+数据，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                                "1.右上角三个点，显示本地备份文件，会列出默认目录下所有通过该软件备份的应用压缩包。\r\n" +
+                                "2.恢复，恢复应用.\r\n" +
+                                "3.全选，不管有没有勾选，都会操作当前列表所有应用.\r\n" +
+                                "4.勾选，仅操作勾选的应用.\r\n" +
+                                "5.未勾选,仅操作勾选以外的应用.\r\n" +
+                                "6.{数据+安装包，数据，安装包}，默认是全部，即备份该应用所有数据包括安装包。\r\n" +
+                                "7.{tgz,txz,tbz},默认是采用tar.gz压缩格式，这个速度最快，txz模式速度最慢，tbz中规中矩.\r\n" +
+                                "8.搜索框支持中英文搜索，不区分大小写.\r\n"
+                        );
+                        break;
+                    case 2:
+                        fuckActivity.getIns().killall();
+                        ;
+                }
                 break;
-            case 2:
-                getUserEnablePKGS();
-                showPKGS(lv1);
-                break;
-            case 3:
-                getUserPKGS();
-                showPKGS(lv1);
-                break;
-            case 4:
-                getDisablePKGS();
-                showPKGS(lv1);
-                break;
-            case 5:
-                //列出本地已经备份的文件
-                listLocalBackupFiles();
-                break;
-            case 6:
-                showInfoMsg(this,"帮助信息","该页面是用于应用备份与恢复的,支持应用备份与恢复，可选择只备份数据、安装包、安装包+数据，也支持仅恢复数据、安装包、安装包+数据，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
-                        "1.右上角三个点，显示本地备份文件，会列出默认目录下所有通过该软件备份的应用压缩包。\r\n" +
-                        "2.备份，备份应用.\r\n" +
-                        "3.恢复，恢复应用.\r\n" +
-                        "4.全选，不管有没有勾选，都会操作当前列表所有应用.\r\n" +
-                        "5.勾选，仅操作勾选的应用.\r\n" +
-                        "6.未勾选,仅操作勾选以外的应用.\r\n" +
-                        "7.{数据+安装包，数据，安装包}，默认是全部，即备份该应用所有数据包括安装包。\r\n" +
-                        "8.{tgz,txz,tbz},默认是采用tar.gz压缩格式，这个速度最快，txz模式速度最慢，tbz中规中矩.\r\n" +
-                        "9.搜索框支持中英文搜索，不区分大小写.\r\n"
-                );
-                break;
-            case 7:
-                fuckActivity.getIns().killall();
-                ;
         }
+
         return super.onOptionsItemSelected(item);
     }
 

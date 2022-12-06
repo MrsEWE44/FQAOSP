@@ -1,153 +1,92 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/amdl"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:layout_height="match_parent">
+    <!-- The main content view  ···没滑动前显示的页面布局 -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        >
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:background="@color/design_default_color_secondary"
+            android:orientation="horizontal"
+            >
 
+            <Button
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:background="@drawable/left_menu_foreground"
+                android:id="@+id/amb1"></Button>
 
-   <LinearLayout
-       android:layout_width="match_parent"
-       android:layout_height="match_parent"
-       android:orientation="horizontal">
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="FQAOSP"
+                android:id="@+id/mtv1"
+                android:gravity="center"
+                />
 
-     <LinearLayout
-         android:layout_width="fill_parent"
-         android:layout_height="fill_parent"
-         android:layout_weight="1"
-         android:orientation="vertical" >
+        </LinearLayout>
 
-         <LinearLayout
-             android:layout_width="fill_parent"
-             android:layout_height="fill_parent"
-             android:layout_weight="1"
-             android:orientation="horizontal">
-             <Button
-                 android:layout_width="fill_parent"
-                 android:layout_weight="1"
-                 android:layout_height="match_parent"
-                 android:text="文件搜索"
-                 android:layout_marginLeft="5dp"
-                 android:id="@+id/mfilesearch"
-                 ></Button>
-             <Button
-                 android:layout_width="fill_parent"
-                 android:layout_weight="1"
-                 android:layout_height="match_parent"
-                 android:text="文件共享"
-                 android:layout_marginLeft="5dp"
-                 android:id="@+id/mfilesharing"
-                 ></Button>
-         </LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="fill_parent"
+            android:id="@+id/mtv2"
+            android:text="其他内容"
+            android:gravity="center"
+            />
 
-         <Button
-             android:layout_width="fill_parent"
-             android:layout_weight="1"
-             android:layout_height="match_parent"
-             android:layout_marginLeft="5dp"
-             android:text="手机分身"
-             android:id="@+id/mb1"
-             ></Button>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="检查更新"
+            android:id="@+id/amupdate"></Button>
+    </LinearLayout>
+    <!-- The navigation drawer ···滑动出来后显示的菜单栏页面布局 -->
+    <LinearLayout
+        android:id="@+id/amleft"
+        android:layout_width="200dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:background="@color/design_default_color_secondary"
+        android:layout_gravity="start"
+        >
+        <ListView
+            android:id="@+id/amlv1"
+            android:layout_width="240dp"
+            android:layout_weight="1"
+            android:layout_height="fill_parent"
+            android:choiceMode="singleChoice"
+            android:divider="@android:color/transparent"
+            android:dividerHeight="0dp"
+            />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
 
-         <Button
-             android:layout_width="fill_parent"
-             android:layout_weight="1"
-             android:layout_height="match_parent"
-             android:text="禁用app"
-             android:layout_marginLeft="5dp"
-             android:id="@+id/mapkdisable"
-             ></Button>
+            <Button
+                android:layout_weight="1"
+                android:layout_width="fill_parent"
+                android:layout_height="60dp"
+                android:background="@drawable/left_menu_icon_exit_foreground"
+                android:id="@+id/amb2"
+                ></Button>
 
-         <LinearLayout
-             android:layout_weight="1"
-             android:layout_width="fill_parent"
-             android:layout_height="fill_parent"
-             android:orientation="vertical">
+            <Button
+                android:layout_weight="1"
+                android:layout_width="fill_parent"
+                android:background="@drawable/left_menu_icon_info_foreground"
+                android:layout_height="60dp"
+                android:id="@+id/amb3"
+                android:text="关于"></Button>
 
-             <Button
-                 android:layout_width="fill_parent"
-                 android:layout_weight="1"
-                 android:layout_height="match_parent"
-                 android:text="应用管理"
-                 android:layout_marginLeft="5dp"
-                 android:id="@+id/mappops"
-                 ></Button>
-             <Button
-                 android:layout_width="fill_parent"
-                 android:layout_weight="1"
-                 android:layout_height="match_parent"
-                 android:text="备份/恢复"
-                 android:layout_marginLeft="5dp"
-                 android:id="@+id/brbutton"
-                 ></Button>
-
-         </LinearLayout>
-
-     </LinearLayout>
-
-       <LinearLayout
-           android:layout_width="fill_parent"
-           android:layout_height="fill_parent"
-           android:layout_weight="1"
-           android:orientation="vertical"
-           android:layout_marginLeft="10dp"
-           >
-
-           <Button
-               android:layout_width="fill_parent"
-               android:layout_weight="1"
-               android:layout_height="wrap_content"
-               android:text="后台管理"
-               android:id="@+id/mb3"
-               ></Button>
-
-           <Button
-               android:layout_width="fill_parent"
-               android:layout_weight="1"
-               android:layout_height="wrap_content"
-               android:text="U盘模式"
-               android:id="@+id/mb4"
-               ></Button>
-
-           <LinearLayout
-               android:layout_width="fill_parent"
-               android:layout_height="wrap_content"
-               android:layout_weight="1"
-               android:orientation="horizontal">
-               <Button
-                   android:layout_width="fill_parent"
-                   android:layout_weight="1"
-                   android:layout_height="fill_parent"
-                   android:text="apk反编译"
-                   android:id="@+id/mb5"
-                   ></Button>
-
-               <Button
-                   android:layout_width="fill_parent"
-                   android:layout_weight="1"
-                   android:layout_height="fill_parent"
-                   android:layout_marginLeft="5dp"
-                   android:text="镜像工具"
-                   android:id="@+id/imgtool"
-                   ></Button>
-
-           </LinearLayout>
-           <Button
-               android:layout_width="fill_parent"
-               android:layout_weight="1"
-               android:layout_height="wrap_content"
-               android:layout_marginLeft="5dp"
-               android:text="数据库编辑"
-               android:id="@+id/sqliteb"
-               ></Button>
-
-
-
-       </LinearLayout>
-
-
-
-   </LinearLayout>
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+        </LinearLayout>
+    </LinearLayout>
+</androidx.drawerlayout.widget.DrawerLayout>

@@ -6,6 +6,7 @@ if [ -f "busybox" ];then
 		touch fqtools
 		exit 0;
 	fi
+
 	if [ -f "jdk.tar.xz" ];then
 		./busybox tar xf jdk.tar.xz
 		rm -rf jdk.tar.xz

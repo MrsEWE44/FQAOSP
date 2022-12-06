@@ -17,13 +17,13 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:hint="请输入搜索内容"
-                android:id="@+id/braet1"></EditText>
+                android:id="@+id/raet1"></EditText>
 
             <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="搜索"
-                android:id="@+id/brasearchb"></Button>
+                android:id="@+id/rasearchb"></Button>
 
 
         </LinearLayout>
@@ -48,7 +48,7 @@
                 <Switch
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/brasb1"></Switch>
+                    android:id="@+id/rasb1"></Switch>
 
             </LinearLayout>
 
@@ -66,7 +66,7 @@
                 <Switch
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/brasb2"></Switch>
+                    android:id="@+id/rasb2"></Switch>
 
             </LinearLayout>
 
@@ -84,7 +84,7 @@
                 <Switch
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/brasb3"></Switch>
+                    android:id="@+id/rasb3"></Switch>
 
             </LinearLayout>
 
@@ -110,7 +110,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:id="@+id/brasp"
+                    android:id="@+id/rasp"
                     ></Spinner>
             </LinearLayout>
 
@@ -129,7 +129,7 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:id="@+id/brasp2"
+                    android:id="@+id/rasp2"
                     ></Spinner>
 
             </LinearLayout>
@@ -145,15 +145,8 @@
                 android:layout_width="fill_parent"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
-                android:text="备份"
-                android:id="@+id/brab1"
-                ></Button>
-            <Button
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
                 android:text="恢复"
-                android:id="@+id/brab2"
+                android:id="@+id/rabt1"
                 ></Button>
         </LinearLayout>
 
@@ -163,7 +156,7 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_weight="1"
-            android:id="@+id/bralv1"
+            android:id="@+id/ralv1"
             ></ListView>
 
 

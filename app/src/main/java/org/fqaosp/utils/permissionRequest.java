@@ -79,7 +79,7 @@ public class permissionRequest {
     }
 
     public static void requestExternalStoragePermission(Activity activity){
-        String p[] = {Manifest.permission.CHANGE_COMPONENT_ENABLED_STATE,Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.MANAGE_EXTERNAL_STORAGE,Manifest.permission.REQUEST_COMPANION_PROFILE_WATCH};
+        String p[] = {Manifest.permission.INSTALL_PACKAGES, Manifest.permission.CHANGE_COMPONENT_ENABLED_STATE,Manifest.permission.READ_EXTERNAL_STORAGE,Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.MANAGE_EXTERNAL_STORAGE,Manifest.permission.REQUEST_COMPANION_PROFILE_WATCH};
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             activity.requestPermissions(p,0);
         }
@@ -110,5 +110,6 @@ public class permissionRequest {
         });
         ab.create().show();
     }
+
 
 }
