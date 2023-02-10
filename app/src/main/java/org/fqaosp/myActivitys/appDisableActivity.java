@@ -2,7 +2,9 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
+import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
@@ -45,8 +47,8 @@ public class appDisableActivity extends AppCompatActivity implements View.OnClic
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private Button ada_disableappb,ada_enableappb, ada_disablemiuib,ada_disableflymeb,ada_disablemyuib, ada_disablecolorb,ada_disablevivob,ada_searchb;
     private EditText ada_et1;
-
     private ListView ada_disablelv;
+    private boolean isRoot = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -54,6 +56,10 @@ public class appDisableActivity extends AppCompatActivity implements View.OnClic
         setContentView(R.layout.app_disable_activity);
         fuckActivity.getIns().add(this);
         setTitle("应用程序禁用");
+        isRoot=isSuEnable();
+        if(isRoot == false && checkShizukuPermission(1) == false){
+            Toast.makeText(this, "没有被授权,将无法正常使用该功能", Toast.LENGTH_SHORT).show();
+        }
         buttoninit();
         hideButton();
         String filesDir =getMyHomeFilesPath(this);
@@ -135,14 +141,14 @@ public class appDisableActivity extends AppCompatActivity implements View.OnClic
                                 String cmdstr = "";
                                 String statestr="";
                                 if(mode == 0){
-                                    cmdstr = "pm disable " + pkginfo.getPkgname();
+                                    cmdstr = "pm disable-user " + pkginfo.getPkgname();
                                     statestr = "禁用 ";
                                 }
                                 if(mode == 1){
                                     cmdstr = "pm enable " + pkginfo.getPkgname();
                                     statestr = "启用 ";
                                 }
-                                CMD cmd = new CMD(cmdstr);
+                                CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
                                 if(cmd.getResultCode() ==0){
                                     Toast.makeText(context, statestr+pkginfo.getAppname() + " 成功", Toast.LENGTH_SHORT).show();
                                 }else{
@@ -190,25 +196,30 @@ public class appDisableActivity extends AppCompatActivity implements View.OnClic
     }
 
     private  void hideButtonCMD(String cmd,String msgstr,View view){
-        AlertDialog show = showMyDialog(appDisableActivity.this, "提示", "请稍后，正在执行禁用策略...");
-        preventDismissDialog(show);
-        Handler handler = new Handler(){
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                if (msg.what == 0) {
-                    Toast.makeText(appDisableActivity.this,msgstr,Toast.LENGTH_SHORT).show();
-                    multiFunc.dismissDialog(show);
+        if(isRoot){
+            AlertDialog show = showMyDialog(appDisableActivity.this, "提示", "请稍后，正在执行禁用策略...");
+            preventDismissDialog(show);
+            Handler handler = new Handler(){
+                @Override
+                public void handleMessage(@NonNull Message msg) {
+                    if (msg.what == 0) {
+                        Toast.makeText(appDisableActivity.this,msgstr,Toast.LENGTH_SHORT).show();
+                        multiFunc.dismissDialog(show);
+                    }
                 }
-            }
-        };
-        view.post(new Runnable() {
-            @Override
-            public void run() {
-                CMD cmd1 = new CMD(cmd);
-                cmd1.getResultCode();
-                sendHandlerMSG(handler,0);
-            }
-        });
+            };
+            view.post(new Runnable() {
+                @Override
+                public void run() {
+                    CMD cmd1 = new CMD(cmd);
+                    cmd1.getResultCode();
+                    sendHandlerMSG(handler,0);
+                }
+            });
+
+        }else{
+            showMyDialog(appDisableActivity.this,"提示","该功能需要root才能使用");
+        }
 
     }
 

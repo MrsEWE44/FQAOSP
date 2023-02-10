@@ -78,7 +78,7 @@ public class makeWP {
 
     public String getInstallLocalPkgCMD(String uid , String apkPath){
         String localTmpFile="/data/local/tmp/fqaosp.apk";
-        return "cp \""+apkPath+"\" " + localTmpFile +" && pm install --user "+uid+" " + localTmpFile + " && exit 0;";
+        return "rm -rf "+localTmpFile+" && cp \""+apkPath+"\" " + localTmpFile +" && pm install --user "+uid+" " + localTmpFile + " && exit 0;";
     }
 
     //同步传过来的pkginfo对象，将对应的apk都同步安装到其他用户空间里面
@@ -94,18 +94,18 @@ public class makeWP {
     }
 
     public String getUserPkgByUIDCMD(String uid){
-        return "pm list packages --user "+uid+" -3 | cut -d':' -f2 ";
+        return "pm list packages --user "+uid+" -3 | cut -d':' -f2";
     }
     public String getPkgByUIDCMD(String uid){
-        return "pm list packages --user "+uid+" | cut -d':' -f2 ";
+        return "pm list packages --user "+uid+"| cut -d':' -f2";
     }
 
     public String getDisablePkgByUIDCMD(String uid){
-        return "pm list packages --user "+uid+" -d | cut -d':' -f2 ";
+        return "pm list packages --user "+uid+" -d | cut -d':' -f2";
     }
 
     public String getUninstallPkgByUIDCMD(String uid,String pkgname){
-        return "pm uninstall --user "+uid+"  "+pkgname;
+        return "pm uninstall --user "+uid+" "+pkgname;
     }
 
     public void addCMDResult(String cmdstr , Activity activity,ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs){

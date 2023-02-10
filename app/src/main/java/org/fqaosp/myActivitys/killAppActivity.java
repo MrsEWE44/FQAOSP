@@ -2,6 +2,8 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
+import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
@@ -53,6 +55,7 @@ public class killAppActivity extends AppCompatActivity {
     private Switch kaasb1,kaasb2,kaasb3;
     private Boolean kaasb1Bool,kaasb2Bool,kaasb3Bool;
     private killAppDB killAppdb = new killAppDB(killAppActivity.this, "killApp.db", null, 1);
+    private boolean isRoot=false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -60,6 +63,10 @@ public class killAppActivity extends AppCompatActivity {
         setContentView(R.layout.kill_app_activity);
         fuckActivity.getIns().add(this);
         setTitle("后台管理");
+        isRoot=isSuEnable();
+        if(isRoot == false && checkShizukuPermission(1) == false){
+            Toast.makeText(this, "没有被授权,将无法正常使用该功能", Toast.LENGTH_SHORT).show();
+        }
         initBt();
         getRunning(1);
     }
@@ -205,7 +212,8 @@ public class killAppActivity extends AppCompatActivity {
 
 
     private void stopApp(String pkgname){
-        CMD cmd = new CMD("am force-stop "+pkgname);
+        String cmdstr="am force-stop "+pkgname;
+        CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
         if(cmd.getResultCode() == 0){
             if(killAppdb.select(pkgname,0).size() == 0){
                 killAppdb.insert(pkgname,0);

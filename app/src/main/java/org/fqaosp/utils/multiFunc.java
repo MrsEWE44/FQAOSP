@@ -1,5 +1,6 @@
 package org.fqaosp.utils;
 
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static org.fqaosp.utils.permissionRequest.getExternalStorageManager;
 import static org.fqaosp.utils.permissionRequest.grantAndroidData;
 import static org.fqaosp.utils.permissionRequest.grantAndroidObb;
@@ -41,6 +42,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
+import rikka.shizuku.Shizuku;
+
 /**
  * 通用功能函数集合
  * */
@@ -59,6 +62,50 @@ public class multiFunc {
         Intent intent = new Intent(srcA, cls);
         srcA.startActivity(intent);
     }
+
+    /**
+     * 是否存在su命令，并且有执行权限
+     *
+     * @return 存在su命令，并且有执行权限返回true
+     */
+    public static boolean isSuEnable() {
+        File file = null;
+        String[] paths = {"/system/bin/", "/system/xbin/", "/system/sbin/", "/sbin/", "/vendor/bin/", "/su/bin/"};
+        try {
+            for (String path : paths) {
+                file = new File(path + "su");
+                if (file.exists() && file.canExecute()) {
+                    return true;
+                }
+            }
+        } catch (Exception x) {
+            x.printStackTrace();
+        }
+        return false;
+    }
+
+    //检查shizuku是否被授权
+    public static boolean checkShizukuPermission(int code) {
+        if (Shizuku.isPreV11()) {
+            return false;
+        }
+        try {
+            if (Shizuku.checkSelfPermission() == PERMISSION_GRANTED) {
+                return true;
+            } else if (Shizuku.shouldShowRequestPermissionRationale()) {
+                Log.d("checkPermission","User denied permission (shouldShowRequestPermissionRationale=true)");
+                return false;
+            } else {
+                Shizuku.requestPermission(code);
+                return false;
+            }
+        } catch (Throwable e) {
+            Log.d("checkPermission",Log.getStackTraceString(e));
+        }
+
+        return false;
+    }
+
 
     //页面布局跳转
     public static void jump(Button b , Context srcA , Class<?> cls){
@@ -296,7 +343,6 @@ public class multiFunc {
         }
         ddd.dismiss();
     }
-
 
     public static Handler dismissDialogHandler(int value,AlertDialog show){
         preventDismissDialog(show);

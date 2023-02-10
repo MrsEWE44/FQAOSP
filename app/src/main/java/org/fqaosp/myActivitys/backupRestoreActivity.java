@@ -4,6 +4,7 @@ import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
+import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
@@ -83,14 +84,21 @@ public class backupRestoreActivity extends AppCompatActivity {
     private Integer viewPageIndex = 0;
     private Boolean switchBool1,switchBool2,switchBool3,isBackup;
 
+    private boolean isRoot = false;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.backup_restore_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("备份与恢复");
-        initViews();
-        checkTools();
+        isRoot=isSuEnable();
+        if(isRoot){
+            initViews();
+            checkTools();
+        }else{
+            showMyDialog(this,"提示","本功能需要root才能正常使用");
+        }
     }
 
     private void initViews(){

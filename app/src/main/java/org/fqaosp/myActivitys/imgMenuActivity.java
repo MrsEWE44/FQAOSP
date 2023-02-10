@@ -2,6 +2,7 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
+import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
@@ -57,6 +58,8 @@ public class imgMenuActivity extends AppCompatActivity {
     private ArrayList<Boolean> flashCheckboxs2 = new ArrayList<>();
     private Boolean switchBool1,switchBool2,switchBool3;
     private Context context;
+    private boolean isRoot = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,7 +67,12 @@ public class imgMenuActivity extends AppCompatActivity {
         setContentView(R.layout.apk_decompile_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("分区管理");
-        initViews();
+        isRoot=isSuEnable();
+        if(isRoot){
+            initViews();
+        }else{
+            showMyDialog(this,"提示","本功能需要root才能正常使用");
+        }
     }
 
     private void initViews() {

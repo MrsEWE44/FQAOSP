@@ -32,6 +32,19 @@ public class fileTools {
 
     private final static String TAG = "fileTools";
 
+
+    //获取文件大小，带单位
+    public static String getSize(double size, int count) {
+        String size_type[] = {"b", "KB", "MB", "GB", "TB", "PB"};
+        if (size > 1024) {
+            double d_size = size / 1024;
+            count = count + 1;
+            return getSize(d_size, count);
+        }
+        String sizestr = String.format("%.2f", size) + size_type[count];
+        return sizestr;
+    }
+
     //读取文件
     public static String readFileToPath(String filePath) {
         StringBuilder stringBuilder = new StringBuilder();

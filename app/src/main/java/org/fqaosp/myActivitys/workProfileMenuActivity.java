@@ -2,6 +2,7 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.checkBoxsHashMap;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
+import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.queryUSERS;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
@@ -69,14 +70,20 @@ public class workProfileMenuActivity extends AppCompatActivity {
     private ArrayList<String> wpfmUserList = new ArrayList<>();
     private workProfileDB workProfiledb = new workProfileDB(workProfileMenuActivity.this, "workProfile", null, 1);
     private makeWP wp = new makeWP();
-
+    private boolean isRoot = false;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.work_profile_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("分身部分");
-        initViews();
+        isRoot=isSuEnable();
+        if(isRoot){
+            initViews();
+        }else{
+            showMyDialog(this,"提示","本功能需要root才能正常使用");
+        }
+
     }
 
     private void initViews() {

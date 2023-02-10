@@ -38,7 +38,7 @@
             android:layout_weight="1"
             android:layout_height="fill_parent"
             android:id="@+id/mtv2"
-            android:text="其他内容"
+            android:text="点击左上角那几条杠"
             android:gravity="center"
             />
 

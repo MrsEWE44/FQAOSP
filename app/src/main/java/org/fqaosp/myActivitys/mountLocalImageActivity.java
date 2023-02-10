@@ -2,6 +2,7 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
@@ -65,6 +66,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
     private String[] sizetype = {"byte", "KB", "MB", "GB"};
     private String[] sizetypeCMD = {"", "K", "M", "G"};
     private Integer filetype2Index=0,sizetypeCMDIndex=0,filetypeIndex=0;
+    private boolean isRoot = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -72,8 +74,14 @@ public class mountLocalImageActivity extends AppCompatActivity {
         setContentView(R.layout.mount_local_img_activity);
         fuckActivity.getIns().add(this);
         setTitle("U盘模式");
-        initBt();
-        permissionRequest.getExternalStorageManager(mountLocalImageActivity.this);
+        isRoot=isSuEnable();
+        if(isRoot){
+            initBt();
+            permissionRequest.getExternalStorageManager(mountLocalImageActivity.this);
+        }else{
+            showMyDialog(this,"提示","本功能需要root才能正常使用");
+        }
+
     }
 
     private void initBt(){

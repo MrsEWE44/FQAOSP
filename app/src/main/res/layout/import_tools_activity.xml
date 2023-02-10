@@ -42,9 +42,16 @@
                     android:layout_weight="1"
                     android:layout_marginLeft="5dp"
                     android:layout_height="wrap_content"
-                    android:text="从本地选择安装"
+                    android:text="本地安装"
                     android:id="@+id/itab2"></Button>
 
+                <Button
+                    android:layout_width="fill_parent"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="5dp"
+                    android:layout_height="wrap_content"
+                    android:text="在线下载"
+                    android:id="@+id/itab6"></Button>
             </LinearLayout>
 
         </LinearLayout>
@@ -82,8 +89,16 @@
                     android:layout_weight="1"
                     android:layout_marginLeft="5dp"
                     android:layout_height="wrap_content"
-                    android:text="从本地选择安装"
+                    android:text="本地安装"
                     android:id="@+id/itab4"></Button>
+
+                <Button
+                    android:layout_width="fill_parent"
+                    android:layout_weight="1"
+                    android:layout_marginLeft="5dp"
+                    android:layout_height="wrap_content"
+                    android:text="在线下载"
+                    android:id="@+id/itab7"></Button>
 
             </LinearLayout>
 

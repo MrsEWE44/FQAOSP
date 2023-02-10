@@ -7,7 +7,11 @@ import org.fqaosp.naive.term;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.HashMap;
+
+import rikka.shizuku.Shizuku;
+import rikka.shizuku.ShizukuRemoteProcess;
 
 /**
  *
@@ -64,6 +68,24 @@ public class CMD {
     //默认以root身份运行命令
     public CMD(String cmd){
         this(cmd,true,true);
+    }
+
+    //对接shizuku命令
+    public CMD(String cmds[]){
+        try{
+            Log.d("cmdstr", Arrays.toString(cmds));
+            ShizukuRemoteProcess shizukuRemoteProcess = Shizuku.newProcess(cmds, null, null);
+            resultCode=shizukuRemoteProcess.waitFor();
+            BufferedReader br = new BufferedReader(new InputStreamReader(shizukuRemoteProcess.getInputStream()));
+            String line = null;
+            while((line = br.readLine()) != null){
+                sb.append(line+"\n");
+            }
+            shizukuRemoteProcess.destroy();
+            br.close();
+        }catch (Exception e){
+            sb.append(e.toString());
+        }
     }
 
     //获取执行完命令后的状态码

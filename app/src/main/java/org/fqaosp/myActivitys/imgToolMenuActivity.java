@@ -6,6 +6,7 @@ import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.selectFile;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
+import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
@@ -55,6 +56,7 @@ public class imgToolMenuActivity extends AppCompatActivity implements View.OnCli
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private ListView itualv, itralv;
     private Integer viewPageIndex = 0;
+    private boolean isRoot = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -62,8 +64,14 @@ public class imgToolMenuActivity extends AppCompatActivity implements View.OnCli
         setContentView(R.layout.img_tool_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("镜像工具");
-        initViews();
-        extractAssetsFiles();
+        isRoot=isSuEnable();
+        if(isRoot){
+            initViews();
+            extractAssetsFiles();
+        }else{
+            showMyDialog(this,"提示","本功能需要root才能正常使用");
+        }
+
     }
 
     private void initViews() {

@@ -1,22 +1,16 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.fileTools.checkDocum;
+import static org.fqaosp.utils.fileTools.getSize;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
-import static org.fqaosp.utils.permissionRequest.getExternalStorageManager;
-import static org.fqaosp.utils.permissionRequest.grantAndroidData;
-import static org.fqaosp.utils.permissionRequest.grantAndroidObb;
-import static org.fqaosp.utils.permissionRequest.intoGrantDataOrObb;
 import static org.fqaosp.utils.permissionRequest.requestExternalStoragePermission;
 
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -44,7 +38,6 @@ import org.fqaosp.adapter.FILESELECTAdapter;
 import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
-import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 
@@ -63,6 +56,8 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class fileSharingActivity extends AppCompatActivity {
 
@@ -154,7 +149,6 @@ public class fileSharingActivity extends AppCompatActivity {
     }
 
     private void initBtClick() {
-
         Activity that = this;
 
         fsab1.setOnClickListener(new View.OnClickListener() {
@@ -165,12 +159,7 @@ public class fileSharingActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         fsab1.setText("当前正在运行");
-                        String extstorage = Environment.getExternalStorageDirectory().toString();
-                        String ssss = extstorage + "/Android/data";
-                        String s2 = extstorage + "/Android/obb";
-                        DocumentFile doucmentFile = fileTools.getDoucmentFileOnData(that, ssss);
-                        DocumentFile doucmentFil2e = fileTools.getDoucmentFileOnObb(that, s2);
-                        new HttpServer().start(doucmentFile, doucmentFil2e, that);
+                        new HttpServer().start(that);
                     }
                 }).start();
             }
@@ -213,53 +202,38 @@ public class fileSharingActivity extends AppCompatActivity {
 
     private void checkPeer(Activity that) {
         String extstorage = Environment.getExternalStorageDirectory().toString();
-        String s = extstorage + "/Android/data";
-        String s2 = extstorage + "/Android/obb";
         String s3 = extstorage + "/Android";
-        DocumentFile doucmentFile = fileTools.getDoucmentFileOnData(that, s);
-        DocumentFile doucmentFil2e = fileTools.getDoucmentFileOnObb(that, s2);
         File file = new File(s3);
-        if (doucmentFile.isDirectory() && doucmentFil2e.isDirectory() && file.isDirectory()) {
-            showSelectFile(extstorage, null, doucmentFile, doucmentFil2e, that);
+        if (file.isDirectory()) {
+            showSelectFile(extstorage, null, that);
         } else {
-            intoGrantDataOrObb(that);
-        }
-    }
-
-    private void addFlist(DocumentFile dd, ArrayList<String> flist) {
-        for (DocumentFile df : dd.listFiles()) {
-            flist.add(df.getName());
+            requestExternalStoragePermission(that);
         }
     }
 
     //显示文件选择框
-    private void showSelectFile(String extstorage, String path, DocumentFile dd, DocumentFile obb, Context context) {
+    private void showSelectFile(String extstorage, String path, Context context) {
+        String AnDir = extstorage + "/Android";
         ArrayList<String> flist = new ArrayList<>();
         if (path == null || path.isEmpty()) {
             path = "/";
         }
-        //判断文件路径是否为需要授权的data与obb
-        if (path.indexOf("/Android/data") != -1) {
-            addFlist(dd, flist);
-
-        } else if (path.indexOf("/Android/obb") != -1) {
-            addFlist(obb, flist);
-
-        } else {
-            //如果只是授权文件存储权限，则只需要通关file列出所有文件夹即可
-            File file1 = new File(extstorage + "/" + path);
-            if (file1.listFiles() != null) {
-                for (File file : file1.listFiles()) {
+        //如果只是授权文件存储权限，则只需要通关file列出所有文件夹即可
+        File file1 = new File(extstorage + "/" + path);
+        if (file1.listFiles() != null) {
+            for (File file : file1.listFiles()) {
+                if(file.getAbsolutePath().indexOf(AnDir) == -1){
                     flist.add(file.getName());
                 }
             }
         }
         Collections.sort(flist, String::compareTo);
-        if (flist.size() < 1) {
-            flist.add("上一页");
-        } else {
+        if (flist.size() >0 && flist.get(0).length() > extstorage.length()) {
             flist.add(0, "上一页");
+        }else{
+            flist.add( "上一页");
         }
+
         String finalPath = path;
 
         ListView fsalv = fileView.findViewById(R.id.fsalv);
@@ -277,26 +251,14 @@ public class fileSharingActivity extends AppCompatActivity {
         fsalv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                DocumentFile dou = dd;
-                DocumentFile dou2 = obb;
                 String fffname = flist.get(i);
                 String full_path = finalPath + "/" + fffname;
                 File file = new File(extstorage + "/" + full_path);
-                dou = checkDocum(dd, fffname);
-                dou2 = checkDocum(obb, fffname);
                 if (file.getName().indexOf("上一页") != -1) {
-                    dou = dd.getParentFile();
-                    dou2 = obb.getParentFile();
-                    if (dou == null) {
-                        dou = dd;
-                    }
-                    if (dou2 == null) {
-                        dou2 = obb;
-                    }
-                    showSelectFile(extstorage, new File(finalPath).getParent(), dou, dou2, context);
+                    showSelectFile(extstorage, new File(finalPath).getParent(), context);
                 } else {
                     if (file.isDirectory()) {
-                        showSelectFile(extstorage, full_path, dou, dou2, context);
+                        showSelectFile(extstorage, full_path, context);
                     }
                 }
             }
@@ -361,21 +323,14 @@ public class fileSharingActivity extends AppCompatActivity {
         }
     }
 
-
-    //获取文件大小，带单位
-    private String getSize(double size, int count) {
-        String size_type[] = {"b", "KB", "MB", "GB", "TB", "PB"};
-        if (size > 1024) {
-            double d_size = size / 1024;
-            count = count + 1;
-            return getSize(d_size, count);
-        }
-        String sizestr = String.format("%.2f", size) + size_type[count];
-        return sizestr;
-    }
-
     //http服务器内部类
     private class HttpServer {
+
+        //判断是否为第一次访问
+        private boolean isFirst = true;
+
+        //临时list
+        private ArrayList<String> tempList = new ArrayList<>();
 
         //保留上一级路径
         private String parenPath;
@@ -408,152 +363,133 @@ public class fileSharingActivity extends AppCompatActivity {
                 "}\n" +
                 "</script>";
 
-        private DocumentFile dd, obb;
         private Context context;
-        private HashMap<String, Uri> hashMap = new HashMap<>();
 
-        public void start(DocumentFile ddf, DocumentFile obbf, Context context2) {
+        public void start(Context context2) {
             ServerSocket serverSocket = null;
-            dd = ddf;
-            obb = obbf;
+            ExecutorService executorService = Executors.newCachedThreadPool();
             context = context2;
+            tempList.addAll(fileList);
             try {
+                String extstorage = Environment.getExternalStorageDirectory().toString();
                 serverSocket = new ServerSocket(s.isEmpty() ? 26456 : Integer.valueOf(s));
                 Log.d(fileSharingActivity.class.getName(), "listen port : " + serverSocket.getLocalPort());
 //                System.out.println("服务器端正在监听端口："+serverSocket.getLocalPort());
                 while (true) {//死循环时刻监听客户端链接
-                    final Socket socket = serverSocket.accept();
+                    Socket socket = serverSocket.accept();
                     Log.d(fileSharingActivity.class.getName(), "new con : " + socket.getInetAddress() + ":" + socket.getPort());
 //                    System.out.println("建立了与客户端一个新的tcp连接，客户端地址为："+socket.getInetAddress()
 //                            +":"+socket.getPort());
                     //开始服务
-                    service(socket);
+                    executorService.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                //读取HTTP请求信息
+                                InputStream socketIn = socket.getInputStream();
+                                int size = socketIn.available();
+                                byte[] b = new byte[size];
+                                socketIn.read(b);
+                                String request = new String(b);
+                                String[] split = request.split("\r\n");
+
+                                //创建HTTP响应结果
+                                //创建响应协议、状态
+                                String httpStatus = "HTTP/1.1 200 OK\r\n";
+                                for (String s : split) {
+                                    if (s.indexOf("GET") != -1) {
+                                        String path = s.split(" ")[1];
+                                        //判断是否为请求fqaosp
+                                        if (path.indexOf("fqaosp") != -1) {
+                                            String parm = path.split("\\?")[1];
+                                            Log.d("parm", parm);
+                                            //判断是否为请求fqaosp的文件列表以及文件下载
+                                            if (parm.indexOf("file") != -1) {
+                                                parm = parm.split("=")[1];
+                                                Integer index = Integer.valueOf(parm.trim());
+                                                String data = isFirst ? fileList.get(index) : tempList.get(index);
+                                                //判断是否点击的“上一页”
+                                                if(data.equals("上一页") && extstorage.equals(parenPath)){
+                                                    tempList.clear();
+                                                    tempList.addAll(fileList);
+                                                    returnFileList(fileList, httpStatus, socket);
+                                                }else{
+                                                    if (data.equals("上一页")) {
+                                                        data = parenPath;
+                                                    }
+                                                    data = data.replaceAll("//", "/");
+                                                    File file = new File(data);
+
+//                            Log.d("data",data + " -- " + parenPath + " -- " + file.getAbsolutePath());
+                                                    if (file.isDirectory()) {
+                                                        tempList.clear();
+                                                        File[] files = file.listFiles();
+                                                        if (files != null && files.length > 0) {
+                                                            for (File listFile : files) {
+                                                                tempList.add(listFile.getAbsolutePath());
+                                                            }
+                                                        }
+                                                        Collections.sort(tempList, String::compareTo);
+
+                                                        if (tempList.size() >0 && tempList.get(0).length() > extstorage.length()) {
+                                                            tempList.add(0, "上一页");
+                                                        }else{
+                                                            tempList.add( "上一页");
+                                                        }
+                                                        parenPath = file.getParent();
+                                                        returnFileList(tempList, httpStatus, socket);
+
+                                                    } else {
+                                                        String contentType = "attachment;filename=" + URLEncoder.encode(file.getName(), "utf-8");
+                                                        //创建响应头
+                                                        String responseHeader = "Content-disposition:" + contentType + "\r\nContent-Length: " + file.length() + "\r\n\r\n";
+                                                        OutputStream socketOut = socket.getOutputStream();
+                                                        //发送响应协议、状态码及响应头、正文
+                                                        socketOut.write(httpStatus.getBytes());
+                                                        socketOut.write(responseHeader.getBytes());
+                                                        InputStream in = new FileInputStream(file);
+                                                        int len = 0;
+                                                        b = new byte[1024];
+                                                        try {
+                                                            while ((len = in.read(b)) != -1) {
+                                                                //在这里会出现下载出错的问题，需要改善一下。
+                                                                //2023年1月30日18点32分
+                                                                socketOut.write(b, 0, len);
+                                                            }
+                                                        } catch (Exception e) {
+                                                            Log.d(fileSharingActivity.class.getName(), e.getMessage());
+                                                            e.printStackTrace();
+                                                        } finally {
+                                                            socketOut.close();
+                                                        }
+
+                                                    }
+                                                }
+                                            } else {
+                                                returnText(httpStatus, socket, "参数错误.");
+                                            }
+
+                                        } else {
+                                            returnFileList(fileList, httpStatus, socket);
+                                        }
+
+                                    }
+                                }
+                                socket.shutdownInput();
+                                socket.shutdownOutput();
+                                socket.close();
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            isFirst=false;
+                        }
+                    });
+                    //开始服务
+                    //service(socket);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-            }
-        }
-
-        //http服务解析函数
-        public void service(Socket socket) throws Exception {
-            //读取HTTP请求信息
-            InputStream socketIn = socket.getInputStream();
-            int size = socketIn.available();
-            byte[] b = new byte[size];
-            socketIn.read(b);
-            String request = new String(b);
-            String[] split = request.split("\r\n");
-
-            //创建HTTP响应结果
-            //创建响应协议、状态
-            String httpStatus = "HTTP/1.1 200 OK\r\n";
-            for (String s : split) {
-                if (s.indexOf("GET") != -1) {
-                    String path = s.split(" ")[1];
-                    if (path.indexOf("fqaosp") != -1) {
-                        String parm = path.split("\\?")[1];
-                        Log.d("parm", parm);
-                        if (parm.indexOf("file") != -1) {
-                            parm = parm.split("=")[1];
-                            Integer index = Integer.valueOf(parm.trim());
-                            String data = fileList.get(index);
-                            //判断是否点击的“上一页”
-                            if (data.equals("上一页")) {
-                                data = parenPath;
-                                if (data.indexOf("/Android/data") != -1) {
-                                    dd = dd.getParentFile();
-                                }
-                                if (data.indexOf("/Android/obb") != -1) {
-                                    obb = obb.getParentFile();
-                                }
-                            }
-
-                            data = data.replaceAll("//", "/");
-                            File file = new File(data);
-                            if (data.indexOf("/Android/data") != -1) {
-                                dd = checkDocum(dd, file.getName());
-                            }
-
-                            if (data.indexOf("/Android/obb") != -1) {
-                                obb = checkDocum(obb, file.getName());
-                            }
-                            parenPath = file.getParent();
-
-//                            Log.d("data",data + " -- " + parenPath + " -- " + file.getAbsolutePath());
-                            if (file.isDirectory()) {
-                                fileList.clear();
-                                hashMap.clear();
-                                if (data.indexOf("/Android/data") != -1) {
-                                    addDocum(dd, data);
-                                } else if (data.indexOf("/Android/obb") != -1) {
-                                    addDocum(obb, data);
-                                } else {
-                                    File[] files = file.listFiles();
-                                    if (files != null && files.length > 0) {
-                                        for (File listFile : files) {
-                                            fileList.add(listFile.getAbsolutePath());
-                                        }
-                                    }
-                                }
-                                Collections.sort(fileList, String::compareTo);
-                                if (fileList.size() < 1) {
-                                    fileList.add("上一页");
-                                } else {
-                                    fileList.add(0, "上一页");
-                                }
-                                returnFileList(fileList, httpStatus, socket);
-
-                            } else {
-                                String contentType = "attachment;filename=" + URLEncoder.encode(file.getName(), "utf-8");
-                                //创建响应头
-                                String responseHeader = "Content-disposition:" + contentType + "\r\nContent-Length: " + file.length() + "\r\n\r\n";
-                                OutputStream socketOut = socket.getOutputStream();
-                                //发送响应协议、状态码及响应头、正文
-                                socketOut.write(httpStatus.getBytes());
-                                socketOut.write(responseHeader.getBytes());
-                                InputStream in = null;
-                                //判断文件路径是否为data跟obb，如果是，则用存有完整路径与对应uri类型的hashmap重新复制inpustream对象。
-                                if (data.indexOf("/Android/data") != -1 || data.indexOf("/Android/obb") != -1) {
-                                    for (Map.Entry<String, Uri> stringUriEntry : hashMap.entrySet()) {
-                                        if (stringUriEntry.getKey().equals(data)) {
-                                            in = context.getContentResolver().openInputStream(stringUriEntry.getValue());
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    in = new FileInputStream(file);
-                                }
-                                int len = 0;
-                                b = new byte[1024];
-                                try {
-                                    while ((len = in.read(b)) != -1) {
-                                        socketOut.write(b, 0, len);
-                                    }
-                                } catch (Exception e) {
-                                    Log.d(fileSharingActivity.class.getName(), e.getMessage());
-                                }
-                                socketOut.close();
-                            }
-
-                        } else {
-                            returnText(httpStatus, socket, "参数错误.");
-                        }
-
-                    } else {
-                        returnFileList(fileList, httpStatus, socket);
-                    }
-
-                }
-            }
-            socket.close();
-
-        }
-
-        public void addDocum(DocumentFile dd2, String data) {
-            for (DocumentFile df : dd2.listFiles()) {
-                String docum_path = data + "/" + df.getName();
-                fileList.add(docum_path);
-                hashMap.put(docum_path, df.getUri());
             }
         }
 
