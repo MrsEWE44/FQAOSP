@@ -8,7 +8,6 @@ package org.fqaosp.myActivitys;
  *
  * */
 
-import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static org.fqaosp.utils.fileTools.copyFile;
 import static org.fqaosp.utils.fileTools.execDirSelect;
 import static org.fqaosp.utils.fileTools.execFileSelect;
@@ -24,7 +23,6 @@ import static org.fqaosp.utils.multiFunc.clearList;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
-import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
@@ -51,10 +49,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.Toast;
 
@@ -63,7 +63,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
-import org.fqaosp.MainActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
@@ -78,27 +77,27 @@ import org.fqaosp.utils.permissionRequest;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 
-import rikka.shizuku.Shizuku;
-
 public class appopsActivity extends AppCompatActivity {
 
-    private Button appopsab2,apopsab4,apopsab5;
+    private Button appopsab2,apopsab4,apopsab5,apopsab6;
     private ListView lv1;
     private EditText apopsaet1;
     private Switch apopsasb1 , apopsasb2,apopsasb3;
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private String uid;
+    private Spinner apopsasp1,apopsasp2;
     private netUtils ipMange = new netUtils();
     private boolean switch_mode_tmp,switch_mode_autostart,switch_mode_all;
     private String magiskDir="/data/adb/post-fs-data.d";
     private int nowItemIndex=-1;
     private View nowItemView = null;
     private boolean isRoot=false;
+    private String apops_permis[],apops_opt[];
+    private int apops_permis_index,apops_opt_index;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -110,14 +109,7 @@ public class appopsActivity extends AppCompatActivity {
         if(isRoot == false && checkShizukuPermission(1) == false){
             Toast.makeText(this, "没有被授权,将无法正常使用该功能", Toast.LENGTH_SHORT).show();
         }
-        apopsasb1 = findViewById(R.id.apopsasb1);
-        apopsasb2 = findViewById(R.id.apopsasb2);
-        apopsasb3 = findViewById(R.id.apopsasb3);
-        appopsab2 = findViewById(R.id.apopsab2);
-        apopsab4 = findViewById(R.id.apopsab4);
-        apopsab5 = findViewById(R.id.apopsab5);
-        apopsaet1 = findViewById(R.id.apopsaet1);
-        lv1 = findViewById(R.id.apopsalv1);
+
         /**
          * 如果uid为null，就走默认操作
          * 如果uid不为null，则走分身部分
@@ -127,8 +119,56 @@ public class appopsActivity extends AppCompatActivity {
         if(uid == null){
             uid=getMyUID();
         }
-        Context con = this;
+        initBt();
+    }
+
+    private void initBt(){
+        apopsasb1 = findViewById(R.id.apopsasb1);
+        apopsasb2 = findViewById(R.id.apopsasb2);
+        apopsasb3 = findViewById(R.id.apopsasb3);
+        appopsab2 = findViewById(R.id.apopsab2);
+        apopsab4 = findViewById(R.id.apopsab4);
+        apopsab5 = findViewById(R.id.apopsab5);
+        apopsab6 = findViewById(R.id.apopsab6);
+        apopsaet1 = findViewById(R.id.apopsaet1);
+        lv1 = findViewById(R.id.apopsalv1);
+        apopsasp1 = findViewById(R.id.apopsasp1);
+        apopsasp2 = findViewById(R.id.apopsasp2);
+        apops_permis = new String[]{"通话/短信相关", "存储","剪切板","电池优化","后台运行","摄像头","麦克风","定位","日历","传感器扫描","通知"};
+        apops_opt = new String[]{"默认", "拒绝","允许","仅在运行时允许"};
         apopsasb1.setChecked(true);
+        apopsasp1.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_permis));
+        apopsasp2.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_opt));
+
+        clickedBt();
+    }
+
+    private void clickedBt(){
+        Context con = this;
+
+        apopsasp1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                apops_permis_index = i;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+        apopsasp2.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                apops_opt_index = i;
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
 
         apopsasb1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
@@ -151,13 +191,10 @@ public class appopsActivity extends AppCompatActivity {
             }
         });
 
-        appopsab2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String searchStr = apopsaet1.getText().toString();
-                pkginfos = multiFunc.indexOfPKGS(appopsActivity.this,searchStr,pkginfos,checkboxs,0);
-                showPKGS(lv1);
-            }
+        appopsab2.setOnClickListener((v)->{
+            String searchStr = apopsaet1.getText().toString();
+            pkginfos = multiFunc.indexOfPKGS(appopsActivity.this,searchStr,pkginfos,checkboxs,0);
+            showPKGS(lv1);
         });
 
         apopsab4.setOnClickListener(new View.OnClickListener() {
@@ -252,6 +289,188 @@ public class appopsActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        //应用appops权限更改
+        apopsab6.setOnClickListener((v)->{
+            AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在应用更改,请稍后(可能会出现无响应，请耐心等待)....");
+            preventDismissDialog(show);
+            Handler handler = new Handler(){
+                @Override
+                public void handleMessage(@NonNull Message msg) {
+                    if(msg.what==0){
+                        showPKGS(lv1);
+                        multiFunc.dismissDialog(show);
+                    }
+                }
+            };
+            v.post(new Runnable() {
+                @Override
+                public void run() {
+                    int hit=0;
+                    StringBuilder sb = new StringBuilder();
+                    sb.append("aaa=(");
+                    Log.d("asdf",apops_permis[apops_permis_index]+" -- " + apops_opt[apops_opt_index]);
+                    for (int i = 0; i < checkboxs.size(); i++) {
+                        if(checkboxs.get(i)){
+                            sb.append("\""+pkginfos.get(i).getPkgname()+"\" ");
+                            hit++;
+                        }
+                    }
+                    if(hit == 0){
+                        for (PKGINFO pkginfo : pkginfos) {
+                            sb.append("\""+pkginfo.getPkgname()+"\" ");
+                        }
+                    }
+                    sb.append(");for pp in ${aaa[@]};do "+spliceCMDStr()+";done;");
+
+                    CMD cmd = getCMD(sb.toString());
+                    checkCMDResult(cmd,"权限修改完成","权限修改出现错误");
+                    sendHandlerMSG(handler,0);
+                }
+            });
+        });
+
+    }
+
+    //拼接命令参数字符串
+    private String spliceCMDStr(){
+        StringBuilder sb = new StringBuilder();
+        String cmdHead = "appops set --uid $pp ";
+        String cmdWrite = "appops write-settings ";
+        String modestr="";
+
+        switch (apops_opt_index){
+            case 0:
+                modestr = "default";
+                break;
+            case 1:
+                modestr = "ignore";
+                break;
+            case 2:
+                modestr = "allow";
+                break;
+            case 3:
+                modestr = "foreground";
+                break;
+        }
+
+        switch (apops_permis_index){
+            case 0 :
+                sb.append(cmdHead+" READ_PHONE_STATE "+modestr+";");
+                sb.append(cmdHead+" READ_CONTACTS "+modestr+";");
+                sb.append(cmdHead+" WRITE_CONTACTS "+modestr+";");
+                sb.append(cmdHead+" READ_CALL_LOG "+modestr+";");
+                sb.append(cmdHead+" WRITE_CALL_LOG "+modestr+";");
+                sb.append(cmdHead+" CALL_PHONE "+modestr+";");
+                sb.append(cmdHead+" READ_SMS "+modestr+";");
+                sb.append(cmdHead+" WRITE_SMS "+modestr+";");
+                sb.append(cmdHead+" SEND_SMS "+modestr+";");
+                sb.append(cmdHead+" RECEIVE_SMS "+modestr+";");
+                sb.append(cmdHead+" RECEIVE_EMERGECY_SMS "+modestr+";");
+                sb.append(cmdHead+" RECEIVE_MMS "+modestr+";");
+                sb.append(cmdHead+" RECEIVE_WAP_PUSH "+modestr+";");
+                sb.append(cmdHead+" READ_ICC_SMS "+modestr+";");
+                sb.append(cmdHead+" WRITE_ICC_SMS "+modestr+";");
+                sb.append(cmdHead+" PROCESS_OUTGOING_CALLS "+modestr+";");
+                sb.append(cmdHead+" READ_CELL_BROADCASTS "+modestr+";");
+                sb.append(cmdHead+" android:add_voicemail "+modestr+";");
+                sb.append(cmdHead+" android:answer_phone_calls "+modestr+";");
+                sb.append(cmdHead+" android:call_phone "+modestr+";");
+                sb.append(cmdHead+" android:read_call_log "+modestr+";");
+                sb.append(cmdHead+" android:read_contacts "+modestr+";");
+                sb.append(cmdHead+" android:read_cell_broadcasts "+modestr+";");
+                sb.append(cmdHead+" android:read_phone_numbers "+modestr+";");
+                sb.append(cmdHead+" android:read_phone_state "+modestr+";");
+                sb.append(cmdHead+" android:read_sms "+modestr+";");
+                sb.append(cmdHead+" android:receive_mms "+modestr+";");
+                sb.append(cmdHead+" android:receive_sms "+modestr+";");
+                sb.append(cmdHead+" android:receive_wap_push "+modestr+";");
+                sb.append(cmdHead+" android:send_sms "+modestr+";");
+                sb.append(cmdHead+" android:write_call_log "+modestr+";");
+                sb.append(cmdHead+" android:write_contacts "+modestr+";");
+                sb.append(cmdHead+" android:process_outgoing_calls "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.CALL_LOG "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.CONTACTS "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.PHONE "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.SMS "+modestr+";");
+                break;
+            case 1:
+                sb.append(cmdHead+" READ_EXTERNAL_STORAGE "+modestr+";");
+                sb.append(cmdHead+" WRITE_EXTERNAL_STORAGE "+modestr+";");
+                sb.append(cmdHead+" ACCESS_MEDIA_LOCATION "+modestr+";");
+                sb.append(cmdHead+" LEGACY_STORAGE "+modestr+";");
+                sb.append(cmdHead+" WRITE_MEDIA_AUDIO "+modestr+";");
+                sb.append(cmdHead+" READ_MEDIA_AUDIO "+modestr+";");
+                sb.append(cmdHead+" WRITE_MEDIA_VIDEO "+modestr+";");
+                sb.append(cmdHead+" READ_MEDIA_VIDEO "+modestr+";");
+                sb.append(cmdHead+" READ_MEDIA_IMAGES "+modestr+";");
+                sb.append(cmdHead+" WRITE_MEDIA_IMAGES "+modestr+";");
+                sb.append(cmdHead+" MANAGE_EXTERNAL_STORAGE "+modestr+";");
+                sb.append(cmdHead+" android:picture_in_picture "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.READ_MEDIA_AURAL "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.READ_MEDIA_VISUAL "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.READ_MEDIA_VISUAL "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.STORAGE "+modestr+";");
+                break;
+            case 2:
+                sb.append(cmdHead+" READ_CLIPBOARD "+modestr+";");
+                sb.append(cmdHead+" WRITE_CLIPBOARD "+modestr+";");
+                break;
+            case 3:
+                sb.append(cmdHead+" RUN_ANY_IN_BACKGROUND "+modestr+";");
+                break;
+            case 4:
+                sb.append(cmdHead+" RUN_IN_BACKGROUND "+modestr+";");
+                break;
+            case 5:
+                sb.append(cmdHead+" CAMERA "+modestr+";");
+                sb.append(cmdHead+" android:camera "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.CAMERA "+modestr+";");
+                break;
+            case 6:
+                sb.append(cmdHead+" RECORD_AUDIO "+modestr+";");
+                sb.append(cmdHead+" android:record_audio "+modestr+";");
+                sb.append(cmdHead+" TAKE_AUDIO_FOCUS "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.MICROPHONE "+modestr+";");
+                break;
+            case 7:
+                sb.append(cmdHead+" COARSE_LOCATION "+modestr+";");
+                sb.append(cmdHead+" FINE_LOCATION "+modestr+";");
+                sb.append(cmdHead+" android:coarse_location "+modestr+";");
+                sb.append(cmdHead+" android:fine_location "+modestr+";");
+                sb.append(cmdHead+" android:mock_location "+modestr+";");
+                sb.append(cmdHead+" android:monitor_location_high_power "+modestr+";");
+                sb.append(cmdHead+" android:monitor_location "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.LOCATION "+modestr+";");
+                break;
+            case 8:
+                sb.append(cmdHead+" READ_CALENDAR "+modestr+";");
+                sb.append(cmdHead+" WRITE_CALENDAR "+modestr+";");
+                sb.append(cmdHead+" android:write_calendar "+modestr+";");
+                sb.append(cmdHead+" android:read_calendar "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.CALENDAR "+modestr+";");
+                break;
+            case 9:
+                sb.append(cmdHead+" WIFI_SCAN "+modestr+";");
+                sb.append(cmdHead+" android:use_sip "+modestr+";");
+                sb.append(cmdHead+" BLUETOOTH_SCAN "+modestr+";");
+                sb.append(cmdHead+" BLUETOOTH_ADVERTISE "+modestr+";");
+                sb.append(cmdHead+" BLUETOOTH_CONNECT "+modestr+";");
+                sb.append(cmdHead+" BLUETOOTH_ADMIN "+modestr+";");
+                sb.append(cmdHead+" BLUETOOTH "+modestr+";");
+                sb.append(cmdHead+" NEARBY_DEVICES "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.NEARBY_DEVICES "+modestr+";");
+                sb.append(cmdHead+" android.permission-group.SENSORS "+modestr+";");
+                break;
+            case 10:
+                sb.append(cmdHead+" android.permission-group.NOTIFICATIONS "+modestr+";");
+                sb.append(cmdHead+" ACCESS_NOTIFICATIONS "+modestr+";");
+                sb.append(cmdHead+" POST_NOTIFICATION "+modestr+";");
+                break;
+        }
+        sb.append(cmdWrite);
+
+        return sb.toString();
     }
 
     //跳转到系统自带的应用详情界面
@@ -744,7 +963,8 @@ public class appopsActivity extends AppCompatActivity {
                         "4.长按应用列表会出现相关操作菜单，根据自己需求点击即可。支持批量操作。\r\n" +
                         "5.右上角\"选择本地应用\",支持选择apks进行安装，传统apk文件可以加载出图标。\r\n" +
                         "6.点击应用列表，则会进入到应用配置页面.\r\n" +
-                        "7.右上角\"选择本地安装包文件夹\"，选择一个文件夹，会自动安装里面所有apk/apks文件.如果你是通过mt直接从/data/app连同文件夹一起提取的，效果会更好。\r\n");
+                        "7.右上角\"选择本地安装包文件夹\"，选择一个文件夹，会自动安装里面所有apk/apks文件.如果你是通过mt直接从/data/app连同文件夹一起提取的，效果会更好。\r\n" +
+                        "8.应用更改，该按钮的作用是用来配置应用权限，可以批量或者勾选操作，不勾选则默认全部生效。左边是你想要操作的权限名称，右边是设置的模式。\r\n假如你想要将fqaosp的存储权限给拒绝掉：可以先点击左边的权限列表，选中\"存储\"，然后在右边列表中选择\"拒绝\"，最后勾选中fqaosp(如果不勾选而直接点击按钮，则会默认生效所有应用，请斟酌！)，点击\"应用更改\"即可生效。\r\n");
                 break;
             case 7:
                 fuckActivity.getIns().killall();
