@@ -42,6 +42,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.viewbinding.BuildConfig;
 
 import org.fqaosp.adapter.MENUSELECTAdapter;
 import org.fqaosp.entity.menuEntity;
@@ -154,7 +155,7 @@ public class MainActivity extends Activity {
                 tv1.setText("帮助信息");
                 tv2.setText("FQAOSP是一个适用于类原生的搞机工具，同样也适用于国内定制ui系统，它拥有很多常用的功能，例如：后台清理、一键卸载与安装应用、安装某个指定的文件夹里面所有apk文件、将手机本地的pe镜像文件挂载给电脑重装系统、反/回编译软件、提取或者刷入系统分区文件、软件的备份与恢复、应用分身、共享手机本地文件给局域网内所有用户、搜索自己设定范围内的文件等等，未来还会加入更多功能，现在部分功能已经可以不再需要root，已经对接了shizuku，但是仍有部分需要root才能使用，后续会逐渐完善与shizuku的对接。\r\n" +
                         "如果有新功能或建议，可以在GitHub提issue！\r\n" +
-                        "当前软件版本为：V1.2.0\r\n");
+                        "当前软件版本为：V1.2.2\r\n");
                 amupdate.setVisibility(View.VISIBLE);
                 dl.closeDrawer(Gravity.LEFT);
             }

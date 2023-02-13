@@ -8,14 +8,12 @@ import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.getSize;
 import static org.fqaosp.utils.fileTools.selectFile;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
-import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -31,7 +29,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -59,14 +56,12 @@ public class importToolsActivity extends Activity {
     boolean mIsCancel;
     private int mProgress;
     private long downloaded_sum;
-    private boolean isRoot=false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.import_tools_activity);
         fuckActivity.getIns().add(this);
-        isRoot=isSuEnable();
         initButton();
         permissionRequest.getExternalStorageManager(importToolsActivity.this);
     }
@@ -172,20 +167,10 @@ public class importToolsActivity extends Activity {
                         alertDialog.dismiss();
                         if(mode == 0){
                             itatv1.setText("文件下载完成，保存在:"+fqfilepath);
-                            if(isRoot){
-                                extractFile(fqfilepath,fqfile);
-                            }else{
-                                showMyDialog(context,"提示","本功能需要root才能正常使用");
-                            }
-
+                            extractFile(fqfilepath,fqfile);
                         }else{
                             itatv2.setText("文件下载完成，保存在:"+fqfilepath);
-                            if(isRoot){
-                                extractFile(fqfilepath,jdkfile);
-                            }else{
-                                showMyDialog(context,"提示","本功能需要root才能正常使用");
-                            }
-
+                            extractFile(fqfilepath,jdkfile);
                         }
 
                 }
@@ -274,6 +259,7 @@ public class importToolsActivity extends Activity {
             File busyF = new File(busyboxFile);
             if(!busyF.exists()){
                 extactAssetsFile(this,"busybox",busyboxFile);
+                busyF.setExecutable(true);
             }
             if(!extractScriptF.exists()){
                 extactAssetsFile(this,"extract.sh",extractScriptFile);
@@ -284,8 +270,8 @@ public class importToolsActivity extends Activity {
             new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    CMD cmd1 = new CMD(cmd);
-                    cmd1.getResultCode();
+                    CMD cmd1 = new CMD(cmd,false);
+                    Log.d("importTools",cmd1.getResultCode() +" -- " + cmd1.getResult());
                     sendHandlerMSG(handler,0);
                 }
             }).start();

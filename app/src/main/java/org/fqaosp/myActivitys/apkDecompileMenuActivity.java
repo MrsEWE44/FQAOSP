@@ -5,7 +5,6 @@ import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.selectFile;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
-import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.queryUserPKGS;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
@@ -63,7 +62,6 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
     private ArrayList<String> list = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
-    private boolean isRoot = false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -71,13 +69,8 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
         setContentView(R.layout.apk_decompile_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("软件反编译");
-        isRoot=isSuEnable();
-        if(isRoot){
-            extractAssetsFiles();
-            initViews();
-        }else{
-            showMyDialog(this,"提示","本功能需要root才能正常使用");
-        }
+        extractAssetsFiles();
+        initViews();
     }
 
     private void extractAssetsFiles() {
@@ -199,7 +192,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                             msg1="反编译成功";
                             msg2="反编译失败";
                         }
-                        CMD cmd1 = new CMD(cmd);
+                        CMD cmd1 = new CMD(cmd,false);
                         Toast.makeText(context, cmd1.getResultCode() == 0 ? msg1:msg2, Toast.LENGTH_SHORT).show();
                     }
                 }

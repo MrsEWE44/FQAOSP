@@ -28,7 +28,7 @@ public class cmdThread extends  Thread{
 
     @Override
     public void run() {
-        CMD cmd = new CMD(this.cmd);
+        CMD cmd = new CMD(this.cmd,false);
         if(cmd.getResultCode() == 0){
             Looper.prepare();
             Toast.makeText(this.context, sucess_msg, Toast.LENGTH_SHORT).show();

@@ -22,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -64,6 +65,14 @@ public class imgToolMenuActivity extends AppCompatActivity implements View.OnCli
         setContentView(R.layout.img_tool_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("镜像工具");
+
+        /*
+        * 2023年2月13日13点38分
+        *
+        * I/cmd :::: cd /data/data/org.fqaosp/files && ./unpackbootimg -i /storage/emulated/0/twrp-11-10-21.img -o /storage/emulated/0/Android/data/org.fqaosp/cache/unpack/twrp-11-10-21
+            D/imgTool: 159 -- Bad system call
+        * */
+
         isRoot=isSuEnable();
         if(isRoot){
             initViews();
@@ -71,7 +80,6 @@ public class imgToolMenuActivity extends AppCompatActivity implements View.OnCli
         }else{
             showMyDialog(this,"提示","本功能需要root才能正常使用");
         }
-
     }
 
     private void initViews() {
@@ -158,7 +166,7 @@ public class imgToolMenuActivity extends AppCompatActivity implements View.OnCli
         AlertDialog show = showMyDialog(imgToolMenuActivity.this, "提示", "请稍后，正在扫描本地镜像工程...");
         preventDismissDialog(show);
         String cmd = "find " + homePath + "/cache/unpack -type d";
-        CMD cmd1 = new CMD(cmd);
+        CMD cmd1 = new CMD(cmd,false);
         if (cmd1.getResultCode() == 0) {
             for (String s : cmd1.getResult().split("\n")) {
                 String name = getPathByLastName(s);
@@ -180,8 +188,8 @@ public class imgToolMenuActivity extends AppCompatActivity implements View.OnCli
         String storage = Environment.getExternalStorageDirectory().toString();
         AlertDialog show = showMyDialog(imgToolMenuActivity.this, "提示", "请稍后，正在扫描本地镜像文件...");
         preventDismissDialog(show);
-        String cmd = "find " + storage + "/ -name '*.img'";
-        CMD cmd1 = new CMD(cmd);
+        String cmd = "find " + storage + "/ -path \""+storage+"/Android\" -prune -o -name  '*.img' -print";
+        CMD cmd1 = new CMD(cmd,false);
         if (cmd1.getResultCode() == 0) {
             for (String s : cmd1.getResult().split("\n")) {
                 list.add(s);
@@ -348,7 +356,9 @@ public class imgToolMenuActivity extends AppCompatActivity implements View.OnCli
                             if (!file.exists()) {
                                 file.mkdirs();
                             }
+
                             CMD cmd1 = new CMD(cmd);
+                            Log.d("imgTool",cmd1.getResultCode() +" -- " + cmd1.getResult());
                             Toast.makeText(context, cmd1.getResultCode() == 0 ? msg1:msg2, Toast.LENGTH_SHORT).show();
                         }
                     }
