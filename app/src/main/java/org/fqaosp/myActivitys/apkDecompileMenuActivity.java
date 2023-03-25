@@ -1,6 +1,7 @@
 package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.execFileSelect;
+import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.selectFile;
@@ -23,6 +24,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Process;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -76,11 +78,17 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
     private void extractAssetsFiles() {
         try {
             String filesDir = getMyHomeFilesPath(apkDecompileMenuActivity.this);
-            String jdkDir = filesDir + "/jdk";
-            String apktoolFile = filesDir + "/apktool.jar";
+            String fqtoolsfile = filesDir+"/fqtools.sh";
+            String jdkDir = filesDir + "/usr/opt/openjdk";
+            String apktoolFile = filesDir + "/usr/apktool.jar";
             File file1 = new File(filesDir);
             File jdkD = new File(jdkDir);
             File apkToolF = new File(apktoolFile);
+            File fqtoolfile = new File(fqtoolsfile);
+            fqtoolfile.delete();
+            if(!fqtoolfile.exists()){
+                extactAssetsFile(this,"fqtools.sh",fqtoolsfile);
+            }
             if (!file1.exists()) {
                 file1.mkdirs();
             }
@@ -92,10 +100,6 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                 Toast.makeText(this, "未找到apktool.jar，请重新导入工具包后再执行此项", Toast.LENGTH_LONG).show();
                 jump(apkDecompileMenuActivity.this, importToolsActivity.class);
             }
-            Integer myuid = Process.myUid();
-            String cmd = "cd " + filesDir + " && sh make.sh && cd ../ && chown -R " + myuid + ":" + myuid + " files/";
-            alertDialogThread dialogThread = new alertDialogThread(apkDecompileMenuActivity.this, "请稍后，正在解压apktool相关资源文件", cmd, "提示", "工具已存在", "解压失败");
-            dialogThread.start();
         } catch (Exception e) {
             Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
         }
@@ -178,7 +182,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                                 file.mkdirs();
                             }
                             String outFile = outDir + "/" + outname + ".apk";
-                            cmd = "cd " + filesDir + " && sh re.sh " + outFile + " " + filePath;
+                            cmd = "cd " + filesDir + " && sh fqtools.sh apktool reapk "+ filePath+ " "  + outFile ;
                             msg1="回编译成功";
                             msg2="回编译失败";
                         }
@@ -188,11 +192,12 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                             PackageInfo archiveInfo = packageManager.getPackageArchiveInfo(filePath, 0);
                             String pkgname = archiveInfo.packageName;
                             String outDir = myStorageHomePath + "/cache/decompile/" + pkgname;
-                            cmd = "cd " + filesDir + " && sh de.sh " + outDir + " " + filePath;
+                            cmd = "cd " + filesDir + " && sh fqtools.sh apktool deapk " + filePath+ " "  + outDir ;
                             msg1="反编译成功";
                             msg2="反编译失败";
                         }
                         CMD cmd1 = new CMD(cmd,false);
+                        Log.d("cccc",cmd1.getResultCode() + " -- " + cmd1.getResult());
                         Toast.makeText(context, cmd1.getResultCode() == 0 ? msg1:msg2, Toast.LENGTH_SHORT).show();
                     }
                 }

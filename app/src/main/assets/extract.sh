@@ -1,18 +1,12 @@
+FQTOOLS_NAME="fqtools.tar.xz"
 if [ -f "busybox" ];then
 	chmod 777 busybox
-	if [ -f "fqtools.tar" ];then
-		./busybox tar xf fqtools.tar
-		rm -rf fqtools.tar
+	if [ -f "$FQTOOLS_NAME" ];then
+		./busybox tar xf "$FQTOOLS_NAME"
+		rm -rf $FQTOOLS_NAME
 		touch fqtools
 		exit 0;
 	fi
-
-	if [ -f "jdk.tar.xz" ];then
-		./busybox tar xf jdk.tar.xz
-		rm -rf jdk.tar.xz
-		exit 0;
-	fi
-	exit 1;
 fi
 
 

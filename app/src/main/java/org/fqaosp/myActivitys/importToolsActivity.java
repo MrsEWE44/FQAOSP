@@ -49,10 +49,9 @@ public class importToolsActivity extends Activity {
 
     private ArrayList<String> list = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
-    private TextView itatv1 , itatv2;
-    private Button itab1 , itab2,itab3,itab4,itab5,itab6,itab7;
-    private int mode;
-    private String fqfile="fqtools.tar" , jdkfile="jdk.tar.xz";
+    private TextView itatv1;
+    private Button itab1 , itab2,itab5,itab6,itab7;
+    private String fqfile="fqtools.tar.xz";
     boolean mIsCancel;
     private int mProgress;
     private long downloaded_sum;
@@ -68,11 +67,8 @@ public class importToolsActivity extends Activity {
 
     private  void initButton(){
         itatv1 = findViewById(R.id.itatv1);
-        itatv2 = findViewById(R.id.itatv2);
         itab1 = findViewById(R.id.itab1);
         itab2 = findViewById(R.id.itab2);
-        itab3 = findViewById(R.id.itab3);
-        itab4 = findViewById(R.id.itab4);
         itab5 = findViewById(R.id.itab5);
         itab6 = findViewById(R.id.itab6);
         itab7 = findViewById(R.id.itab7);
@@ -92,21 +88,9 @@ public class importToolsActivity extends Activity {
         });
 
         itab2.setOnClickListener((v)->{
-            mode=0;
             execFileSelect(importToolsActivity.this,importToolsActivity.this,"请选择 "+fqfile+" 文件");
         });
 
-        itab3.setOnClickListener((v)->{
-            String filesPath = getMyHomeFilesPath(importToolsActivity.this);
-            String fqtoolsd = filesPath+"/jdk";
-            File file = new File(fqtoolsd);
-            itatv2.setText(file.exists() ? "jdk已经安装" : "jdk未安装\r\n 64位请复制 https://github.com/MrsEWE44/FQAOSP/releases/download/V1.1.8/jdk.tar.xz 下载工具包");
-        });
-
-        itab4.setOnClickListener((v)->{
-            mode=1;
-            execFileSelect(importToolsActivity.this,importToolsActivity.this,"请选择 "+jdkfile+" 文件");
-        });
 
         itab5.setOnClickListener((v)->{fuckActivity.getIns().killall();});
 
@@ -116,8 +100,28 @@ public class importToolsActivity extends Activity {
         });
 
         itab7.setOnClickListener((v)->{
-            //jdk下载点击事件
-            showDownloadDialog(context,activity,1);
+            String filesPath = getMyHomeFilesPath(importToolsActivity.this);
+            String s = Environment.getExternalStorageDirectory().toString();
+            String makeFQTOOLSScriptFile = filesPath+"/makefqtools.sh";
+            File makeFQTOOLSScriptF = new File(makeFQTOOLSScriptFile);
+            if(!makeFQTOOLSScriptF.exists()){
+                extactAssetsFile(this,"makefqtools.sh",makeFQTOOLSScriptFile);
+            }
+            String outPath = s+"/Download/FQTOOLS";
+            String fqtools = filesPath+"/makefqtools.sh";
+            String outFile = outPath+"/makefqtools.sh";
+            File file = new File(outPath);
+            if(!file.exists()){
+                file.mkdirs();
+            }
+            if(copyFile(fqtools,outFile)){
+                File file1 = new File(outFile);
+                if(file1.exists()){
+                    itatv1.setText("你只需要复制下面这段命令在termux里边执行,随后等待出现\"make fqtools ok !\" 字样，然后选择本地安装即可.工具包在Downloads文件夹里面.\r\nsh storage/downloads/FQTOOLS/makefqtools.sh\r\n");
+                }
+            }else{
+                itatv1.setText("请给予存储权限");
+            }
         });
 
     }
@@ -127,13 +131,8 @@ public class importToolsActivity extends Activity {
         String download_url = "";
         String save_path = getMyStorageHomePath(context)+"/cache/download/";
         String filename = "";
-        if(mode == 0){
-            download_url = "https://github.com/MrsEWE44/FQAOSP/releases/download/V1.1.8/fqtools.tar";
-            filename = fqfile;
-        }else{
-            download_url = "https://github.com/MrsEWE44/FQAOSP/releases/download/V1.1.8/jdk.tar.xz";
-            filename = jdkfile;
-        }
+        download_url = "https://github.com/MrsEWE44/FQAOSP/releases/download/V1.1.8/fqtools.tar";
+        filename = fqfile;
         String fqfilepath = save_path+"/"+filename;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle("下载中");
@@ -165,14 +164,8 @@ public class importToolsActivity extends Activity {
                     case 1:
                         // 隐藏当前下载对话框
                         alertDialog.dismiss();
-                        if(mode == 0){
-                            itatv1.setText("文件下载完成，保存在:"+fqfilepath);
-                            extractFile(fqfilepath,fqfile);
-                        }else{
-                            itatv2.setText("文件下载完成，保存在:"+fqfilepath);
-                            extractFile(fqfilepath,jdkfile);
-                        }
-
+                        itatv1.setText("文件下载完成，保存在:"+fqfilepath);
+                        extractFile(fqfilepath,fqfile);
                 }
             }
         };
@@ -288,26 +281,15 @@ public class importToolsActivity extends Activity {
                 int count = data.getClipData().getItemCount();
                 for(int i =0;i<count;i++){
                     Uri uri = data.getClipData().getItemAt(i).getUri();
-                    if(mode == 0){
-                        selectFile(importToolsActivity.this,storage,uri,list,checkboxs,"请选择正确的 "+fqfile+" 文件","tar");
-                    }else{
-                        selectFile(importToolsActivity.this,storage,uri,list,checkboxs,"请选择正确的 "+jdkfile+" 文件","xz");
-                    }
+                    selectFile(importToolsActivity.this,storage,uri,list,checkboxs,"请选择正确的 "+fqfile+" 文件","xz");
                 }
             } else if(data.getData() != null) {//只有一个文件咯
                 Uri uri = data.getData();
-                if(mode == 0){
-                    selectFile(importToolsActivity.this,storage,uri,list,checkboxs,"请选择正确的 "+fqfile+" 文件","tar");
-                }else{
-                    selectFile(importToolsActivity.this,storage,uri,list,checkboxs,"请选择正确的 "+jdkfile+" 文件","xz");
-                }
+                selectFile(importToolsActivity.this,storage,uri,list,checkboxs,"请选择正确的 "+fqfile+" 文件","xz");
             }
             for (String s : list) {
                 if(s.indexOf(fqfile) != -1){
                     extractFile(s,fqfile);
-                }
-                if(s.indexOf(jdkfile) != -1){
-                    extractFile(s,jdkfile);
                 }
             }
 

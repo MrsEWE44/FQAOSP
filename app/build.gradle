@@ -9,8 +9,8 @@ android {
         applicationId "org.fqaosp"
         minSdk 24
         targetSdk 28
-        versionCode 26
-        versionName "1.2.3"
+        versionCode 27
+        versionName "1.2.4-rombuild"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 

@@ -81,6 +81,21 @@ public class makeWP {
         return "rm -rf "+localTmpFile+" && cp \""+apkPath+"\" " + localTmpFile +" && pm install --user "+uid+" " + localTmpFile + " && exit 0;";
     }
 
+    public String getInstallLocalPkgOnDowngradeCMD(String uid , String apkPath){
+        String localTmpFile="/data/local/tmp/fqaosp.apk";
+        return "rm -rf "+localTmpFile+" && cp \""+apkPath+"\" " + localTmpFile +" && pm install --user "+uid+" -r -d " + localTmpFile + " && exit 0;";
+    }
+
+    public String getInstallLocalPkgOnDebugCMD(String uid , String apkPath){
+        String localTmpFile="/data/local/tmp/fqaosp.apk";
+        return "rm -rf "+localTmpFile+" && cp \""+apkPath+"\" " + localTmpFile +" && pm install --user "+uid+" -r -t " + localTmpFile + " && exit 0;";
+    }
+
+    public String getInstallLocalPkgOnExistsCMD(String uid , String apkPath){
+        String localTmpFile="/data/local/tmp/fqaosp.apk";
+        return "rm -rf "+localTmpFile+" && cp \""+apkPath+"\" " + localTmpFile +" && pm install --user "+uid+" -r " + localTmpFile + " && exit 0;";
+    }
+
     //同步传过来的pkginfo对象，将对应的apk都同步安装到其他用户空间里面
     public void syncapk(Activity activity, PKGINFO pkginfo){
         ArrayList<String> list = new ArrayList<>();
@@ -98,6 +113,14 @@ public class makeWP {
     }
     public String getPkgByUIDCMD(String uid){
         return "pm list packages --user "+uid+"| cut -d':' -f2";
+    }
+
+    public String getChangePkgOnEnableByUIDCMD(String uid,String pkgname){
+        return "pm enable --user "+uid + " " + pkgname;
+    }
+
+    public String getChangePkgOnDisableByUIDCMD(String uid,String pkgname){
+        return "pm clear --user "+ uid + " "+pkgname+" && pm disable-user --user "+uid + " " + pkgname;
     }
 
     public String getDisablePkgByUIDCMD(String uid){

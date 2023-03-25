@@ -40,16 +40,16 @@
         <activity android:name=".myActivitys.killAppActivity" />
         <activity android:name=".myActivitys.mountLocalImageActivity" />
         <activity android:name=".myActivitys.apkDecompileMenuActivity"/>
-        <activity android:name=".myActivitys.appDisableActivity"/>
         <activity android:name=".myActivitys.appopsActivity"/>
         <activity android:name=".myActivitys.appopsInfoActivity"/>
-        <activity android:name=".myActivitys.imgToolMenuActivity"/>
         <activity android:name=".myActivitys.importToolsActivity"/>
         <activity android:name=".myActivitys.sqliteManageActivity"/>
         <activity android:name=".myActivitys.backupRestoreActivity"/>
         <activity android:name=".myActivitys.fileSearchActivity"/>
         <activity android:name=".myActivitys.fileSharingActivity"/>
         <activity android:name=".myActivitys.imgMenuActivity"/>
+        <activity android:name=".myActivitys.romToolsActivity"/>
+
 
         <provider
             android:authorities="org.fqaosp.provider"

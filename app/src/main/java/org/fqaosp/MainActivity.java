@@ -5,13 +5,10 @@ import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.jump;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -19,7 +16,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -27,7 +23,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.provider.Settings;
-import android.provider.SyncStateContract;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
@@ -37,28 +32,25 @@ import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 import androidx.drawerlayout.widget.DrawerLayout;
-import androidx.viewbinding.BuildConfig;
 
 import org.fqaosp.adapter.MENUSELECTAdapter;
 import org.fqaosp.entity.menuEntity;
 import org.fqaosp.myActivitys.apkDecompileMenuActivity;
-import org.fqaosp.myActivitys.appDisableActivity;
 import org.fqaosp.myActivitys.appopsActivity;
 import org.fqaosp.myActivitys.backupRestoreActivity;
 import org.fqaosp.myActivitys.fileSearchActivity;
 import org.fqaosp.myActivitys.fileSharingActivity;
 import org.fqaosp.myActivitys.imgMenuActivity;
-import org.fqaosp.myActivitys.imgToolMenuActivity;
 import org.fqaosp.myActivitys.importToolsActivity;
 import org.fqaosp.myActivitys.killAppActivity;
 import org.fqaosp.myActivitys.mountLocalImageActivity;
+import org.fqaosp.myActivitys.romToolsActivity;
 import org.fqaosp.myActivitys.sqliteManageActivity;
 import org.fqaosp.myActivitys.workProfileMenuActivity;
 import org.fqaosp.utils.fuckActivity;
@@ -115,13 +107,12 @@ public class MainActivity extends Activity {
         menuEntities.add(new menuEntity("后台管理","该功能是用于后台进程管理的，需要root授权。\r\n长按该选项即可进入。\n",killAppActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_foreground),true,true));
         menuEntities.add(new menuEntity("手机分身","该功能是用于手机分身管理的，但仅限于类原生，以及其它没有限制过多开用户的系统使用，国内定制系统使用会存在问题，包括moto的myui。需要root使用。\r\n长按该选项即可进入。\n",workProfileMenuActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_view_array_foreground),true,false));
         menuEntities.add(new menuEntity("U盘模式","该功能是用于挂载手机上的镜像文件，让电脑识别的，可以当U盘使用，可以给电脑安装系统，需要root权限授权。\r\n长按该选项即可进入。\n",mountLocalImageActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_usb_foreground),true,false));
-        menuEntities.add(new menuEntity("禁用APP","该功能是用于apk禁用的，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n长按该选项即可进入。\n" ,appDisableActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_foreground),true,true));
         menuEntities.add(new menuEntity("apk反编译","该功能是用于apk回编译操作的，需要安装jdk与fqtools，采用传统apktool进行回编译操作,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n长按该选项即可进入。\n" ,apkDecompileMenuActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_foreground),false,false));
-        menuEntities.add(new menuEntity("镜像工具","该功能是用于boot/recovery镜像文件解包与打包的，需要安装fqtools工具。\r\n",imgToolMenuActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_foreground),true,false));
         menuEntities.add(new menuEntity("应用管理","该功能是用于应用管理的,支持应用提取、详情跳转、卸载应用、导出应用信息、安装apks/apk应用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n长按该选项即可进入。\n",appopsActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_android_foreground),true,true));
         menuEntities.add(new menuEntity("备份与恢复","该功能是用于应用备份与恢复的,支持应用备份与恢复，可选择只备份数据、安装包、安装包+数据，也支持仅恢复数据、安装包、安装包+数据，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n长按该选项即可进入。\n",backupRestoreActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_backup_restore_foreground),true,false));
         menuEntities.add(new menuEntity("数据库编辑","该功能是用于编辑该软件产生的数据库文件。\r\n长按该选项即可进入。\n",sqliteManageActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_foreground),false,false));
         menuEntities.add(new menuEntity("分区管理","用于提取系统分区到本地或者刷入本地分区文件到分区位置。此功能需要root权限。\r\n 长按该选项即可进入。\r\n", imgMenuActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_data_usage_foreground),true,false));
+        menuEntities.add(new menuEntity("ROM工具","用于rom固件相关的操作，例如解包payload.bin、system.new.dat文件，部分功能仍需要root权限才能解决。\r\n 长按该选项即可进入。\r\n", romToolsActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_android_foreground),false,false));
         menuEntities.add(new menuEntity("组件检查","用于检查该设备是否已经安装部分功能所需的额外扩展组件。\r\n 长按该选项即可进入。\r\n",importToolsActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_find_foreground),false,false));
 
         //创建并设置适配器
@@ -155,11 +146,19 @@ public class MainActivity extends Activity {
                 tv2.setText("红色是当前状态下不能使用的功能.\n黄色是当前状态下只可以使用部分功能,剩下部分则不能使用.\n默认绿色则是代表当前状态可以完美正常使用该功能.\n\n" +
                         "FQAOSP(中文全称为: 法可油安卓),它是一个适用于类原生的搞机工具，同样也适用于国内定制ui系统，它拥有很多常用的功能，例如：后台清理、一键卸载与安装应用、安装某个指定的文件夹里面所有apk文件、将手机本地的pe镜像文件挂载给电脑重装系统、反/回编译软件、提取或者刷入系统分区文件、软件的备份与恢复、应用分身、共享手机本地文件给局域网内所有用户、搜索自己设定范围内的文件等等，未来还会加入更多功能，现在部分功能已经可以不再需要root，已经对接了shizuku，但是仍有部分需要root才能使用，后续会逐渐完善与shizuku的对接。\r\n" +
                         "如果有新功能或建议，可以在GitHub提issue！\r\n" +
-                        "当前软件版本为：V1.2.3\r\n" +
-                        "当前版本日志:\n" +
-                        "1.添加应用启动图标。\n" +
-                        "2.添加侧边菜单选项颜色，用于区分是否拥有权限使用该功能。\n" +
-                        "3.修改版本号为1.2.3.\n");
+                        "V1.2.4-rombuild\n" +
+                        "\n" +
+                        "1.添加rom工具选项，加入rom解包功能实现。\n" +
+                        "\n" +
+                        "2.耦合fqtools工具包，精简无用内容，缩减体积，更改压缩方式。\n" +
+                        "\n" +
+                        "3.剔除禁用应用、镜像工具功能，禁用应用功能合并至应用管理当中。\n" +
+                        "\n" +
+                        "4.应用管理界面添加降级、调试、覆盖安装、应用禁用、启用功能选项。\n" +
+                        "\n" +
+                        "5.新增makefqtools脚本，用户可以在termux里面手动制作最新的fqtools工具包，无需手动下载或者等待更新。\n" +
+                        "\n" +
+                        "6.更改版本号为V1.2.4-rombuild\n");
                 amupdate.setVisibility(View.VISIBLE);
                 dl.closeDrawer(Gravity.LEFT);
             }

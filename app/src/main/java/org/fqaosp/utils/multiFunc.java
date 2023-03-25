@@ -1,10 +1,6 @@
 package org.fqaosp.utils;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-import static org.fqaosp.utils.permissionRequest.getExternalStorageManager;
-import static org.fqaosp.utils.permissionRequest.grantAndroidData;
-import static org.fqaosp.utils.permissionRequest.grantAndroidObb;
-import static org.fqaosp.utils.permissionRequest.requestExternalStoragePermission;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -14,7 +10,6 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Process;
@@ -29,8 +24,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import org.fqaosp.entity.PKGINFO;
-import org.fqaosp.myActivitys.appDisableActivity;
-import org.fqaosp.myActivitys.backupRestoreActivity;
 import org.fqaosp.myActivitys.importToolsActivity;
 
 import java.io.File;

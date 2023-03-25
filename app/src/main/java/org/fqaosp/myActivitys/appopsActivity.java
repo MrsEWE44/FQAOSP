@@ -96,7 +96,9 @@ public class appopsActivity extends AppCompatActivity {
     private int nowItemIndex=-1;
     private View nowItemView = null;
     private boolean isRoot=false;
+    private boolean isDisable=false;
     private String apops_permis[],apops_opt[];
+    private String script_name = "fqtools.sh";
     private int apops_permis_index,apops_opt_index;
 
     @Override
@@ -309,7 +311,7 @@ public class appopsActivity extends AppCompatActivity {
                     int hit=0;
                     StringBuilder sb = new StringBuilder();
                     sb.append("aaa=(");
-                    Log.d("asdf",apops_permis[apops_permis_index]+" -- " + apops_opt[apops_opt_index]);
+//                    Log.d("appopsActivity",apops_permis[apops_permis_index]+" -- " + apops_opt[apops_opt_index]);
                     for (int i = 0; i < checkboxs.size(); i++) {
                         if(checkboxs.get(i)){
                             sb.append("\""+pkginfos.get(i).getPkgname()+"\" ");
@@ -494,10 +496,19 @@ public class appopsActivity extends AppCompatActivity {
                     contextMenu.add(0,1,0,"跳转至应用详情");
                     contextMenu.add(0,2,0,"导出所有勾选应用包名");
                     contextMenu.add(0,3,0,"导出并附加所有勾选应用包名");
-                    contextMenu.add(0,4,0,"提取应用");
-                    contextMenu.add(0,5,0,"卸载应用");
+                    if(isDisable){
+                        contextMenu.add(0,10,0,"启用");
+                    }else{
+                        contextMenu.add(0,11,0,"禁用");
+                    }
+                    contextMenu.add(0,4,0,"尝试降级安装");
+                    contextMenu.add(0,8,0,"尝试覆盖安装");
+                    contextMenu.add(0,9,0,"尝试安装debug应用");
+                    contextMenu.add(0,5,0,"提取应用");
+                    contextMenu.add(0,6,0,"卸载应用");
                 } catch (PackageManager.NameNotFoundException e) {
-                    contextMenu.add(0,6,0,"尝试安装应用");
+                    contextMenu.add(0,7,0,"尝试安装应用");
+                    contextMenu.add(0,9,0,"尝试安装debug应用");
                 }
             }
         });
@@ -511,7 +522,7 @@ public class appopsActivity extends AppCompatActivity {
             fileD.mkdirs();
         }
         if(!sysupF.exists()){
-            extactAssetsFile(this,"bar.sh",sysupfile);
+            extactAssetsFile(this,script_name,sysupfile);
         }
         return sysupF.exists();
     }
@@ -536,9 +547,9 @@ public class appopsActivity extends AppCompatActivity {
     private boolean installApkOnDir(String dir){
         Context that = this;
         String filesDir =getMyHomeFilesPath(that);
-        String barfile = filesDir+"/bar.sh";
+        String barfile = filesDir+"/"+script_name;
         if(isRoot && extractAssertFile(barfile,filesDir)){
-            Log.d("installApkOnDir","禁用脚本已存在");
+//            Log.d("installApkOnDir","禁用脚本已存在");
             String cmdstr = "sh "+barfile+" inapkonpath " + dir;
             CMD cmd = getCMD(cmdstr);
             return cmd.getResultCode() ==0;
@@ -556,7 +567,7 @@ public class appopsActivity extends AppCompatActivity {
     //安装apks文件
     private boolean installAPKS(String apksFilePath){
         String filesDir =getMyHomeFilesPath(this);
-        String barfile = filesDir+"/bar.sh";
+        String barfile = filesDir+"/"+script_name;
         if(extractAssertFile(barfile,filesDir)){
             Log.d("installAPKS","禁用脚本已存在");
             String cmdstr = "sh "+barfile+" inapks " + apksFilePath;
@@ -569,7 +580,7 @@ public class appopsActivity extends AppCompatActivity {
     }
 
     //安装本地文件
-    private void installLocalPKG(){
+    private void installLocalPKG(int install_mode){
         AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
         preventDismissDialog(show);
         nowItemView.post(new Runnable() {
@@ -583,7 +594,22 @@ public class appopsActivity extends AppCompatActivity {
                         if(getPathByLastNameType(pkginfo.getApkpath()).equals("apks")){
                             installAPKS(pkginfo.getApkpath());
                         }else{
-                            String cmdstr = makewp.getInstallLocalPkgCMD(uid, pkginfo.getApkpath());
+                            String cmdstr = "";
+                            switch (install_mode){
+                                case 0:
+                                    cmdstr = makewp.getInstallLocalPkgCMD(uid, pkginfo.getApkpath());
+                                    break;
+                                case 1:
+                                    cmdstr = makewp.getInstallLocalPkgOnDowngradeCMD(uid, pkginfo.getApkpath());
+                                    break;
+                                case 2:
+                                    cmdstr = makewp.getInstallLocalPkgOnDebugCMD(uid, pkginfo.getApkpath());
+                                    break;
+                                case 3:
+                                    cmdstr = makewp.getInstallLocalPkgOnExistsCMD(uid, pkginfo.getApkpath());
+                                    break;
+                            }
+
                             CMD cmd = getCMD(cmdstr);
                             checkCMDResult(cmd,"成功安装","安装失败");
                         }
@@ -638,6 +664,38 @@ public class appopsActivity extends AppCompatActivity {
                     String cmdstr = makewp.getUninstallPkgByUIDCMD(uid, pkginfo.getPkgname());
                     CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
                     checkCMDResult(cmd,"成功卸载","卸载失败");
+                }
+                multiFunc.dismissDialog(show);
+            }
+        });
+    }
+
+    //修改应用状态,禁用或者启用
+    private void changePKGState(){
+        AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在"+(isDisable?"启动":"禁用")+"应用,请稍后(可能会出现无响应，请耐心等待)....");
+        preventDismissDialog(show);
+        nowItemView.post(new Runnable() {
+            @Override
+            public void run() {
+                makeWP makewp = new makeWP();
+                int hit=0;
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    if(checkboxs.get(i)){
+                        PKGINFO pkginfo = pkginfos.get(i);
+                        String pkgname = pkginfo.getPkgname();
+                        String cmdstr = isDisable?makewp.getChangePkgOnEnableByUIDCMD(uid, pkgname):makewp.getChangePkgOnDisableByUIDCMD(uid,pkgname);
+                        CMD cmd = getCMD(cmdstr);
+                        checkCMDResult(cmd,"修改成功","修改失败");
+                        hit++;
+                    }
+                }
+
+                if(hit ==0){
+                    PKGINFO pkginfo = pkginfos.get(nowItemIndex);
+                    String pkgname = pkginfo.getPkgname();
+                    String cmdstr = isDisable?makewp.getChangePkgOnEnableByUIDCMD(uid, pkgname):makewp.getChangePkgOnDisableByUIDCMD(uid,pkgname);
+                    CMD cmd = getCMD(cmdstr);
+                    checkCMDResult(cmd,"修改成功","修改失败");
                 }
                 multiFunc.dismissDialog(show);
             }
@@ -738,13 +796,26 @@ public class appopsActivity extends AppCompatActivity {
                 extractPKGList(true);
                 break;
             case 4:
-                extractPKGFileToLocal();
+                installLocalPKG(1);
                 break;
             case 5:
-                uninstallPKG();
+                extractPKGFileToLocal();
                 break;
             case 6:
-                installLocalPKG();
+                uninstallPKG();
+                break;
+            case 7:
+                installLocalPKG(0);
+                break;
+            case 8:
+                installLocalPKG(3);
+                break;
+            case 9:
+                installLocalPKG(2);
+                break;
+            case 10:
+            case 11:
+                changePKGState();
                 break;
 
         }
@@ -849,11 +920,17 @@ public class appopsActivity extends AppCompatActivity {
         menu.add(Menu.NONE,1,1,"显示所有应用(包括禁用)");
         menu.add(Menu.NONE,2,2,"显示用户安装的应用");
         menu.add(Menu.NONE,3,3,"显示用户安装的应用(包括禁用)");
-        menu.add(Menu.NONE,4,4,"选择本地应用");
-        menu.add(Menu.NONE,5,5,"选择本地安装包文件夹");
-        menu.add(Menu.NONE,6,6,"帮助");
-        menu.add(Menu.NONE,7,7,"退出");
+        menu.add(Menu.NONE,4,4,"显示被禁用的应用");
+        menu.add(Menu.NONE,5,5,"选择本地应用");
+        menu.add(Menu.NONE,6,6,"选择本地安装包文件夹");
+        menu.add(Menu.NONE,7,7,"帮助");
+        menu.add(Menu.NONE,8,8,"退出");
         return super.onCreateOptionsMenu(menu);
+    }
+
+    //获取已经禁用的应用程序
+    private void getDisablePKGS(){
+        multiFunc.queryDisablePKGS(this,pkginfos,checkboxs,0);
     }
 
     private void getPKGByUID(String cmdstr){
@@ -912,6 +989,7 @@ public class appopsActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        isDisable=false;
         int itemId = item.getItemId();
         makeWP wp = new makeWP();
         switch (itemId){
@@ -950,12 +1028,22 @@ public class appopsActivity extends AppCompatActivity {
                 }
                 break;
             case 4:
-                selectLocalFile();
+                isDisable=true;
+                if(uid == null || uid.equals(getMyUID())){
+                    getDisablePKGS();
+                    showPKGS(lv1);
+                }else{
+                    getPKGByUID(wp.getDisablePkgByUIDCMD(uid));
+                }
+
                 break;
             case 5:
-                selectLocalDir();
+                selectLocalFile();
                 break;
             case 6:
+                selectLocalDir();
+                break;
+            case 7:
                 showInfoMsg(this,"帮助信息","该页面是用于应用管理的,支持应用提取、详情跳转、卸载应用、导出应用信息、安装apks/apk应用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
                         "1.禁用联网，勾选列出来的应用，即可批量禁用联网权限.\r\n" +
                         "2.启用联网，勾选列出来的应用，即可批量禁用联网权限.\r\n" +
@@ -966,7 +1054,7 @@ public class appopsActivity extends AppCompatActivity {
                         "7.右上角\"选择本地安装包文件夹\"，选择一个文件夹，会自动安装里面所有apk/apks文件.如果你是通过mt直接从/data/app连同文件夹一起提取的，效果会更好。\r\n" +
                         "8.应用更改，该按钮的作用是用来配置应用权限，可以批量或者勾选操作，不勾选则默认全部生效。左边是你想要操作的权限名称，右边是设置的模式。\r\n假如你想要将fqaosp的存储权限给拒绝掉：可以先点击左边的权限列表，选中\"存储\"，然后在右边列表中选择\"拒绝\"，最后勾选中fqaosp(如果不勾选而直接点击按钮，则会默认生效所有应用，请斟酌！)，点击\"应用更改\"即可生效。\r\n");
                 break;
-            case 7:
+            case 8:
                 fuckActivity.getIns().killall();
                 ;
         }

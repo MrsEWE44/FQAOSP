@@ -11,22 +11,22 @@
         >
 
         <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical">
 
             <TextView
-                android:layout_width="fill_parent"
+                android:layout_width="match_parent"
                 android:layout_height="fill_parent"
                 android:layout_weight="1"
+                android:text="test"
+                android:textSize="40dp"
                 android:textIsSelectable="true"
                 android:id="@+id/itatv1"></TextView>
 
             <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
                 <Button
@@ -56,53 +56,12 @@
 
         </LinearLayout>
 
-
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
-            android:layout_weight="1"
-            android:orientation="vertical">
-
-            <TextView
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:textIsSelectable="true"
-                android:id="@+id/itatv2"></TextView>
-
-            <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:orientation="horizontal">
-
-                <Button
-                    android:layout_width="fill_parent"
-                    android:layout_weight="1"
-                    android:layout_height="wrap_content"
-                    android:text="检查jdk"
-                    android:id="@+id/itab3"></Button>
-
-
-                <Button
-                    android:layout_width="fill_parent"
-                    android:layout_weight="1"
-                    android:layout_marginLeft="5dp"
-                    android:layout_height="wrap_content"
-                    android:text="本地安装"
-                    android:id="@+id/itab4"></Button>
-
-                <Button
-                    android:layout_width="fill_parent"
-                    android:layout_weight="1"
-                    android:layout_marginLeft="5dp"
-                    android:layout_height="wrap_content"
-                    android:text="在线下载"
-                    android:id="@+id/itab7"></Button>
-
-            </LinearLayout>
-
-        </LinearLayout>
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="制作本地fqtools工具包"
+            android:id="@+id/itab7"
+            ></Button>
 
         <Button
             android:layout_width="match_parent"
