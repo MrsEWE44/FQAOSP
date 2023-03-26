@@ -11,8 +11,8 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 27,
-      "versionName": "1.2.4-rombuild",
+      "versionCode": 28,
+      "versionName": "1.2.5",
       "outputFile": "app-release.apk"
     }
   ],

@@ -382,10 +382,10 @@ unpack_rom_img(){
     	    sdat2img "$(dirname $ROMFULLPATH)/$TRANSFER_LIST" $ROMFULLPATH "$ROMOUTPATH/$OUTIMGNAME" && exit 0
     	    break;;
     	  sndatbr)
-    	    brotli -d $ROMFULLPATH -o "$ROMOUTPATH/tmp.new.dat" && sdat2img "$(dirname $ROMFULLPATH)/$TRANSFER_LIST" "$ROMOUTPATH/tmp.new.dat" "$ROMOUTPATH/$OUTIMGNAME" && rm -rf "$ROMOUTPATH/tmp.new.dat" && exit 0
+    	    brotli -d $ROMFULLPATH -o "$ROMOUTPATH/tmp.new.dat" -f && sdat2img "$(dirname $ROMFULLPATH)/$TRANSFER_LIST" "$ROMOUTPATH/tmp.new.dat" "$ROMOUTPATH/$OUTIMGNAME" && rm -rf "$ROMOUTPATH/tmp.new.dat" && exit 0
     	    break;;
     	  super)
-    	    lpunpack --slot=0 "$ROMFULLPATH" "$ROMOUTPATH/" && exit 0
+    	    simg2img "$ROMFULLPATH" "$ROMOUTPATH/tmp.img" && lpunpack "$ROMOUTPATH/tmp.img" "$ROMOUTPATH/" && rm -rf "$ROMOUTPATH/tmp.img" && exit 0
     	    break;;
     	esac
   else
@@ -393,6 +393,30 @@ unpack_rom_img(){
     exit -4
 	fi
 }
+
+repack_rom_img(){
+	IMGFULLPATH="$1"
+	REPACKOUTPATH="$2"
+	REPACKTYPE="$3"
+	ANDROIDLEVEL="$4"
+	if [ -f "$IMGFULLPATH" ];then
+	  if [ ! -d "$REPACKOUTPATH" ];then
+	    mkdir -p "$REPACKOUTPATH"
+	  fi
+	  case $REPACKTYPE in
+	    sdat)
+	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && img2sdat "$REPACKOUTPATH/tmp.img" -o "$REPACKOUTPATH/" -v "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && exit 0
+	      break;;
+	    sdatbr)
+	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && img2sdat "$REPACKOUTPATH/tmp.img" -o "$REPACKOUTPATH/" -v "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && brotli -q 11 "$REPACKOUTPATH/system.new.dat" -f && exit 0
+	      break;;
+	  esac
+  else
+    echo "file no exists -- $IMGFULLPATH"
+    exit -4
+	fi
+}
+
 
 apk_tool(){
   APKTOOLOPT="$1"
@@ -441,7 +465,10 @@ if [ -f $busybox_my ] && [ -f $xz_my ] ;then
 		break;;
     apktool)
       apk_tool $pkgname $backup_mode $backup_type
-      break;;
+    break;;
+    repackrom)
+      repack_rom_img $pkgname $backup_mode $backup_type $parm5
+    break;;
 		*)
 		help_msg
 		break;;

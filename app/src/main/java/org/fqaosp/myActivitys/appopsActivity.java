@@ -569,7 +569,7 @@ public class appopsActivity extends AppCompatActivity {
         String filesDir =getMyHomeFilesPath(this);
         String barfile = filesDir+"/"+script_name;
         if(extractAssertFile(barfile,filesDir)){
-            Log.d("installAPKS","禁用脚本已存在");
+//            Log.d("installAPKS","禁用脚本已存在");
             String cmdstr = "sh "+barfile+" inapks " + apksFilePath;
             CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
             return cmd.getResultCode() ==0;
@@ -591,22 +591,23 @@ public class appopsActivity extends AppCompatActivity {
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if(checkboxs.get(i)){
                         PKGINFO pkginfo = pkginfos.get(i);
-                        if(getPathByLastNameType(pkginfo.getApkpath()).equals("apks")){
-                            installAPKS(pkginfo.getApkpath());
+                        String apkpath = pkginfo.getApkpath();
+                        if(getPathByLastNameType(apkpath).equals("apks")){
+                            installAPKS(apkpath);
                         }else{
                             String cmdstr = "";
                             switch (install_mode){
                                 case 0:
-                                    cmdstr = makewp.getInstallLocalPkgCMD(uid, pkginfo.getApkpath());
+                                    cmdstr = makewp.getInstallLocalPkgCMD(uid, apkpath);
                                     break;
                                 case 1:
-                                    cmdstr = makewp.getInstallLocalPkgOnDowngradeCMD(uid, pkginfo.getApkpath());
+                                    cmdstr = makewp.getInstallLocalPkgOnDowngradeCMD(uid, apkpath);
                                     break;
                                 case 2:
-                                    cmdstr = makewp.getInstallLocalPkgOnDebugCMD(uid, pkginfo.getApkpath());
+                                    cmdstr = makewp.getInstallLocalPkgOnDebugCMD(uid, apkpath);
                                     break;
                                 case 3:
-                                    cmdstr = makewp.getInstallLocalPkgOnExistsCMD(uid, pkginfo.getApkpath());
+                                    cmdstr = makewp.getInstallLocalPkgOnExistsCMD(uid, apkpath);
                                     break;
                             }
 
@@ -735,7 +736,7 @@ public class appopsActivity extends AppCompatActivity {
                 }
 
                 multiFunc.dismissDialog(show);
-                Toast.makeText(appopsActivity.this, "文件保存在: "+myStorageHomePath, Toast.LENGTH_SHORT).show();
+                showInfoMsg(appopsActivity.this,"提示","文件保存在: "+myStorageHomePath);
             }
         });
 

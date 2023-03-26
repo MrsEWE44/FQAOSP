@@ -57,7 +57,7 @@
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/drawable/left_menu_foreground.xml" value="0.162" />
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/activity_main.xml" value="0.22" />
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/apk_decompile_activity.xml" value="0.16032608695652173" />
-        <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/apk_decompile_menu_activity.xml" value="0.3333333333333333" />
+        <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/apk_decompile_menu_activity.xml" value="0.2109375" />
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/appops_activity.xml" value="0.22" />
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/appops_info_item_activity.xml" value="0.1" />
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/appopsinfo_activity.xml" value="0.14673913043478262" />
@@ -78,7 +78,9 @@
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/mount_local_img_activity.xml" value="0.2109375" />
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/mount_local_img_item_activity.xml" value="0.1" />
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/restore_activity.xml" value="0.22" />
+        <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/rom_repack_activity.xml" value="0.1" />
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/rom_tools_activity.xml" value="0.22" />
+        <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/rom_unpack_activity.xml" value="0.1" />
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/testlayout.xml" value="0.3333333333333333" />
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/update_activity.xml" value="0.16666666666666666" />
         <entry key="..\:/devel/androidproject/FQAOSP/app/src/main/res/layout/work_profile_menu_activity.xml" value="0.1" />

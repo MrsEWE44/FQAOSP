@@ -4,32 +4,30 @@ termux_prefix_bin="../$PREFIX/bin/"
 fqtools_file="fqtools.tar.xz"
 getDepends()
 {
-   # use tr to del < >
    ret=`apt-cache depends $1|grep Depends |cut -d: -f2 |tr -d "<>"`
-   echo $ret|tee  -a $logfile
 }
 
 download_depends(){
-if [ ! -d "$cache_dir_fqaosp" ];then
-    mkdir -p $cache_dir_fqaosp
-fi
-cd $cache_dir_fqaosp
-libs="android-tools libandroid-support libbz2 libffi openjdk-17 xz-utils"
-i=0
-while [ $i -lt 5 ] ;
-do
-    i=$(($i + 1)) 
-    # download libs
-    newlist=" "
-    for j in $libs
-    do
-        apt download $j
-        added="$(getDepends $j)"
-        newlist="$newlist $added"
-        apt download $added 
-    done
-    libs=$newlist
-done
+  if [ ! -d "$cache_dir_fqaosp" ];then
+      mkdir -p $cache_dir_fqaosp
+  fi
+  cd $cache_dir_fqaosp
+  libs="android-tools libandroid-support libbz2 libffi $(apt search openjdk|grep jdk|cut -f1 -d'/'|head -n 1) xz-utils"
+  i=0
+  while [ $i -lt 5 ] ;
+  do
+      i=$(($i + 1))
+      # download libs
+      newlist=" "
+      for j in $libs
+      do
+          apt download $j
+          added="$(getDepends $j)"
+          newlist="$newlist $added"
+          apt download $added
+      done
+      libs=$newlist
+  done
 }
 
 extract_deb(){
@@ -65,7 +63,7 @@ make_git_project(){
         cp dist/img2sdat "$termux_prefix_bin"
         cd $termux_prefix_bin
         cd ../
-        curl -L -O https://gitee.com/SorryMyLife/FQAOSP/releases/download/V1.2.3/apktool.jar
+        curl -L -O https://gitee.com/SorryMyLife/FQAOSP/releases/download/V1.2.4-ROMBUILD/apktool.jar
 
     fi
 }
@@ -91,7 +89,6 @@ make_fqtools(){
         if [ -f "$HOME/storage/downloads/$fqtools_file" ];then
             cd $HOME &&rm -rf $cache_dir_fqaosp
             echo "make fqtools ok!"
-            exit 0;
         else
             echo "make fqtools error!!"
             exit 8
@@ -105,7 +102,6 @@ install_base_tools(){
 }
 
 main(){
-    clear
     rm -rf $cache_dir_fqaosp
     install_base_tools
     download_depends
@@ -113,4 +109,6 @@ main(){
     make_git_project
     make_fqtools
 }
-main
+clear
+main >> `pwd`/makefqtools.log 2>&1
+

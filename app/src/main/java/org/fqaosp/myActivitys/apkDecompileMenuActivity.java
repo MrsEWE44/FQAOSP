@@ -23,8 +23,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Process;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -43,7 +41,6 @@ import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
-import org.fqaosp.threads.alertDialogThread;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
@@ -85,7 +82,6 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
             File jdkD = new File(jdkDir);
             File apkToolF = new File(apktoolFile);
             File fqtoolfile = new File(fqtoolsfile);
-            fqtoolfile.delete();
             if(!fqtoolfile.exists()){
                 extactAssetsFile(this,"fqtools.sh",fqtoolsfile);
             }
@@ -93,15 +89,15 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                 file1.mkdirs();
             }
             if (!jdkD.exists() ) {
-                Toast.makeText(this, "未找到jdk，请重新导入工具包后再执行此项", Toast.LENGTH_LONG).show();
+                showInfoMsg(this,"错误","未找到jdk，请重新导入工具包后再执行此项");
                 jump(apkDecompileMenuActivity.this, importToolsActivity.class);
             }
             if (!apkToolF.exists()) {
-                Toast.makeText(this, "未找到apktool.jar，请重新导入工具包后再执行此项", Toast.LENGTH_LONG).show();
+                showInfoMsg(this,"错误","未找到apktool.jar，请重新导入工具包后再执行此项");
                 jump(apkDecompileMenuActivity.this, importToolsActivity.class);
             }
         } catch (Exception e) {
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
+            showInfoMsg(this,"错误",e.toString());
         }
     }
 
@@ -197,7 +193,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                             msg2="反编译失败";
                         }
                         CMD cmd1 = new CMD(cmd,false);
-                        Log.d("cccc",cmd1.getResultCode() + " -- " + cmd1.getResult());
+//                        Log.d("cccc",cmd1.getResultCode() + " -- " + cmd1.getResult());
                         Toast.makeText(context, cmd1.getResultCode() == 0 ? msg1:msg2, Toast.LENGTH_SHORT).show();
                     }
                 }

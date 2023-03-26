@@ -2,45 +2,27 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        >
+        android:layout_height="match_parent"
+        android:orientation="vertical" >
 
-        <LinearLayout
+        <androidx.viewpager.widget.ViewPager
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_height="fill_parent"
+            android:layout_gravity="center"
+            android:id="@+id/rtavp"
+            android:layout_weight="1">
 
-            <Spinner
-                android:layout_width="fill_parent"
-                android:layout_height="fill_parent"
-                android:layout_weight="1"
-                android:id="@+id/rtasp1"
-                ></Spinner>
-
-            <Button
+            <androidx.viewpager.widget.PagerTabStrip
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="扫描本地rom镜像文件"
-                android:id="@+id/rtab1"></Button>
+                android:id="@+id/rtapt"
+                ></androidx.viewpager.widget.PagerTabStrip>
 
-        </LinearLayout>
-
-        <Button
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="解包"
-            android:id="@+id/rtab2"></Button>
-
-        <ListView
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/rtalv1"
-            ></ListView>
+        </androidx.viewpager.widget.ViewPager>
 
     </LinearLayout>
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
