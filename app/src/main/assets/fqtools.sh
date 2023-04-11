@@ -410,6 +410,9 @@ repack_rom_img(){
 	    sdatbr)
 	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && img2sdat "$REPACKOUTPATH/tmp.img" -o "$REPACKOUTPATH/" -v "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && brotli -q 11 "$REPACKOUTPATH/system.new.dat" -f && exit 0
 	      break;;
+	    sparseimg)
+	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/sparse.img"  && exit 0
+	      break;;
 	  esac
   else
     echo "file no exists -- $IMGFULLPATH"

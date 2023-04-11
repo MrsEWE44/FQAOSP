@@ -83,6 +83,7 @@ public class backupRestoreActivity extends AppCompatActivity {
     private ListView backupLv1,restoreLv1;
     private Integer viewPageIndex = 0;
     private Boolean switchBool1,switchBool2,switchBool3,isBackup;
+    private String scriptName="fqtools.sh";
 
     private boolean isRoot = false;
 
@@ -455,14 +456,14 @@ public class backupRestoreActivity extends AppCompatActivity {
             fileD.mkdirs();
         }
         if(!sysupF.exists()){
-            extactAssetsFile(this,"bar.sh",sysupfile);
+            extactAssetsFile(this,scriptName,sysupfile);
         }
         return sysupF.exists();
     }
 
     private boolean checkTools(){
         String filesDir =getMyHomeFilesPath(this);
-        String barfile = filesDir+"/bar.sh";
+        String barfile = filesDir+"/"+scriptName;
         if(extractAssertFile(barfile,filesDir)){
             Toast.makeText(this, "备份跟恢复脚本已存在", Toast.LENGTH_SHORT).show();
             return true;
@@ -474,7 +475,7 @@ public class backupRestoreActivity extends AppCompatActivity {
 
     private boolean backupByPKGNAME(String pkgname){
         String filesDir =getMyHomeFilesPath(this);
-        String barfile = filesDir+"/bar.sh";
+        String barfile = filesDir+"/"+scriptName;
         String cmdstr = "sh "+barfile+" backup " + pkgname +" " + mode2[mode_index] + " " + fileEnd[fileEnd_index];
         CMD cmd = new CMD(cmdstr);
         return cmd.getResultCode()==0;
@@ -491,7 +492,7 @@ public class backupRestoreActivity extends AppCompatActivity {
 
     private boolean restoryByPKGNAME(String pkgname){
         String filesDir =getMyHomeFilesPath(this);
-        String barfile = filesDir+"/bar.sh";
+        String barfile = filesDir+"/"+scriptName;
         String cmdstr = "sh "+barfile+" restory " + pkgname+" " + mode2[mode_index] + " " + fileEnd[fileEnd_index];
         CMD cmd = new CMD(cmdstr);
         return cmd.getResultCode() ==0;

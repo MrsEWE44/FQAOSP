@@ -59,7 +59,7 @@ public class romToolsActivity extends AppCompatActivity {
     private ListView rualv1,rralv1;
     private int rom_img_index=-1,rom_img_index2=-1,rom_img_index2_ver=-1,viewPageIndex=0;
     private String rom_imgs[] = {"system.new.dat","product.new.dat","vendor.new.dat","system.new.dat.br","product.new.dat.br","vendor.new.dat.br","payload.bin","super.img"};
-    private String rom_imgs2[] = {"system.new.dat","system.new.dat.br"};
+    private String rom_imgs2[] = {"system.new.dat","system.new.dat.br","sparse img"};
     private String rom_imgs2_ver[] = {"5.0","5.1","6.x","7.x+"};
 
     @Override
@@ -296,6 +296,8 @@ public class romToolsActivity extends AppCompatActivity {
                     return "sdat";
                 case 1:
                     return "sdatbr";
+                case 2:
+                    return "sparseimg";
             }
         }
 

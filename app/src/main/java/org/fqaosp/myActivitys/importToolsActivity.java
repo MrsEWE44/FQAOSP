@@ -268,6 +268,8 @@ public class importToolsActivity extends Activity {
                     sendHandlerMSG(handler,0);
                 }
             }).start();
+        }else{
+            Log.e("importToolError",s+" -- "+outName);
         }
     }
 

@@ -29,6 +29,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -107,8 +108,9 @@ public class appopsInfoActivity extends AppCompatActivity {
         menu.add(Menu.NONE,0,0,"显示活动项");
         menu.add(Menu.NONE,1,1,"显示服务项");
         menu.add(Menu.NONE,2,2,"显示权限列表");
-        menu.add(Menu.NONE,3,3,"帮助");
-        menu.add(Menu.NONE,4,4,"退出");
+        menu.add(Menu.NONE,3,3,"显示广播接收器列表");
+        menu.add(Menu.NONE,4,4,"帮助");
+        menu.add(Menu.NONE,5,5,"退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -129,16 +131,21 @@ public class appopsInfoActivity extends AppCompatActivity {
                 showListView(lv1);
                 break;
             case 3:
+                getPKGReceivers(pm,appInfo);
+                showListView(lv1);
+                break;
+            case 4:
                 showInfoMsg(this,"帮助信息","该页面是用于应用配置的,支持应用权限设置、服务禁/启用、活动项禁/启用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
                         "1.右上角三个点，活动项，列出该应用的所有可修改的活动项，支持批量启动或者禁用.\r\n" +
                         "2.右上角三个点，服务项，列出该应用的所有可修改的服务项，支持批量启动或者禁用.\r\n"+
                         "3.右上角三个点，权限列表，列出该应用的所有可修改的权限列表，支持批量启动或者禁用.\r\n"+
-                        "4.勾选与未勾选，勾选即是勾选的，未勾选即使勾选以外的.\r\n"+
-                        "5.应用更改，点击这个选项后，将会设置相反的状态，即如果该应用有个mm服务，它在现在是启用的状态，但是你勾选并选择了勾选，然后点击应用更改，那它就会变成禁用状态了，反之同理。\r\n" +
-                        "6.搜索框，可以搜索相关服务、活动项、权限，不区分大小写.\r\n"
+                        "4.右上角三个点，广播接收器列表，列出该应用的所有可修改的广播接收器列表，支持批量启动或者禁用.\r\n"+
+                        "5.勾选与未勾选，勾选即是勾选的，未勾选即使勾选以外的.\r\n"+
+                        "6.应用更改，点击这个选项后，将会设置相反的状态，即如果该应用有个mm服务，它在现在是启用的状态，但是你勾选并选择了勾选，然后点击应用更改，那它就会变成禁用状态了，反之同理。\r\n" +
+                        "7.搜索框，可以搜索相关服务、活动项、权限，不区分大小写.\r\n"
                 );
                 break;
-            case 4:
+            case 5:
                 fuckActivity.getIns().killall();
                 ;
         }
@@ -152,11 +159,9 @@ public class appopsInfoActivity extends AppCompatActivity {
                 break;
             case 1:
                 getPKGServices(pm,appInfo);
-
                 break;
             case 2:
                 getPKGPermission(packageInfo);
-
                 break;
         }
     }
@@ -171,16 +176,24 @@ public class appopsInfoActivity extends AppCompatActivity {
         mode=0;
         clearList();
         if(packageInfo.activities != null){
+            ArrayList<String> mainActivityList = new ArrayList<>();
+            ArrayList<String> otherActivityList = new ArrayList<>();
             for (ActivityInfo activity : packageInfo.activities) {
                 int enabledSetting = pm.getComponentEnabledSetting(new ComponentName(packageInfo.packageName, activity.name));
+                if(activity.exported){
+                    mainActivityList.add(activity.name);
+                }else{
+                    otherActivityList.add(activity.name);
+                }
                 if(enabledSetting == PackageManager.COMPONENT_ENABLED_STATE_DISABLED){
                     switbs.add(false);
-                }else{
+                }else {
                     switbs.add(true);
                 }
-                list.add(activity.name);
                 checkboxs.add(false);
             }
+            list.addAll(mainActivityList);
+            list.addAll(otherActivityList);
         }else{
             Toast.makeText(this, packageInfo.applicationInfo.loadLabel(pm) + " 没有找到活动项哦!", Toast.LENGTH_SHORT).show();
         }
@@ -235,6 +248,28 @@ public class appopsInfoActivity extends AppCompatActivity {
             }
         }else{
             Toast.makeText(this, appinfo.loadLabel(pm) + " 没有找到服务哦!", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private  void getPKGReceivers(PackageManager pm,ApplicationInfo appinfo){
+        mode=1;
+        clearList();
+        PackageInfo archiveInfo = pm.getPackageArchiveInfo(appinfo.sourceDir, PackageManager.GET_RECEIVERS);
+        if(archiveInfo.receivers != null){
+            for (ActivityInfo receiver : archiveInfo.receivers) {
+                ComponentName componentName = new ComponentName(packageInfo.packageName, receiver.name);
+                int enabledSetting = pm.getComponentEnabledSetting(componentName);
+                if(enabledSetting == PackageManager.COMPONENT_ENABLED_STATE_DISABLED){
+                    switbs.add(false);
+                }else{
+                    switbs.add(true);
+                }
+                list.add(receiver.name);
+                checkboxs.add(false);
+            }
+
+        }else{
+            Toast.makeText(this, appinfo.loadLabel(pm) + " 没有找到广播接收器哦!", Toast.LENGTH_SHORT).show();
         }
     }
 

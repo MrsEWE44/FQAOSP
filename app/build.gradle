@@ -9,8 +9,8 @@ android {
         applicationId "org.fqaosp"
         minSdk 24
         targetSdk 28
-        versionCode 28
-        versionName "1.2.5"
+        versionCode 29
+        versionName "1.2.6"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
@@ -40,6 +40,17 @@ android {
 //            path "src/main/jni/CMakeLists.txt"
 //        }
 //    }
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def outputFile = output.outputFile
+            if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                //这里修改apk文件名
+                def fileName = "fqaosp_v${defaultConfig.versionName}_release.apk"
+                outputFileName = fileName
+            }
+        }
+    }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8

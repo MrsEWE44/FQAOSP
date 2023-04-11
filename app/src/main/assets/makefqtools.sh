@@ -5,6 +5,7 @@ fqtools_file="fqtools.tar.xz"
 getDepends()
 {
    ret=`apt-cache depends $1|grep Depends |cut -d: -f2 |tr -d "<>"`
+   echo "$ret"
 }
 
 download_depends(){
@@ -79,9 +80,7 @@ make_fqtools(){
         rm -rf mkdtboimg
         mv dist/mkdtboimg mkdtboimg
         rm -rf build dist
-        cd ../
-        rm -rf share
-        cd ../
+        cd ../../
         chmod -R 777 usr
         chmod -R u+rw usr
         tar cJvf $fqtools_file usr
@@ -110,5 +109,5 @@ main(){
     make_fqtools
 }
 clear
-main >> `pwd`/makefqtools.log 2>&1
+main
 
