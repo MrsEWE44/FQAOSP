@@ -20,7 +20,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -72,8 +71,8 @@ public class backupRestoreActivity extends AppCompatActivity {
     private String file_end="";
     private String [] mode={"数据+安装包","数据","安装包"};
     private String [] mode2={"full","data","apk"};
-    private String [] fileEnd={"tgz","txz","tbz"};
-    private String [] fileEnd2={".tar.gz",".tar.xz",".tar.bz2"};
+    private String [] fileEnd={"tgz","tbz","txz","tbr"};
+    private String [] fileEnd2={".tar.gz",".tar.bz2",".tar.xz",".tar.br"};
     private int mode_index=0,fileEnd_index=0;
 
     private ViewPager brmavp;
@@ -137,52 +136,56 @@ public class backupRestoreActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog show = showMyDialog(backupRestoreActivity.this,"提示","正在恢复应用,请稍后(可能会出现无响应，请耐心等待)....");
-                Handler handler = dismissDialogHandler(0,show);
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(isBackup == false){
-                            if(switchBool3){
-                                //未勾选
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(!checkboxs.get(i)){
-                                        restoryByFileName(getPathByLastName(list.get(i)));
+                if(checkRestoryTools()){
+                    AlertDialog show = showMyDialog(backupRestoreActivity.this,"提示","正在恢复应用,请稍后(可能会出现无响应，请耐心等待)....");
+                    Handler handler = dismissDialogHandler(0,show);
+                    view.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(isBackup == false){
+                                if(switchBool3){
+                                    //未勾选
+                                    for (int i = 0; i < checkboxs.size(); i++) {
+                                        if(!checkboxs.get(i)){
+                                            restoryByFileName(getPathByLastName(list.get(i)));
+                                        }
                                     }
                                 }
-                            }
 
-                            if(switchBool2){
-                                //勾选
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(checkboxs.get(i)){
-                                        restoryByFileName(getPathByLastName(list.get(i)));
+                                if(switchBool2){
+                                    //勾选
+                                    for (int i = 0; i < checkboxs.size(); i++) {
+                                        if(checkboxs.get(i)){
+                                            restoryByFileName(getPathByLastName(list.get(i)));
+                                        }
                                     }
                                 }
-                            }
 
-                            if(switchBool1){
-                                //所有
-                                for (String s : list) {
-                                    restoryByFileName(getPathByLastName(s));
-                                }
-                            }
-                            //都没有勾选
-                            if(switchBool1==false && switchBool2 ==false && switchBool3 ==false){
-                                //如果都没有选择，我们就默认走已经勾选的
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(checkboxs.get(i)){
-                                        restoryByFileName(getPathByLastName(list.get(i)));
+                                if(switchBool1){
+                                    //所有
+                                    for (String s : list) {
+                                        restoryByFileName(getPathByLastName(s));
                                     }
                                 }
+                                //都没有勾选
+                                if(switchBool1==false && switchBool2 ==false && switchBool3 ==false){
+                                    //如果都没有选择，我们就默认走已经勾选的
+                                    for (int i = 0; i < checkboxs.size(); i++) {
+                                        if(checkboxs.get(i)){
+                                            restoryByFileName(getPathByLastName(list.get(i)));
+                                        }
+                                    }
+                                }
+                                Toast.makeText(backupRestoreActivity.this, "所选应用都已恢复 ", Toast.LENGTH_SHORT).show();
+                            }else{
+                                Toast.makeText(backupRestoreActivity.this, "请切换回恢复模式", Toast.LENGTH_SHORT).show();
                             }
-                            Toast.makeText(backupRestoreActivity.this, "所选应用都已恢复 ", Toast.LENGTH_SHORT).show();
-                        }else{
-                            Toast.makeText(backupRestoreActivity.this, "请切换回恢复模式", Toast.LENGTH_SHORT).show();
+                            sendHandlerMSG(handler,0);
                         }
-                        sendHandlerMSG(handler,0);
-                    }
-                });
+                    });
+                }else{
+                    showImportToolsDialog(backupRestoreActivity.this,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用");
+                }
             }
         });
 
@@ -225,65 +228,67 @@ public class backupRestoreActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog show = showMyDialog(backupRestoreActivity.this,"提示","正在备份应用,请稍后(可能会出现无响应，请耐心等待)....");
-                Handler handler = dismissDialogHandler(0,show);
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if(isBackup){
-                            if(switchBool3){
-                                //未勾选
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(!checkboxs.get(i)){
-                                        PKGINFO pkginfo = pkginfos.get(i);
-                                        if(!pkginfo.getPkgname().equals(getPackageName())){
-                                            backupByPKGNAME(pkginfo.getPkgname());
+                if(checkBackupTools()){
+                    AlertDialog show = showMyDialog(backupRestoreActivity.this,"提示","正在备份应用,请稍后(可能会出现无响应，请耐心等待)....");
+                    Handler handler = dismissDialogHandler(0,show);
+                    view.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(isBackup){
+                                if(switchBool3){
+                                    //未勾选
+                                    for (int i = 0; i < checkboxs.size(); i++) {
+                                        if(!checkboxs.get(i)){
+                                            PKGINFO pkginfo = pkginfos.get(i);
+                                            if(!pkginfo.getPkgname().equals(getPackageName())){
+                                                backupByPKGNAME(pkginfo.getPkgname());
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            if(switchBool2){
-                                //勾选
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(checkboxs.get(i)){
-                                        PKGINFO pkginfo = pkginfos.get(i);
-                                        if(!pkginfo.getPkgname().equals(getPackageName())){
-                                            backupByPKGNAME(pkginfo.getPkgname());
+                                if(switchBool2){
+                                    //勾选
+                                    for (int i = 0; i < checkboxs.size(); i++) {
+                                        if(checkboxs.get(i)){
+                                            PKGINFO pkginfo = pkginfos.get(i);
+                                            if(!pkginfo.getPkgname().equals(getPackageName())){
+                                                backupByPKGNAME(pkginfo.getPkgname());
+                                            }
                                         }
                                     }
                                 }
-                            }
 
-                            if(switchBool1){
-                                //所有
-                                for (PKGINFO pkginfo : pkginfos) {
-                                    if(!pkginfo.getPkgname().equals(getPackageName())){
-                                        backupByPKGNAME(pkginfo.getPkgname());
-                                    }
-                                }
-                            }
-                            //都没有勾选
-                            if(switchBool1==false && switchBool2 ==false && switchBool3 ==false){
-                                //如果都没有选择，我们就默认走已经勾选的
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(checkboxs.get(i)){
-                                        PKGINFO pkginfo = pkginfos.get(i);
+                                if(switchBool1){
+                                    //所有
+                                    for (PKGINFO pkginfo : pkginfos) {
                                         if(!pkginfo.getPkgname().equals(getPackageName())){
                                             backupByPKGNAME(pkginfo.getPkgname());
                                         }
                                     }
                                 }
+                                //都没有勾选
+                                if(switchBool1==false && switchBool2 ==false && switchBool3 ==false){
+                                    //如果都没有选择，我们就默认走已经勾选的
+                                    for (int i = 0; i < checkboxs.size(); i++) {
+                                        if(checkboxs.get(i)){
+                                            PKGINFO pkginfo = pkginfos.get(i);
+                                            if(!pkginfo.getPkgname().equals(getPackageName())){
+                                                backupByPKGNAME(pkginfo.getPkgname());
+                                            }
+                                        }
+                                    }
+                                }
+                                Toast.makeText(backupRestoreActivity.this, "所选应用都已备份 ", Toast.LENGTH_SHORT).show();
+                            }else{
+                                Toast.makeText(backupRestoreActivity.this, "请切换回备份模式", Toast.LENGTH_SHORT).show();
                             }
-                            Toast.makeText(backupRestoreActivity.this, "所选应用都已备份 ", Toast.LENGTH_SHORT).show();
-                        }else{
-                            Toast.makeText(backupRestoreActivity.this, "请切换回备份模式", Toast.LENGTH_SHORT).show();
+                            sendHandlerMSG(handler,0);
                         }
-                        sendHandlerMSG(handler,0);
-
-                    }
-                });
-
+                    });
+                }else{
+                    showImportToolsDialog(backupRestoreActivity.this,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用");
+                }
             }
         });
 
@@ -343,7 +348,7 @@ public class backupRestoreActivity extends AppCompatActivity {
 
     private void clickedSpinnerBt(Spinner brasp,Spinner brasp2){
         clickedSpinnerBt(brasp,0);
-        clickedSpinnerBt(brasp,1);
+        clickedSpinnerBt(brasp2,1);
     }
 
     private void clickedSwitchBt(Switch brasb1,Switch brasb2,Switch brasb3){
@@ -449,26 +454,51 @@ public class backupRestoreActivity extends AppCompatActivity {
         checkboxs.clear();
     }
 
-    private Boolean extractAssertFile(String sysupfile,String filesDir){
-        File sysupF = new File(sysupfile);
-        File fileD = new File(filesDir);
-        if(!fileD.exists()){
-            fileD.mkdirs();
-        }
-        if(!sysupF.exists()){
-            extactAssetsFile(this,scriptName,sysupfile);
-        }
-        return sysupF.exists();
-    }
-
     private boolean checkTools(){
         String filesDir =getMyHomeFilesPath(this);
         String barfile = filesDir+"/"+scriptName;
-        if(extractAssertFile(barfile,filesDir)){
+        String busyFile = filesDir+"/busybox";
+        String usrDir = filesDir+"/usr";
+        File file = new File(usrDir);
+        File busyfile = new File(busyFile);
+        File barFile = new File(barfile);
+        if(!busyfile.exists()){
+            extactAssetsFile(this,"busybox",busyFile);
+            busyfile.setExecutable(true);
+        }
+        if(!barFile.exists()){
+            extactAssetsFile(this,scriptName,barfile);
+        }
+        if(busyfile.exists() && file.exists()){
             Toast.makeText(this, "备份跟恢复脚本已存在", Toast.LENGTH_SHORT).show();
             return true;
         }else{
-            showImportToolsDialog(this,"备份跟恢复脚本无法获取，请退出重试或者重新安装app","备份跟恢复脚本没有找到,请补全脚本再使用");
+            showImportToolsDialog(this,"备份跟恢复脚本没有找到,部分功能使用将会受限!","备份跟恢复脚本没有找到,部分功能使用将会受限!");
+        }
+        return false;
+    }
+
+    private boolean checkUsrTool(){
+        String filesDir =getMyHomeFilesPath(this);
+        String usr=filesDir+"/usr";
+        File file = new File(usr);
+        return file.exists();
+    }
+
+    private boolean checkBackupTools(){
+        if(checkUsrTool()){
+            return true;
+        }else if(checkUsrTool() == false && fileEnd_index < 2){
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkRestoryTools(){
+        if(checkUsrTool()){
+            return true;
+        }else if(checkUsrTool() == false && fileEnd_index < 3){
+            return true;
         }
         return false;
     }
@@ -596,7 +626,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                                 "4.勾选，仅操作勾选的应用.\r\n" +
                                 "5.未勾选,仅操作勾选以外的应用.\r\n" +
                                 "6.{数据+安装包，数据，安装包}，默认是全部，即备份该应用所有数据包括安装包。\r\n" +
-                                "7.{tgz,txz,tbz},默认是采用tar.gz压缩格式，这个速度最快，txz模式速度最慢，tbz中规中矩.\r\n" +
+                                "7.{tgz,tbz,txz,tbr},默认是采用tar.gz压缩格式，这个速度最快，tbr模式速度最慢但解压速度接近gzip，txz速度仅次于tbr但是压缩率最高.\r\n" +
                                 "8.搜索框支持中英文搜索，不区分大小写.\r\n"
                         );
                         break;
@@ -613,14 +643,14 @@ public class backupRestoreActivity extends AppCompatActivity {
                         listLocalBackupFiles();
                         break;
                     case 1:
-                        showInfoMsg(this,"帮助信息","该页面是用于应用备份与恢复的,支持应用备份与恢复，可选择只备份数据、安装包、安装包+数据，也支持仅恢复数据、安装包、安装包+数据，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                        showInfoMsg(this,"帮助信息","\r\n" +
                                 "1.右上角三个点，显示本地备份文件，会列出默认目录下所有通过该软件备份的应用压缩包。\r\n" +
                                 "2.恢复，恢复应用.\r\n" +
                                 "3.全选，不管有没有勾选，都会操作当前列表所有应用.\r\n" +
                                 "4.勾选，仅操作勾选的应用.\r\n" +
                                 "5.未勾选,仅操作勾选以外的应用.\r\n" +
                                 "6.{数据+安装包，数据，安装包}，默认是全部，即备份该应用所有数据包括安装包。\r\n" +
-                                "7.{tgz,txz,tbz},默认是采用tar.gz压缩格式，这个速度最快，txz模式速度最慢，tbz中规中矩.\r\n" +
+                                "7.{tgz,tbz,txz,tbr},默认是采用tar.gz压缩格式，这个速度最快，tbr模式速度最慢但解压速度接近gzip，txz速度仅次于tbr但是压缩率最高.\r\n" +
                                 "8.搜索框支持中英文搜索，不区分大小写.\r\n"
                         );
                         break;

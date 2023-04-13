@@ -1,16 +1,19 @@
 #!/system/bin/sh
 fqaosp_home="/data/data/org.fqaosp"
+fqaosp_usr="$fqaosp_home/files/usr"
 data_local_tmp="/data/local/tmp"
 apks_tmp_dir_path="$data_local_tmp/apks"
 backup_app_home="/sdcard/backup_app"
 sdcard_android_path="/sdcard/Android"
 busybox_my="$fqaosp_home/files/busybox"
-xz_my="$fqaosp_home/files/usr/bin/xz"
+xz_my="$fqaosp_usr/bin/xz"
+brotli_my="$fqaosp_usr/bin/brotli"
 xz_parm="-9 -T 6 -z"
-export TMPDIR="/data/data/org.fqaosp/cache"
-export JAVA_HOME="$fqaosp_home/files/usr/opt/openjdk"
-export PATH=$PATH:"$fqaosp_home/files/usr/bin":"$JAVA_HOME/bin"
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$fqaosp_home/files/usr/lib":"$JAVA_HOME/lib"
+brotli_parm="-f -j -q 11"
+export TMPDIR="$fqaosp_home/cache"
+export JAVA_HOME="$fqaosp_usr/opt/openjdk"
+export PATH=$PATH:"$fqaosp_usr/bin":"$JAVA_HOME/bin"
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$fqaosp_usr/lib":"$JAVA_HOME/lib"
 
 install_apks(){
 	apks_path=$1
@@ -116,6 +119,11 @@ backup_app(){
 			fffend="tar.gz"
 			xz_cmdstr="echo "
 		break;;
+    tbr)
+      tar_parm="cf"
+      fffend="tar"
+      xz_cmdstr="$brotli_my $brotli_parm "
+      break;;
 		*)
 		help_msg
 		break;;
@@ -157,7 +165,6 @@ backup_app(){
 				cd /proc/1/cwd/data/data
 				if [ -d $pkgname ];then
 					$busybox_my tar "$tar_parm" "$out_dir_path/data.${fffend}" $pkgname && $xz_cmdstr "$out_dir_path/data.${fffend}"
-			
 				else
 					echo "Check if you use namespace isolation for root commands in Magisk (other root solutions might have this, too)."
 					exit -1;
@@ -205,6 +212,9 @@ restory_app(){
 		tgz)
 			r_fffend="tar.gz"
 		break;;
+    tbr)
+      r_fffend="tar.br"
+    break;;
 		*)
 		help_msg
 		break;;
@@ -212,10 +222,19 @@ restory_app(){
 	case $backup_mode in
 		full)
 			if [ -f "$pkgname.${r_fffend}" ];then
-				$busybox_my tar xf "$pkgname.${r_fffend}"
+				if [ "$backup_type" == "tbr" ];then
+				  $brotli_my -d "$pkgname.${r_fffend}" && $busybox_my tar xf "$pkgname.tar"
+				else
+				  $busybox_my tar xf "$pkgname.${r_fffend}"
+				fi
 				cd $pkgname
 				if [ -f "file.${r_fffend}" ] && [ -f "data.${r_fffend}" ];then
-					mkdir file && $busybox_my tar xf "file.${r_fffend}" -C file/
+				  mkdir file
+				  if [ "$backup_type" == "tbr" ];then
+              $brotli_my -d "file.${r_fffend}" && $busybox_my tar xf "file.tar" -C file/
+          else
+          	  $busybox_my tar xf "file.${r_fffend}" -C file/
+          fi
 					cd file && cd `find -name "base.apk" |xargs dirname` 
 					apks_sum=$(find -name "*.apk" |wc -l)
 					if [ $apks_sum -gt 1 ];then
@@ -246,7 +265,11 @@ restory_app(){
 							break;
 						done
 					fi
-					$busybox_my tar xf "data.${r_fffend}" -mokC $pkg_data_dir
+					if [ "$backup_type" == "tbr" ];then
+              $brotli_my -d "data.${r_fffend}" && $busybox_my tar xf "data.tar" -mokC $pkg_data_dir
+          else
+          	  $busybox_my tar xf "data.${r_fffend}" -mokC $pkg_data_dir
+          fi
 					for dddf in $($busybox_my ls -l $pkg_dir_path|$busybox_my awk '$3=="root" {print $9}')
 					do
 						if [ $dddf != "lib" ];then
@@ -254,10 +277,18 @@ restory_app(){
 						fi
 					done
 					if [ -f "sddata.${r_fffend}" ];then
-						$busybox_my tar xf "sddata.${r_fffend}" -C $sdcard_android_path/data/
+					  if [ "$backup_type" == "tbr" ];then
+                $brotli_my -d "sddata.${r_fffend}" && $busybox_my tar xf "sddata.tar" -C $sdcard_android_path/data/
+            else
+                $busybox_my tar xf "sddata.${r_fffend}" -C $sdcard_android_path/data/
+            fi
 					fi
 					if [ -f "sdobb.${r_fffend}" ];then
-						$busybox_my tar xf "sdobb.${r_fffend}" -C $sdcard_android_path/obb/
+					  if [ "$backup_type" == "tbr" ];then
+                $brotli_my -d "sdobb.${r_fffend}" && $busybox_my tar xf "sdobb.${r_fffend}" -C $sdcard_android_path/obb/
+            else
+                $busybox_my tar xf "sdobb.${r_fffend}" -C $sdcard_android_path/obb/
+            fi
 					fi
 					cd ../
 					rm -rf $pkgname && exit 0;
@@ -271,7 +302,11 @@ restory_app(){
 		break;;
 		data)
 			if [ -f "$pkgname.${r_fffend}" ];then
-				$busybox_my tar xf "$pkgname.${r_fffend}"
+			  if [ "$backup_type" == "tbr" ];then
+          $brotli_my -d "$pkgname.${r_fffend}" && $busybox_my tar xf "$pkgname.tar"
+        else
+          $busybox_my tar xf "$pkgname.${r_fffend}"
+        fi
 				cd $pkgname
 				if [ -f "data.${r_fffend}" ];then
 					in_app_uid=$(pm list packages -U $pkgname |cut -d ':' -f 3)
@@ -297,7 +332,11 @@ restory_app(){
 							break;
 						done
 					fi
-					$busybox_my tar xf "data.${r_fffend}" -mokC $pkg_data_dir
+					if [ "$backup_type" == "tbr" ];then
+              $brotli_my -d "data.${r_fffend}" && $busybox_my tar xf "data.tar" -mokC $pkg_data_dir
+          else
+              $busybox_my tar xf "data.${r_fffend}" -mokC $pkg_data_dir
+          fi
 					for dddf in $($busybox_my ls -l $pkg_dir_path|$busybox_my awk '$3=="root" {print $9}')
 					do
 						if [ $dddf != "lib" ];then
@@ -305,11 +344,19 @@ restory_app(){
 						fi
 					done
 					if [ -f "sddata.${r_fffend}" ];then
-						$busybox_my tar xf "sddata.${r_fffend}" -C $sdcard_android_path/data/
-					fi
-					if [ -f "sdobb.${r_fffend}" ];then
-						$busybox_my tar xf "sdobb.${r_fffend}" -C $sdcard_android_path/obb/
-					fi
+            if [ "$backup_type" == "tbr" ];then
+                $brotli_my -d "sddata.${r_fffend}" && $busybox_my tar xf "sddata.tar" -C $sdcard_android_path/data/
+            else
+                $busybox_my tar xf "sddata.${r_fffend}" -C $sdcard_android_path/data/
+            fi
+          fi
+          if [ -f "sdobb.${r_fffend}" ];then
+            if [ "$backup_type" == "tbr" ];then
+                $brotli_my -d "sdobb.${r_fffend}" && $busybox_my tar xf "sdobb.${r_fffend}" -C $sdcard_android_path/obb/
+            else
+                $busybox_my tar xf "sdobb.${r_fffend}" -C $sdcard_android_path/obb/
+            fi
+          fi
 					cd ../
 					rm -rf $pkgname && exit 0;
 				else
@@ -321,10 +368,19 @@ restory_app(){
 		break;;
 		apk)
 			if [ -f "$pkgname.${r_fffend}" ];then
-				$busybox_my tar xf "$pkgname.${r_fffend}"
+			  if [ "$backup_type" == "tbr" ];then
+          $brotli_my -d "$pkgname.${r_fffend}" && $busybox_my tar xf "$pkgname.tar"
+        else
+          $busybox_my tar xf "$pkgname.${r_fffend}"
+        fi
 				cd $pkgname
 				if [ -f "file.${r_fffend}" ];then
-					mkdir file && $busybox_my tar xf "file.${r_fffend}" -C file/
+				  mkdir file
+          if [ "$backup_type" == "tbr" ];then
+              $brotli_my -d "file.${r_fffend}" && $busybox_my tar xf "file.tar" -C file/
+          else
+              $busybox_my tar xf "file.${r_fffend}" -C file/
+          fi
 					cd file && cd `find -name "base.apk" |xargs dirname` 
 					apks_sum=$(find -name "*.apk" |wc -l)
 					if [ $apks_sum -gt 1 ];then
@@ -408,7 +464,7 @@ repack_rom_img(){
 	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && img2sdat "$REPACKOUTPATH/tmp.img" -o "$REPACKOUTPATH/" -v "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && exit 0
 	      break;;
 	    sdatbr)
-	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && img2sdat "$REPACKOUTPATH/tmp.img" -o "$REPACKOUTPATH/" -v "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && brotli -q 11 "$REPACKOUTPATH/system.new.dat" -f && exit 0
+	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && img2sdat "$REPACKOUTPATH/tmp.img" -o "$REPACKOUTPATH/" -v "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && brotli -f -q 11 "$REPACKOUTPATH/system.new.dat" && exit 0
 	      break;;
 	    sparseimg)
 	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/sparse.img"  && exit 0
@@ -419,7 +475,6 @@ repack_rom_img(){
     exit -4
 	fi
 }
-
 
 apk_tool(){
   APKTOOLOPT="$1"
@@ -444,7 +499,7 @@ help_msg(){
 	exit 1;
 }
 
-if [ -f $busybox_my ] && [ -f $xz_my ] ;then
+if [ -f $busybox_my ];then
 	mmm=$1
 	pkgname=$2
 	backup_mode=$3

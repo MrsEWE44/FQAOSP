@@ -179,7 +179,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                             }
                             String outFile = outDir + "/" + outname + ".apk";
                             cmd = "cd " + filesDir + " && sh fqtools.sh apktool reapk "+ filePath+ " "  + outFile ;
-                            msg1="回编译成功";
+                            msg1="回编译成功!\r\n文件输出在: "+outFile;
                             msg2="回编译失败";
                         }
                         if(mode == 1){
@@ -189,12 +189,15 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                             String pkgname = archiveInfo.packageName;
                             String outDir = myStorageHomePath + "/cache/decompile/" + pkgname;
                             cmd = "cd " + filesDir + " && sh fqtools.sh apktool deapk " + filePath+ " "  + outDir ;
-                            msg1="反编译成功";
+                            msg1="反编译成功!\r\n反编译后的文件夹存放在: "+outDir;
                             msg2="反编译失败";
                         }
                         CMD cmd1 = new CMD(cmd,false);
-//                        Log.d("cccc",cmd1.getResultCode() + " -- " + cmd1.getResult());
-                        Toast.makeText(context, cmd1.getResultCode() == 0 ? msg1:msg2, Toast.LENGTH_SHORT).show();
+                        if(cmd1.getResultCode() == 0){
+                            showInfoMsg(apkDecompileMenuActivity.this,"提示",msg1);
+                        }else {
+                            showInfoMsg(apkDecompileMenuActivity.this, "错误", msg2 + " : " + cmd1.getResultCode() + " -- " + cmd1.getResult());
+                        }
                     }
                 }
                 sendHandlerMSG(handler, 0);

@@ -13,14 +13,13 @@ import static org.fqaosp.utils.fileTools.execDirSelect;
 import static org.fqaosp.utils.fileTools.execFileSelect;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.getPathByLastNameType;
-import static org.fqaosp.utils.fileTools.writeDataToPath;
 import static org.fqaosp.utils.multiFunc.checkBoxs;
 import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.clearList;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
+import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
@@ -67,6 +66,7 @@ import org.fqaosp.R;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.utils.CMD;
+import org.fqaosp.utils.appopsCmdStr;
 import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeWP;
@@ -325,7 +325,7 @@ public class appopsActivity extends AppCompatActivity {
                     }
                     sb.append(");for pp in ${aaa[@]};do "+spliceCMDStr()+";done;");
 
-                    CMD cmd = getCMD(sb.toString());
+                    CMD cmd = getCMD(con ,sb.toString(),isRoot);
                     checkCMDResult(cmd,"权限修改完成","权限修改出现错误");
                     sendHandlerMSG(handler,0);
                 }
@@ -527,56 +527,38 @@ public class appopsActivity extends AppCompatActivity {
         return sysupF.exists();
     }
 
-    private CMD getCMD(String cmdstr){
-        String myStorageHomePath = getMyStorageHomePath(this);
-        String tmpFile = myStorageHomePath + "/cache/temp.sh";
-        if(isRoot){
-            return new CMD(cmdstr);
-        }else{
-            Boolean aBoolean = writeDataToPath(cmdstr, tmpFile, false);
-            if(aBoolean){
-                return new CMD(new String[]{"sh",tmpFile});
-            }else{
-                Log.e("error","write temp script error");
-            }
-        }
-        return null;
-    }
-
     //安装文件夹里面所有apk文件
-    private boolean installApkOnDir(String dir){
+    private void installApkOnDir(String dir){
         Context that = this;
         String filesDir =getMyHomeFilesPath(that);
         String barfile = filesDir+"/"+script_name;
         if(isRoot && extractAssertFile(barfile,filesDir)){
 //            Log.d("installApkOnDir","禁用脚本已存在");
             String cmdstr = "sh "+barfile+" inapkonpath " + dir;
-            CMD cmd = getCMD(cmdstr);
-            return cmd.getResultCode() ==0;
+            CMD cmd = getCMD(that,cmdstr,isRoot);
+            checkCMDResult(cmd,"安装 [ " + dir + " ] 文件夹里所有程序成功","安装 [ " + dir + " ] 文件夹里程序失败");
         }else if(isRoot == false && checkShizukuPermission(6)){
             String tmpPath = "/data/local/tmp/aa.apk";
             String cmdstr2 = " for p in $(find "+dir+" -name \"*.apk\") ;do cp $p "+tmpPath+"; pm install "+tmpPath+"; rm -rf "+tmpPath+"; done; exit 0;";
-            CMD cmd = getCMD(cmdstr2);
-            return cmd.getResultCode() ==0;
+            CMD cmd = getCMD(that,cmdstr2,isRoot);
+            checkCMDResult(cmd,"安装 [ " + dir + " ] 文件夹里所有程序成功","安装 [ " + dir + " ] 文件夹里程序失败");
         }else{
             showImportToolsDialog(that,"apks安装脚本无法获取，请退出重试或者重新安装app","apks安装脚本没有找到,请补全脚本再尝试安装.");
         }
-        return false;
     }
 
     //安装apks文件
-    private boolean installAPKS(String apksFilePath){
+    private void installAPKS(String apksFilePath){
         String filesDir =getMyHomeFilesPath(this);
         String barfile = filesDir+"/"+script_name;
         if(extractAssertFile(barfile,filesDir)){
 //            Log.d("installAPKS","禁用脚本已存在");
             String cmdstr = "sh "+barfile+" inapks " + apksFilePath;
             CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
-            return cmd.getResultCode() ==0;
+            checkCMDResult(cmd,"安装apks成功","安装apks失败");
         }else{
             showImportToolsDialog(this,"apks/apk安装脚本无法获取，请退出重试或者重新安装app","apks/apk安装脚本没有找到,请补全脚本再尝试安装.");
         }
-     return false;
     }
 
     //安装本地文件
@@ -586,7 +568,7 @@ public class appopsActivity extends AppCompatActivity {
         nowItemView.post(new Runnable() {
             @Override
             public void run() {
-                makeWP makewp = new makeWP();
+                appopsCmdStr acs = new appopsCmdStr();
                 int hit=0;
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if(checkboxs.get(i)){
@@ -598,20 +580,20 @@ public class appopsActivity extends AppCompatActivity {
                             String cmdstr = "";
                             switch (install_mode){
                                 case 0:
-                                    cmdstr = makewp.getInstallLocalPkgCMD(uid, apkpath);
+                                    cmdstr = acs.getInstallLocalPkgCMD(uid, apkpath);
                                     break;
                                 case 1:
-                                    cmdstr = makewp.getInstallLocalPkgOnDowngradeCMD(uid, apkpath);
+                                    cmdstr = acs.getInstallLocalPkgOnDowngradeCMD(uid, apkpath);
                                     break;
                                 case 2:
-                                    cmdstr = makewp.getInstallLocalPkgOnDebugCMD(uid, apkpath);
+                                    cmdstr = acs.getInstallLocalPkgOnDebugCMD(uid, apkpath);
                                     break;
                                 case 3:
-                                    cmdstr = makewp.getInstallLocalPkgOnExistsCMD(uid, apkpath);
+                                    cmdstr = acs.getInstallLocalPkgOnExistsCMD(uid, apkpath);
                                     break;
                             }
 
-                            CMD cmd = getCMD(cmdstr);
+                            CMD cmd = getCMD(appopsActivity.this,cmdstr,isRoot);
                             checkCMDResult(cmd,"成功安装","安装失败");
                         }
                         hit++;
@@ -622,8 +604,8 @@ public class appopsActivity extends AppCompatActivity {
                     if(getPathByLastNameType(pkginfo.getApkpath()).equals("apks")){
                         installAPKS(pkginfo.getApkpath());
                     }else{
-                        String cmdstr = makewp.getInstallLocalPkgCMD(uid, pkginfo.getApkpath());
-                        CMD cmd = getCMD(cmdstr);
+                        String cmdstr = acs.getInstallLocalPkgCMD(uid, pkginfo.getApkpath());
+                        CMD cmd = getCMD(appopsActivity.this,cmdstr,isRoot);
                         checkCMDResult(cmd,"成功安装","安装失败");
                     }
 
@@ -636,8 +618,10 @@ public class appopsActivity extends AppCompatActivity {
     private void checkCMDResult(CMD cmd,String msg , String msg2){
         if( cmd.getResultCode() ==0){
             Log.d("checkCMDResult",msg);
+            showInfoMsg(appopsActivity.this,"提示",msg);
         }else{
             Log.d("checkCMDResult",msg2+" :: "+cmd.getResult());
+            showInfoMsg(appopsActivity.this,"错误",msg2 + " -- " + cmd.getResult());
         }
     }
 
@@ -685,7 +669,7 @@ public class appopsActivity extends AppCompatActivity {
                         PKGINFO pkginfo = pkginfos.get(i);
                         String pkgname = pkginfo.getPkgname();
                         String cmdstr = isDisable?makewp.getChangePkgOnEnableByUIDCMD(uid, pkgname):makewp.getChangePkgOnDisableByUIDCMD(uid,pkgname);
-                        CMD cmd = getCMD(cmdstr);
+                        CMD cmd = getCMD(appopsActivity.this,cmdstr,isRoot);
                         checkCMDResult(cmd,"修改成功","修改失败");
                         hit++;
                     }
@@ -695,7 +679,7 @@ public class appopsActivity extends AppCompatActivity {
                     PKGINFO pkginfo = pkginfos.get(nowItemIndex);
                     String pkgname = pkginfo.getPkgname();
                     String cmdstr = isDisable?makewp.getChangePkgOnEnableByUIDCMD(uid, pkgname):makewp.getChangePkgOnDisableByUIDCMD(uid,pkgname);
-                    CMD cmd = getCMD(cmdstr);
+                    CMD cmd = getCMD(appopsActivity.this,cmdstr,isRoot);
                     checkCMDResult(cmd,"修改成功","修改失败");
                 }
                 multiFunc.dismissDialog(show);
@@ -771,9 +755,9 @@ public class appopsActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
             if(fileTools.writeDataToPath(sb.toString(),outFile,isApp)){
-                Toast.makeText(this, "保存在: " + outFile, Toast.LENGTH_SHORT).show();
+                showInfoMsg(appopsActivity.this,"提示","保存在: " + outFile);
             }else{
-                Toast.makeText(this, "失败", Toast.LENGTH_SHORT).show();
+                showInfoMsg(appopsActivity.this,"错误","导出包名列表失败");
             }
         }
     }

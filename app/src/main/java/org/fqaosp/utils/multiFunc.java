@@ -2,6 +2,9 @@ package org.fqaosp.utils;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 
+import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
+import static org.fqaosp.utils.fileTools.writeDataToPath;
+
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -194,6 +197,22 @@ public class multiFunc {
         clearList(pkginfos,checkboxs);
         queryPKGSCore(activity,pkginfos,checkboxs,types,QUERY_ALL_DISABLE_PKG);
 
+    }
+
+    public static CMD getCMD(Context context , String cmdstr,Boolean isRoot){
+        String myStorageHomePath = getMyStorageHomePath(context);
+        String tmpFile = myStorageHomePath + "/cache/temp.sh";
+        if(isRoot){
+            return new CMD(cmdstr);
+        }else{
+            Boolean aBoolean = writeDataToPath(cmdstr, tmpFile, false);
+            if(aBoolean){
+                return new CMD(new String[]{"sh",tmpFile});
+            }else{
+                Log.e("error","write temp script error");
+            }
+        }
+        return null;
     }
 
     //搜索列表匹配项

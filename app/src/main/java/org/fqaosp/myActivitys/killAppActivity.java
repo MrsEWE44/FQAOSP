@@ -3,6 +3,7 @@ package org.fqaosp.myActivitys;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
+import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
@@ -133,13 +134,14 @@ public class killAppActivity extends AppCompatActivity {
                 view.post(new Runnable() {
                     @Override
                     public void run() {
-
+                        StringBuilder sb = new StringBuilder();
+                        sb.append("aaa=(");
                         if(kaasb3Bool){
                             for (int i = 0; i < checkboxs.size(); i++) {
                                 if(!checkboxs.get(i)){
                                     PKGINFO pkginfo = pkginfos.get(i);
                                     if(!pkginfo.getPkgname().equals(getPackageName())){
-                                        stopApp(pkginfo.getPkgname());
+                                        sb.append("\""+pkginfo.getPkgname()+"\" ");
                                     }
                                 }
                             }
@@ -150,7 +152,7 @@ public class killAppActivity extends AppCompatActivity {
                                 if(checkboxs.get(i)){
                                     PKGINFO pkginfo = pkginfos.get(i);
                                     if(!pkginfo.getPkgname().equals(getPackageName())){
-                                        stopApp(pkginfo.getPkgname());
+                                        sb.append("\""+pkginfo.getPkgname()+"\" ");
                                     }
                                 }
                             }
@@ -159,8 +161,7 @@ public class killAppActivity extends AppCompatActivity {
                         if(kaasb1Bool){
                             for (PKGINFO pkginfo : pkginfos) {
                                 if(!pkginfo.getPkgname().equals(getPackageName())){
-                                    //调用命令终止后台程序
-                                    stopApp(pkginfo.getPkgname());
+                                    sb.append("\""+pkginfo.getPkgname()+"\" ");
                                 }
                             }
                         }
@@ -169,18 +170,25 @@ public class killAppActivity extends AppCompatActivity {
                             if(killAppdb.count() == 0){
                                 for (PKGINFO pkginfo : pkginfos) {
                                     if(!pkginfo.getPkgname().equals(getPackageName())){
-                                        //调用命令终止后台程序
-                                        stopApp(pkginfo.getPkgname());
+                                        sb.append("\""+pkginfo.getPkgname()+"\" ");
                                     }
                                 }
                             }else{
                                 HashMap<String, Integer> select = killAppdb.select(null, 0);
                                 for (Map.Entry<String, Integer> entry : select.entrySet()) {
-                                    stopApp(entry.getKey());
+                                    sb.append("\""+entry.getKey()+"\" ");
                                 }
                             }
                         }
                         Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
+                        sb.append(");for pp in ${aaa[@]};do am force-stop $pp ;done;");
+                        CMD cmd = getCMD(killAppActivity.this,sb.toString(),isRoot);
+                        if(cmd.getResultCode() == 0){
+                            showInfoMsg(killAppActivity.this,"提示","已全部终止");
+                        }else{
+                            showInfoMsg(killAppActivity.this,"错误","终止后台进程失败 : "+cmd.getResultCode()+" -- " + cmd.getResult());
+
+                        }
                         getRunning(1);
                     }
                 });
@@ -266,7 +274,7 @@ public class killAppActivity extends AppCompatActivity {
             extactAssetsFile(this,"busybox",busyboxFile);
         }
         String cmdstr="chmod 755 "+busyboxFile +" && "+busyboxFile+" ps  && exit 0;";
-        CMD cmd = new CMD(cmdstr);
+        CMD cmd = getCMD(killAppActivity.this,cmdstr,isRoot);
 //        Log.d("cmd",cmd.getResultCode() + " -- " +cmd.getResult());
         if(cmd.getResultCode() == 0){
             String[] split = cmd.getResult().split("\n");
@@ -283,7 +291,7 @@ public class killAppActivity extends AppCompatActivity {
                             pid=pid.replaceAll("\\s+","");
                             if(!pid.isEmpty()){
                                 String proc_pid_status_cmd="cat /proc/"+pid+"/status |grep 'VmRSS' | "+busyboxFile+" awk '{print $2}'  && exit 0;";
-                                CMD cmd1 = new CMD(proc_pid_status_cmd);
+                                CMD cmd1 = getCMD(killAppActivity.this,proc_pid_status_cmd,isRoot);
                                 if(cmd1.getResultCode() == 0){
 //                                Log.d("ppp",pkginfo.getAppname()+ " -- " + cmd1.getResult());
                                     pkginfos.get(i).setFilesize((Long.parseLong(cmd1.getResult().trim())*1024));
