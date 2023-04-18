@@ -1,10 +1,10 @@
 package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.execFileSelect;
-import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.selectFile;
+import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.queryUserPKGS;
@@ -48,7 +48,6 @@ import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.TreeMap;
 
 public class apkDecompileMenuActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -75,17 +74,13 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
 
     private void extractAssetsFiles() {
         try {
+            checkTools(this);
             String filesDir = getMyHomeFilesPath(apkDecompileMenuActivity.this);
-            String fqtoolsfile = filesDir+"/fqtools.sh";
             String jdkDir = filesDir + "/usr/opt/openjdk";
             String apktoolFile = filesDir + "/usr/apktool.jar";
             File file1 = new File(filesDir);
             File jdkD = new File(jdkDir);
             File apkToolF = new File(apktoolFile);
-            File fqtoolfile = new File(fqtoolsfile);
-            if(!fqtoolfile.exists()){
-                extactAssetsFile(this,"fqtools.sh",fqtoolsfile);
-            }
             if (!file1.exists()) {
                 file1.mkdirs();
             }

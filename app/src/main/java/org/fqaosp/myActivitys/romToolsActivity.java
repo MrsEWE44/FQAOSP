@@ -1,9 +1,9 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.writeDataToPath;
+import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
@@ -26,7 +26,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -69,14 +68,9 @@ public class romToolsActivity extends AppCompatActivity {
         fuckActivity.getIns().add(this);
         setTitle("ROM工具");
         String filesDir =getMyHomeFilesPath(this);
-        String fqtoolsfile = filesDir+"/fqtools.sh";
+        checkTools(this);
         String fqtoolsusr = filesDir+"/usr";
         File fqtoolsusrdir = new File(fqtoolsusr);
-        if(extractAssertFile(fqtoolsfile,filesDir)){
-            Toast.makeText(this, "fqtools脚本已存在", Toast.LENGTH_SHORT).show();
-        }else{
-            showImportToolsDialog(this,"fqtools脚本无法获取，请退出重试或者重新安装app","fqtools没有找到,部分功能使用将受到限制或者异常,要继续使用吗？");
-        }
         if(!fqtoolsusrdir.exists()){
             showImportToolsDialog(this,"fqtools核心无法获取，请退出重试或者重新安装app","fqtools工具包没有找到,功能使用将受到限制或者异常,要继续使用吗？");
         }
@@ -318,18 +312,6 @@ public class romToolsActivity extends AppCompatActivity {
     private void showRomImgs(ListView listView){
         USERAdapter userAdapter = new USERAdapter(list, romToolsActivity.this, checkboxs);
         listView.setAdapter(userAdapter);
-    }
-
-    private Boolean extractAssertFile(String sysupfile,String filesDir){
-        File sysupF = new File(sysupfile);
-        File fileD = new File(filesDir);
-        if(!fileD.exists()){
-            fileD.mkdirs();
-        }
-        if(!sysupF.exists()){
-            extactAssetsFile(this,"fqtools.sh",sysupfile);
-        }
-        return sysupF.exists();
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {

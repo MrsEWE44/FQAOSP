@@ -11,15 +11,14 @@ package org.fqaosp.myActivitys;
 import static org.fqaosp.utils.fileTools.copyFile;
 import static org.fqaosp.utils.fileTools.execDirSelect;
 import static org.fqaosp.utils.fileTools.execFileSelect;
-import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.getPathByLastNameType;
 import static org.fqaosp.utils.multiFunc.checkBoxs;
 import static org.fqaosp.utils.multiFunc.checkCMDResult;
 import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
+import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.clearList;
-import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
@@ -143,7 +142,7 @@ public class appopsActivity extends AppCompatActivity {
         apopsasb1.setChecked(true);
         apopsasp1.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_permis));
         apopsasp2.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_opt));
-
+        checkTools(this);
         clickedBt();
     }
 
@@ -489,17 +488,6 @@ public class appopsActivity extends AppCompatActivity {
 
     }
 
-    private Boolean extractAssertFile(String sysupfile,String filesDir){
-        File sysupF = new File(sysupfile);
-        File fileD = new File(filesDir);
-        if(!fileD.exists()){
-            fileD.mkdirs();
-        }
-        if(!sysupF.exists()){
-            extactAssetsFile(this,script_name,sysupfile);
-        }
-        return sysupF.exists();
-    }
 
     //安装文件夹里面所有apk文件
     private CMD installApkOnDir(String dir){
@@ -507,7 +495,7 @@ public class appopsActivity extends AppCompatActivity {
         String filesDir =getMyHomeFilesPath(that);
         String barfile = filesDir+"/"+script_name;
         String cmdstr = "";
-        if(isRoot && extractAssertFile(barfile,filesDir)){
+        if(isRoot){
 //            Log.d("installApkOnDir","禁用脚本已存在");
             cmdstr = "sh "+barfile+" inapkonpath " + dir;
         }else if(isRoot == false && checkShizukuPermission(6)){
@@ -523,14 +511,9 @@ public class appopsActivity extends AppCompatActivity {
     private void installAPKS(String apksFilePath){
         String filesDir =getMyHomeFilesPath(this);
         String barfile = filesDir+"/"+script_name;
-        if(extractAssertFile(barfile,filesDir)){
-//            Log.d("installAPKS","禁用脚本已存在");
-            String cmdstr = "sh "+barfile+" inapks " + apksFilePath;
-            CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
-            checkCMDResult(appopsActivity.this,cmd,"安装apks成功","安装apks失败");
-        }else{
-            showImportToolsDialog(this,"apks/apk安装脚本无法获取，请退出重试或者重新安装app","apks/apk安装脚本没有找到,请补全脚本再尝试安装.");
-        }
+        String cmdstr = "sh "+barfile+" inapks " + apksFilePath;
+        CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
+        checkCMDResult(appopsActivity.this,cmd,"安装apks成功","安装apks失败");
     }
 
     //安装本地文件

@@ -1,8 +1,8 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
+import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
@@ -95,7 +95,7 @@ public class backupRestoreActivity extends AppCompatActivity {
         isRoot=isSuEnable();
         if(isRoot){
             initViews();
-            checkTools();
+            checkTools(this);
         }else{
             showMyDialog(this,"提示","本功能需要root才能正常使用");
         }
@@ -452,30 +452,6 @@ public class backupRestoreActivity extends AppCompatActivity {
         list.clear();
         pkginfos.clear();
         checkboxs.clear();
-    }
-
-    private boolean checkTools(){
-        String filesDir =getMyHomeFilesPath(this);
-        String barfile = filesDir+"/"+scriptName;
-        String busyFile = filesDir+"/busybox";
-        String usrDir = filesDir+"/usr";
-        File file = new File(usrDir);
-        File busyfile = new File(busyFile);
-        File barFile = new File(barfile);
-        if(!busyfile.exists()){
-            extactAssetsFile(this,"busybox",busyFile);
-            busyfile.setExecutable(true);
-        }
-        if(!barFile.exists()){
-            extactAssetsFile(this,scriptName,barfile);
-        }
-        if(busyfile.exists() && file.exists()){
-            Toast.makeText(this, "备份跟恢复脚本已存在", Toast.LENGTH_SHORT).show();
-            return true;
-        }else{
-            showImportToolsDialog(this,"备份跟恢复脚本没有找到,部分功能使用将会受限!","备份跟恢复脚本没有找到,部分功能使用将会受限!");
-        }
-        return false;
     }
 
     private boolean checkUsrTool(){

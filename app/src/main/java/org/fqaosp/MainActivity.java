@@ -1,14 +1,13 @@
 package org.fqaosp;
 
-import static org.fqaosp.utils.fileTools.extactAssetsFile;
-import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
+import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.Manifest;
@@ -35,7 +34,6 @@ import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -88,11 +86,15 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
         fuckActivity.getIns().add(this);
         permissionRequest.requestExternalStoragePermission(this);
-        getExternalCacheDir().mkdirs();
+        try{
+            getExternalCacheDir().mkdirs();
+        }catch (Exception e){
+            showInfoMsg(this,"警告","你当前的系统是存在问题，不能够读写Android/data/"+getPackageName()+"/cache路径.\r\n错误内容: " + e.toString());
+        }
         isRoot=isSuEnable();
         isShizuku=checkShizukuPermission(1);
         initBut();
-        checkTools();
+        checkTools(this);
     }
 
     private  void initBut(){
@@ -154,7 +156,8 @@ public class MainActivity extends Activity {
                         "\n" +
                         "1.修复重复弹窗问题.\n" +
                         "2.修复安装本地apk文件出现空指针问题.\n" +
-                        "3.修改版本号为V1.2.8");
+                        "3.添加arm的busybox.\n" +
+                        "4.修改版本号为V1.2.8");
                 amupdate.setVisibility(View.VISIBLE);
                 dl.closeDrawer(Gravity.LEFT);
             }
@@ -362,22 +365,6 @@ public class MainActivity extends Activity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-    }
-
-    private void checkTools(){
-        String filesDir =getMyHomeFilesPath(this);
-        String scriptName = "fqtools.sh";
-        String barfile = filesDir+"/"+scriptName;
-        String busyFile = filesDir+"/busybox";
-        File busyfile = new File(busyFile);
-        File barFile = new File(barfile);
-        if(!busyfile.exists()){
-            extactAssetsFile(this,"busybox",busyFile);
-            busyfile.setExecutable(true);
-        }
-        if(!barFile.exists()){
-            extactAssetsFile(this,scriptName,barfile);
-        }
     }
 
     /**

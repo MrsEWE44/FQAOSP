@@ -1,7 +1,8 @@
 package org.fqaosp.utils;
 
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
-
+import static org.fqaosp.utils.fileTools.extactAssetsFile;
+import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.writeDataToPath;
 
@@ -13,6 +14,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Process;
@@ -27,7 +29,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import org.fqaosp.entity.PKGINFO;
-import org.fqaosp.myActivitys.appopsActivity;
 import org.fqaosp.myActivitys.importToolsActivity;
 
 import java.io.File;
@@ -112,6 +113,31 @@ public class multiFunc {
                 jump(srcA,cls);
             }
         });
+    }
+
+    public static void checkTools(Context context){
+        String filesDir =getMyHomeFilesPath(context);
+        String scriptName = "fqtools.sh";
+        String barfile = filesDir+"/"+scriptName;
+        String busyFile = filesDir+"/busybox";
+        String extractScriptFile = filesDir+"/extract.sh";
+        File busyfile = new File(busyFile);
+        File barFile = new File(barfile);
+        File extractScriptFilef = new File(extractScriptFile);
+        if(!busyfile.exists()){
+            if(Build.CPU_ABI.equals("arm64-v8a")){
+                extactAssetsFile(context,"busybox",busyFile);
+            }else if(Build.CPU_ABI.equals("armeabi-v7a") || Build.CPU_ABI2.equals("armeabi")){
+                extactAssetsFile(context,"busybox_arm",busyFile);
+            }
+            busyfile.setExecutable(true);
+        }
+        if(!barFile.exists()){
+            extactAssetsFile(context,scriptName,barfile);
+        }
+        if(!extractScriptFilef.exists()){
+            extactAssetsFile(context,"extract.sh",extractScriptFile);
+        }
     }
 
     //显示一个弹窗

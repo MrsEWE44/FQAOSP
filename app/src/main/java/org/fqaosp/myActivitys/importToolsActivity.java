@@ -7,6 +7,7 @@ import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.getSize;
 import static org.fqaosp.utils.fileTools.selectFile;
+import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
@@ -246,17 +247,7 @@ public class importToolsActivity extends Activity {
         new File(filesPath).mkdirs();
         String outName = filesPath+"/"+fff;
         if(copyFile(s,outName)){
-            String busyboxFile = filesPath+"/busybox";
-            String extractScriptFile = filesPath+"/extract.sh";
-            File extractScriptF = new File(extractScriptFile);
-            File busyF = new File(busyboxFile);
-            if(!busyF.exists()){
-                extactAssetsFile(this,"busybox",busyboxFile);
-                busyF.setExecutable(true);
-            }
-            if(!extractScriptF.exists()){
-                extactAssetsFile(this,"extract.sh",extractScriptFile);
-            }
+            checkTools(this);
             String cmd = "cd " + filesPath + " && sh extract.sh && cd ../ && chown -R "+myuid+":"+myuid+ " files/";
             AlertDialog show = showMyDialog(importToolsActivity.this,"提示","正在安装插件,请稍后(可能会出现无响应，请耐心等待)....");
             Handler handler = dismissDialogHandler(0,show);
