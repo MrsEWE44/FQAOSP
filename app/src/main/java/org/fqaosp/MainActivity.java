@@ -1,11 +1,14 @@
 package org.fqaosp;
 
+import static org.fqaosp.utils.fileTools.extactAssetsFile;
+import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.Manifest;
@@ -32,6 +35,7 @@ import android.widget.ListView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -88,6 +92,7 @@ public class MainActivity extends Activity {
         isRoot=isSuEnable();
         isShizuku=checkShizukuPermission(1);
         initBut();
+        checkTools();
     }
 
     private  void initBut(){
@@ -147,11 +152,9 @@ public class MainActivity extends Activity {
                         "FQAOSP(中文全称为: 法可油安卓),它是一个适用于类原生的搞机工具，同样也适用于国内定制ui系统，它拥有很多常用的功能，例如：后台清理、一键卸载与安装应用、安装某个指定的文件夹里面所有apk文件、将手机本地的pe镜像文件挂载给电脑重装系统、反/回编译软件、提取或者刷入系统分区文件、软件的备份与恢复、应用分身、共享手机本地文件给局域网内所有用户、搜索自己设定范围内的文件等等，未来还会加入更多功能，现在部分功能已经可以不再需要root，已经对接了shizuku，但是仍有部分需要root才能使用，后续会逐渐完善与shizuku的对接。\r\n" +
                         "如果有新功能或建议，可以在GitHub提issue！\r\n" +
                         "\n" +
-                        "1.添加任务结束后的弹窗提示,错误提示以及错误信息.\n" +
-                        "2.修改备份与恢复功能部分,需要强制安装fqtools才能使用的问题.\n" +
-                        "3.在备份与恢复功能中,新增tar.br压缩格式,lzma的压缩效率,gzip的解压速度.\n" +
-                        "4.修复后台管理不能正确读取应用内存占用的问题.\n" +
-                        "5.修改版本号为V1.2.7");
+                        "1.修复重复弹窗问题.\n" +
+                        "2.修复安装本地apk文件出现空指针问题.\n" +
+                        "3.修改版本号为V1.2.8");
                 amupdate.setVisibility(View.VISIBLE);
                 dl.closeDrawer(Gravity.LEFT);
             }
@@ -361,6 +364,21 @@ public class MainActivity extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
+    private void checkTools(){
+        String filesDir =getMyHomeFilesPath(this);
+        String scriptName = "fqtools.sh";
+        String barfile = filesDir+"/"+scriptName;
+        String busyFile = filesDir+"/busybox";
+        File busyfile = new File(busyFile);
+        File barFile = new File(barfile);
+        if(!busyfile.exists()){
+            extactAssetsFile(this,"busybox",busyFile);
+            busyfile.setExecutable(true);
+        }
+        if(!barFile.exists()){
+            extactAssetsFile(this,scriptName,barfile);
+        }
+    }
 
     /**
      * <p>

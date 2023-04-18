@@ -48,6 +48,7 @@ import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.TreeMap;
 
 public class apkDecompileMenuActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -167,6 +168,8 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                 String myStorageHomePath = getMyStorageHomePath(activity);
                 String cmd = null;
                 String msg1=null,msg2=null;
+                StringBuilder sb = new StringBuilder();
+                StringBuilder sb2 = new StringBuilder();
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if (checkboxs.get(i)) {
                         if(mode ==0){
@@ -178,9 +181,9 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                                 file.mkdirs();
                             }
                             String outFile = outDir + "/" + outname + ".apk";
+                            sb2.append(outFile+",");
                             cmd = "cd " + filesDir + " && sh fqtools.sh apktool reapk "+ filePath+ " "  + outFile ;
-                            msg1="回编译成功!\r\n文件输出在: "+outFile;
-                            msg2="回编译失败";
+                            sb.append(cmd+"\n");
                         }
                         if(mode == 1){
                             String filePath = pkginfos.size() > 0 ? pkginfos.get(i).getApkpath() : list.get(i);
@@ -188,17 +191,25 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                             PackageInfo archiveInfo = packageManager.getPackageArchiveInfo(filePath, 0);
                             String pkgname = archiveInfo.packageName;
                             String outDir = myStorageHomePath + "/cache/decompile/" + pkgname;
+                            sb2.append(outDir+",");
                             cmd = "cd " + filesDir + " && sh fqtools.sh apktool deapk " + filePath+ " "  + outDir ;
-                            msg1="反编译成功!\r\n反编译后的文件夹存放在: "+outDir;
-                            msg2="反编译失败";
-                        }
-                        CMD cmd1 = new CMD(cmd,false);
-                        if(cmd1.getResultCode() == 0){
-                            showInfoMsg(apkDecompileMenuActivity.this,"提示",msg1);
-                        }else {
-                            showInfoMsg(apkDecompileMenuActivity.this, "错误", msg2 + " : " + cmd1.getResultCode() + " -- " + cmd1.getResult());
+                            sb.append(cmd+"\n");
                         }
                     }
+                }
+                if(mode == 0){
+                    msg1="回编译成功!\r\n文件输出在: "+sb2.toString();
+                    msg2="回编译失败";
+                }
+                if(mode == 1){
+                    msg1="反编译成功!\r\n反编译后的文件夹存放在: "+sb2.toString();
+                    msg2="反编译失败";
+                }
+                CMD cmd1 = new CMD(sb.toString(),false);
+                if(cmd1.getResultCode() == 0){
+                    showInfoMsg(apkDecompileMenuActivity.this,"提示",msg1);
+                }else {
+                    showInfoMsg(apkDecompileMenuActivity.this, "错误", msg2 + " : " + cmd1.getResultCode() + " -- " + cmd1.getResult());
                 }
                 sendHandlerMSG(handler, 0);
             }

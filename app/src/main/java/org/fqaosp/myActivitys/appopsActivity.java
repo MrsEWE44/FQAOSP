@@ -16,6 +16,7 @@ import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.getPathByLastNameType;
 import static org.fqaosp.utils.multiFunc.checkBoxs;
+import static org.fqaosp.utils.multiFunc.checkCMDResult;
 import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.clearList;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
@@ -23,6 +24,7 @@ import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
+import static org.fqaosp.utils.multiFunc.runTraverseCMD;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
@@ -296,38 +298,10 @@ public class appopsActivity extends AppCompatActivity {
         apopsab6.setOnClickListener((v)->{
             AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在应用更改,请稍后(可能会出现无响应，请耐心等待)....");
             preventDismissDialog(show);
-            Handler handler = new Handler(){
-                @Override
-                public void handleMessage(@NonNull Message msg) {
-                    if(msg.what==0){
-                        showPKGS(lv1);
-                        multiFunc.dismissDialog(show);
-                    }
-                }
-            };
             v.post(new Runnable() {
                 @Override
                 public void run() {
-                    int hit=0;
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("aaa=(");
-//                    Log.d("appopsActivity",apops_permis[apops_permis_index]+" -- " + apops_opt[apops_opt_index]);
-                    for (int i = 0; i < checkboxs.size(); i++) {
-                        if(checkboxs.get(i)){
-                            sb.append("\""+pkginfos.get(i).getPkgname()+"\" ");
-                            hit++;
-                        }
-                    }
-                    if(hit == 0){
-                        for (PKGINFO pkginfo : pkginfos) {
-                            sb.append("\""+pkginfo.getPkgname()+"\" ");
-                        }
-                    }
-                    sb.append(");for pp in ${aaa[@]};do "+spliceCMDStr()+";done;");
-
-                    CMD cmd = getCMD(con ,sb.toString(),isRoot);
-                    checkCMDResult(cmd,"权限修改完成","权限修改出现错误");
-                    sendHandlerMSG(handler,0);
+                    runTraverseCMD(appopsActivity.this,pkginfos,checkboxs,spliceCMDStr(),isRoot,show,"权限修改完成","权限修改出现错误");
                 }
             });
         });
@@ -528,23 +502,21 @@ public class appopsActivity extends AppCompatActivity {
     }
 
     //安装文件夹里面所有apk文件
-    private void installApkOnDir(String dir){
+    private CMD installApkOnDir(String dir){
         Context that = this;
         String filesDir =getMyHomeFilesPath(that);
         String barfile = filesDir+"/"+script_name;
+        String cmdstr = "";
         if(isRoot && extractAssertFile(barfile,filesDir)){
 //            Log.d("installApkOnDir","禁用脚本已存在");
-            String cmdstr = "sh "+barfile+" inapkonpath " + dir;
-            CMD cmd = getCMD(that,cmdstr,isRoot);
-            checkCMDResult(cmd,"安装 [ " + dir + " ] 文件夹里所有程序成功","安装 [ " + dir + " ] 文件夹里程序失败");
+            cmdstr = "sh "+barfile+" inapkonpath " + dir;
         }else if(isRoot == false && checkShizukuPermission(6)){
             String tmpPath = "/data/local/tmp/aa.apk";
-            String cmdstr2 = " for p in $(find "+dir+" -name \"*.apk\") ;do cp $p "+tmpPath+"; pm install "+tmpPath+"; rm -rf "+tmpPath+"; done; exit 0;";
-            CMD cmd = getCMD(that,cmdstr2,isRoot);
-            checkCMDResult(cmd,"安装 [ " + dir + " ] 文件夹里所有程序成功","安装 [ " + dir + " ] 文件夹里程序失败");
+            cmdstr = " for p in $(find "+dir+" -name \"*.apk\") ;do cp $p "+tmpPath+"; pm install "+tmpPath+"; rm -rf "+tmpPath+"; done; exit 0;";
         }else{
             showImportToolsDialog(that,"apks安装脚本无法获取，请退出重试或者重新安装app","apks安装脚本没有找到,请补全脚本再尝试安装.");
         }
+        return getCMD(that,cmdstr,isRoot);
     }
 
     //安装apks文件
@@ -555,7 +527,7 @@ public class appopsActivity extends AppCompatActivity {
 //            Log.d("installAPKS","禁用脚本已存在");
             String cmdstr = "sh "+barfile+" inapks " + apksFilePath;
             CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
-            checkCMDResult(cmd,"安装apks成功","安装apks失败");
+            checkCMDResult(appopsActivity.this,cmd,"安装apks成功","安装apks失败");
         }else{
             showImportToolsDialog(this,"apks/apk安装脚本无法获取，请退出重试或者重新安装app","apks/apk安装脚本没有找到,请补全脚本再尝试安装.");
         }
@@ -568,8 +540,10 @@ public class appopsActivity extends AppCompatActivity {
         nowItemView.post(new Runnable() {
             @Override
             public void run() {
-                appopsCmdStr acs = new appopsCmdStr();
                 int hit=0;
+                appopsCmdStr acs = new appopsCmdStr();
+                StringBuilder sb = new StringBuilder();
+                sb.append("aaa=(");
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if(checkboxs.get(i)){
                         PKGINFO pkginfo = pkginfos.get(i);
@@ -577,53 +551,43 @@ public class appopsActivity extends AppCompatActivity {
                         if(getPathByLastNameType(apkpath).equals("apks")){
                             installAPKS(apkpath);
                         }else{
-                            String cmdstr = "";
-                            switch (install_mode){
-                                case 0:
-                                    cmdstr = acs.getInstallLocalPkgCMD(uid, apkpath);
-                                    break;
-                                case 1:
-                                    cmdstr = acs.getInstallLocalPkgOnDowngradeCMD(uid, apkpath);
-                                    break;
-                                case 2:
-                                    cmdstr = acs.getInstallLocalPkgOnDebugCMD(uid, apkpath);
-                                    break;
-                                case 3:
-                                    cmdstr = acs.getInstallLocalPkgOnExistsCMD(uid, apkpath);
-                                    break;
-                            }
-
-                            CMD cmd = getCMD(appopsActivity.this,cmdstr,isRoot);
-                            checkCMDResult(cmd,"成功安装","安装失败");
+                            sb.append("\""+apkpath+"\" ");
                         }
                         hit++;
                     }
                 }
                 if(hit ==0){
                     PKGINFO pkginfo = pkginfos.get(nowItemIndex);
-                    if(getPathByLastNameType(pkginfo.getApkpath()).equals("apks")){
-                        installAPKS(pkginfo.getApkpath());
+                    String apkpath = pkginfo.getApkpath();
+                    if(getPathByLastNameType(apkpath).equals("apks")){
+                        installAPKS(apkpath);
                     }else{
-                        String cmdstr = acs.getInstallLocalPkgCMD(uid, pkginfo.getApkpath());
-                        CMD cmd = getCMD(appopsActivity.this,cmdstr,isRoot);
-                        checkCMDResult(cmd,"成功安装","安装失败");
+                        sb.append("\""+apkpath+"\" ");
                     }
-
                 }
+                String cmdstr = "";
+                switch (install_mode){
+                    case 0:
+                        cmdstr = acs.getInstallLocalPkgCMD(uid, "$pp");
+                        break;
+                    case 1:
+                        cmdstr = acs.getInstallLocalPkgOnDowngradeCMD(uid, "$pp");
+                        break;
+                    case 2:
+                        cmdstr = acs.getInstallLocalPkgOnDebugCMD(uid, "$pp");
+                        break;
+                    case 3:
+                        cmdstr = acs.getInstallLocalPkgOnExistsCMD(uid, "$pp");
+                        break;
+                }
+                sb.append(");for pp in ${aaa[@]};do "+cmdstr+";done;");
+                CMD cmd = getCMD(appopsActivity.this,sb.toString(),isRoot);
                 multiFunc.dismissDialog(show);
+                checkCMDResult( appopsActivity.this,cmd,"成功安装","安装失败");
             }
         });
     }
 
-    private void checkCMDResult(CMD cmd,String msg , String msg2){
-        if( cmd.getResultCode() ==0){
-            Log.d("checkCMDResult",msg);
-            showInfoMsg(appopsActivity.this,"提示",msg);
-        }else{
-            Log.d("checkCMDResult",msg2+" :: "+cmd.getResult());
-            showInfoMsg(appopsActivity.this,"错误",msg2 + " -- " + cmd.getResult());
-        }
-    }
 
     //卸载应用
     private void uninstallPKG(){
@@ -633,24 +597,8 @@ public class appopsActivity extends AppCompatActivity {
             @Override
             public void run() {
                 makeWP makewp = new makeWP();
-                int hit=0;
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        String cmdstr = makewp.getUninstallPkgByUIDCMD(uid, pkginfo.getPkgname());
-                        CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
-                        checkCMDResult(cmd,"成功卸载","卸载失败");
-                        hit++;
-                    }
-                }
-
-                if(hit ==0){
-                    PKGINFO pkginfo = pkginfos.get(nowItemIndex);
-                    String cmdstr = makewp.getUninstallPkgByUIDCMD(uid, pkginfo.getPkgname());
-                    CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
-                    checkCMDResult(cmd,"成功卸载","卸载失败");
-                }
-                multiFunc.dismissDialog(show);
+                String cmdstr = makewp.getUninstallPkgByUIDCMD(uid, "$pp");
+                runTraverseCMD(appopsActivity.this,pkginfos,checkboxs,cmdstr,isRoot,show,"成功卸载","卸载失败");
             }
         });
     }
@@ -663,26 +611,8 @@ public class appopsActivity extends AppCompatActivity {
             @Override
             public void run() {
                 makeWP makewp = new makeWP();
-                int hit=0;
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        String pkgname = pkginfo.getPkgname();
-                        String cmdstr = isDisable?makewp.getChangePkgOnEnableByUIDCMD(uid, pkgname):makewp.getChangePkgOnDisableByUIDCMD(uid,pkgname);
-                        CMD cmd = getCMD(appopsActivity.this,cmdstr,isRoot);
-                        checkCMDResult(cmd,"修改成功","修改失败");
-                        hit++;
-                    }
-                }
-
-                if(hit ==0){
-                    PKGINFO pkginfo = pkginfos.get(nowItemIndex);
-                    String pkgname = pkginfo.getPkgname();
-                    String cmdstr = isDisable?makewp.getChangePkgOnEnableByUIDCMD(uid, pkgname):makewp.getChangePkgOnDisableByUIDCMD(uid,pkgname);
-                    CMD cmd = getCMD(appopsActivity.this,cmdstr,isRoot);
-                    checkCMDResult(cmd,"修改成功","修改失败");
-                }
-                multiFunc.dismissDialog(show);
+                String cmdstr = isDisable?makewp.getChangePkgOnEnableByUIDCMD(uid, "$pp"):makewp.getChangePkgOnDisableByUIDCMD(uid,"$pp");
+                runTraverseCMD(appopsActivity.this,pkginfos,checkboxs,cmdstr,isRoot,show,"修改成功","修改失败");
             }
         });
     }
@@ -1057,7 +987,7 @@ public class appopsActivity extends AppCompatActivity {
         if(nameType.equals("apk")){
             PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
             ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-            pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(pm).toString(), applicationInfo.sourceDir,applicationInfo.uid+"",packageInfo.versionName, applicationInfo.loadIcon(pm),new File(filePath).length())) ;
+            pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(pm).toString(), filePath,applicationInfo.uid+"",packageInfo.versionName, applicationInfo.loadIcon(pm),new File(filePath).length())) ;
             checkboxs.add(false);
         }else if(nameType.equals("apks")){
             Drawable d = ContextCompat.getDrawable(appopsActivity.this,R.drawable.ic_launcher_foreground);
@@ -1091,12 +1021,27 @@ public class appopsActivity extends AppCompatActivity {
                 Uri uri = data.getData();
                 String filePath = storage + "/" +uri.getPath().replaceAll("/tree/primary:","");
                 AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
-                Handler handler = dismissDialogHandler(0,show);
+                preventDismissDialog(show);
+                Handler handler = new Handler(){
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        multiFunc.dismissDialog(show);
+                        if(msg.what==0){
+                            showInfoMsg(appopsActivity.this,"提示","安装 [ " + filePath + " ] 文件夹里所有程序成功");
+                        }else{
+                            showInfoMsg(appopsActivity.this,"提示","安装 [ " + filePath + " ] 文件夹里程序失败");
+
+                        }
+                    }
+                };
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
-                        installApkOnDir(filePath);
-                        sendHandlerMSG(handler,0);
+                        CMD cmd = installApkOnDir(filePath);
+                        Message msg = new Message();
+                        msg.what=cmd.getResultCode();
+                        msg.obj=cmd.getResult();
+                        handler.sendMessage(msg);
                     }
                 }).start();
             }

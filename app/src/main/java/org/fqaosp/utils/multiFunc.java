@@ -27,6 +27,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.myActivitys.appopsActivity;
 import org.fqaosp.myActivitys.importToolsActivity;
 
 import java.io.File;
@@ -202,15 +203,15 @@ public class multiFunc {
     public static CMD getCMD(Context context , String cmdstr,Boolean isRoot){
         String myStorageHomePath = getMyStorageHomePath(context);
         String tmpFile = myStorageHomePath + "/cache/temp.sh";
-        if(isRoot){
-            return new CMD(cmdstr);
-        }else{
-            Boolean aBoolean = writeDataToPath(cmdstr, tmpFile, false);
-            if(aBoolean){
-                return new CMD(new String[]{"sh",tmpFile});
+        Boolean aBoolean = writeDataToPath(cmdstr, tmpFile, false);
+        if(aBoolean){
+            if(isRoot){
+                return new CMD("sh "+tmpFile);
             }else{
-                Log.e("error","write temp script error");
+                return new CMD(new String[]{"sh",tmpFile});
             }
+        }else{
+            Log.e("error","write temp script error");
         }
         return null;
     }
@@ -366,6 +367,39 @@ public class multiFunc {
                 }
             }
         };
+    }
+
+    public static void runTraverseCMD(Context context, ArrayList<PKGINFO> pkginfos,ArrayList<Boolean> checkboxs ,String cmdstr,Boolean isRoot,AlertDialog show,String msg1,String msg2){
+        int hit=0;
+        StringBuilder sb = new StringBuilder();
+        sb.append("aaa=(");
+        for (int i = 0; i < checkboxs.size(); i++) {
+            if(checkboxs.get(i)){
+                sb.append("\""+pkginfos.get(i).getPkgname()+"\" ");
+                hit++;
+            }
+        }
+        if(hit == 0){
+            for (PKGINFO pkginfo : pkginfos) {
+                sb.append("\""+pkginfo.getPkgname()+"\" ");
+            }
+        }
+
+        sb.append(");for pp in ${aaa[@]};do "+cmdstr+";done;");
+
+        CMD cmd = getCMD(context ,sb.toString(),isRoot);
+        multiFunc.dismissDialog(show);
+        checkCMDResult(context,cmd,msg1,msg2);
+    }
+
+    public static void checkCMDResult(Context context, CMD cmd,String msg , String msg2){
+        if( cmd.getResultCode() ==0){
+            Log.d("checkCMDResult",msg);
+            showInfoMsg(context,"提示",msg);
+        }else{
+            Log.d("checkCMDResult",msg2+" :: "+cmd.getResult());
+            showInfoMsg(context,"错误",msg2 + " -- " + cmd.getResult());
+        }
     }
 
     public static void sendHandlerMSG(Handler handler , int value){

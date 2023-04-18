@@ -154,36 +154,7 @@ public class romToolsActivity extends AppCompatActivity {
         });
 
         rrab2.setOnClickListener((v)->{
-            for (int i = 0; i < checkboxs.size(); i++) {
-                if(checkboxs.get(i)){
-                    String path = list.get(i);
-                    String storage = context.getExternalCacheDir().toString();
-                    String outdir = storage+"/romrepack/"+System.currentTimeMillis();
-                    String filesDir = getMyHomeFilesPath(context);
-                    File file = new File(outdir);
-                    if(!file.exists()){
-                        file.mkdirs();
-                    }
-                    AlertDialog show = showMyDialog(context,"提示","正在打包本地IMG镜像文件,如果是br类型,可能会需要更久的时间,请稍后(可能会出现无响应，请耐心等待，该软件不支持后台)....");
-                    preventDismissDialog(show);
-                    Handler handler = dismissDialogHandler(0,show);
-                    v.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            String cmdstr = "cd "+filesDir+" && sh fqtools.sh repackrom "+path+ " " + outdir + " "  +getRomType() + " " + (rom_img_index2_ver+1);
-                            CMD cmd = new CMD(cmdstr,false);
-//                            Log.d("unpackrom",cmd.getResult());
-                            if(cmd.getResultCode()==0){
-                                showInfoMsg(context,"提示",cmd.getResult()+"\r\n\r\n打包成功,文件存放在 "+outdir);
-                            }else{
-                                writeDataToPath(cmd.getResultCode()+" -- " +cmd.getResult(),outdir+".log",false);
-                                showInfoMsg(context,"错误","打包失败,日志存放在 >>  "+outdir);
-                            }
-                            sendHandlerMSG(handler,0);
-                        }
-                    });
-                }
-            }
+           btClicked(this,v,1);
         });
     }
 
@@ -229,38 +200,49 @@ public class romToolsActivity extends AppCompatActivity {
         });
 
         ruab2.setOnClickListener((v)->{
-            for (int i = 0; i < checkboxs.size(); i++) {
-                if(checkboxs.get(i)){
-                    String path = list.get(i);
-                    String storage = context.getExternalCacheDir().toString();
-                    String outdir = storage+"/romunpack/"+System.currentTimeMillis();
-                    String filesDir = getMyHomeFilesPath(context);
-                    File file = new File(outdir);
-                    if(!file.exists()){
-                        file.mkdirs();
-                    }
-                    AlertDialog show = showMyDialog(context,"提示","正在解包本地ROM镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
-                    preventDismissDialog(show);
-                    Handler handler = dismissDialogHandler(0,show);
-                    v.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            String cmdstr = "cd "+filesDir+" && sh fqtools.sh unpackrom "+getRomType() + " " +path + " " + outdir + " " + getRomPartType();
-                            CMD cmd = new CMD(cmdstr,false);
-//                            Log.d("unpackrom",cmd.getResult());
-                            if(cmd.getResultCode()==0){
-                                showInfoMsg(context,"提示",cmd.getResult()+"\r\n\r\n解包成功,文件存放在 "+outdir);
-                            }else{
-                                writeDataToPath(cmd.getResultCode()+" -- " +cmd.getResult(),outdir+".log",false);
-                                showInfoMsg(context,"错误","解包失败,日志存放在 >>  "+outdir);
-                            }
-                            sendHandlerMSG(handler,0);
+            btClicked(this,v,0);
+        });
+
+    }
+
+    private void btClicked(Context context,View v,int mode){
+        String storage = context.getExternalCacheDir().toString();
+        String outDir = storage+"/"+(mode ==0 ?"romunpack":"romrepack");
+        AlertDialog show = showMyDialog(context,"提示","正在"+(mode ==0?"解":"打")+"包ROM,请稍后(可能会出现无响应，请耐心等待)....");
+        preventDismissDialog(show);
+        Handler handler = dismissDialogHandler(0,show);
+        StringBuilder sb = new StringBuilder();
+        StringBuilder sb2 = new StringBuilder();
+        v.post(new Runnable() {
+            @Override
+            public void run() {
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    if(checkboxs.get(i)){
+                        String path = list.get(i);
+                        String outdir = outDir+"/"+System.currentTimeMillis();
+                        String filesDir = getMyHomeFilesPath(context);
+                        File file = new File(outdir);
+                        if(!file.exists()){
+                            file.mkdirs();
                         }
-                    });
+                        String cmdstr = "cd "+filesDir+" && sh fqtools.sh unpackrom "+getRomType() + " " +path + " " + outdir + " " + getRomPartType();
+                        String cmdstr2 = "cd "+filesDir+" && sh fqtools.sh repackrom "+path+ " " + outdir + " "  +getRomType() + " " + (rom_img_index2_ver+1);
+
+                        sb.append((mode==0? cmdstr:cmdstr2)+";");
+                        sb2.append(path+" -----> "+outdir+".\r\n");
+                    }
+                }
+                CMD cmd = new CMD(sb.toString(),false);
+                sendHandlerMSG(handler,0);
+                if(cmd.getResultCode()==0){
+                    showInfoMsg(context,"提示","\r\n"+(mode==0?"解":"打")+"包成功,文件存放在 "+sb2.toString());
+                }else{
+                    String ff=outDir+"/"+System.currentTimeMillis()+".log";
+                    writeDataToPath(cmd.getResultCode()+" -- " +cmd.getResult(),ff,false);
+                    showInfoMsg(context,"错误",(mode==0?"解":"打")+"包失败,日志存放在 >>  "+ff);
                 }
             }
         });
-
     }
 
     private void initOnListen() {

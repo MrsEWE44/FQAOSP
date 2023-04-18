@@ -2,6 +2,7 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.multiFunc.checkCMDResult;
 import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
@@ -183,12 +184,7 @@ public class killAppActivity extends AppCompatActivity {
                         Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
                         sb.append(");for pp in ${aaa[@]};do am force-stop $pp ;done;");
                         CMD cmd = getCMD(killAppActivity.this,sb.toString(),isRoot);
-                        if(cmd.getResultCode() == 0){
-                            showInfoMsg(killAppActivity.this,"提示","已全部终止");
-                        }else{
-                            showInfoMsg(killAppActivity.this,"错误","终止后台进程失败 : "+cmd.getResultCode()+" -- " + cmd.getResult());
-
-                        }
+                        checkCMDResult(killAppActivity.this,cmd,"已全部终止","终止后台进程失败 : ");
                         getRunning(1);
                     }
                 });

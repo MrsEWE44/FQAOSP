@@ -1,6 +1,7 @@
 package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.checkDocum;
+import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
@@ -39,6 +40,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
@@ -48,6 +50,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.documentfile.provider.DocumentFile;
 
+import org.fqaosp.MainActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.FILESEARCHAdapter;
 import org.fqaosp.adapter.FILESELECTAdapter;
@@ -87,7 +90,25 @@ public class fileSearchActivity extends AppCompatActivity {
         setContentView(R.layout.file_search_activity);
         fuckActivity.getIns().add(this);
         setTitle("文件搜索");
-        initBT();
+        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.S_V2){
+            initBT();
+        }else{
+            AlertDialog.Builder ab = new AlertDialog.Builder(this);
+            ab.setTitle("警告");
+            ab.setMessage("该功能暂不支持安卓12L以上");
+            ab.setNegativeButton("确定", new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    dialogInterface.cancel();
+                    fuckActivity.getIns().killall();
+                }
+            });
+
+            AlertDialog alertDialog = ab.create();
+            alertDialog.show();
+            TextView tv = alertDialog.getWindow().getDecorView().findViewById(android.R.id.message);
+            tv.setTextIsSelectable(true);
+        }
     }
 
     private void initBT() {
