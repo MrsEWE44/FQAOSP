@@ -214,18 +214,6 @@ public class killAppActivity extends AppCompatActivity {
 
     }
 
-
-    private void stopApp(String pkgname){
-        String cmdstr="am force-stop "+pkgname;
-        CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
-        if(cmd.getResultCode() == 0){
-            if(killAppdb.select(pkgname,0).size() == 0){
-                killAppdb.insert(pkgname,0);
-            }
-            Log.d("killAppActivity","已终止 "+pkgname);
-        }
-    }
-
     //获取在后台运行的程序
     private void getRunning(int ss){
         AlertDialog show = showMyDialog(killAppActivity.this,"提示","正在获取后台应用,请稍后(可能会出现无响应，请耐心等待)....");

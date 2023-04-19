@@ -7,7 +7,6 @@ import static org.fqaosp.utils.multiFunc.showMyDialog;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,9 +26,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
-import org.fqaosp.entity.workProfileDBEntity;
 import org.fqaosp.sql.killAppDB;
-import org.fqaosp.sql.workProfileDB;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 
@@ -45,16 +42,13 @@ public class sqliteManageActivity extends AppCompatActivity {
     private LinearLayout linearLayout1;
     private Button sqlitemab1,sqlitemab2,sqlitemab3;
     private HashMap<String, Integer> select;
-    private ArrayList<workProfileDBEntity> select2;
 
     private ArrayList<Map.Entry<String, Integer> > list = new ArrayList<>();
-    private ArrayList<workProfileDBEntity> list2 = new ArrayList<workProfileDBEntity>();
 
     private TableLayout tableLayout ;
     private HorizontalScrollView horizontalScrollView ;
     private ScrollView scrollView;
     private killAppDB killAppdb = new killAppDB(sqliteManageActivity.this, "killApp.db", null, 1);
-    private workProfileDB workProfiledb = new workProfileDB(sqliteManageActivity.this, "workProfile", null, 1);
 
     private int mode;
 
@@ -79,9 +73,6 @@ public class sqliteManageActivity extends AppCompatActivity {
                 if(mode == 0){
                     showDatabase(killAppdb,tableLayout,horizontalScrollView,scrollView);
                 }
-                if(mode == 1){
-                    showDatabase2(workProfiledb,tableLayout,horizontalScrollView,scrollView);
-                }
             }
         });
 
@@ -97,7 +88,6 @@ public class sqliteManageActivity extends AppCompatActivity {
                     public void run() {
                         int childCount = tableLayout.getChildCount();
                         Map.Entry<String, Integer> entry = null;
-                        workProfileDBEntity workProfileDBEntity = null,workProfileDBEntity1 =null;
                         for(int i =1 ;i<childCount;i++){
                             TableRow tableRow = (TableRow) tableLayout.getChildAt(i);
                             EditText editText = (EditText) tableRow.getChildAt(0);
@@ -105,14 +95,8 @@ public class sqliteManageActivity extends AppCompatActivity {
                             if(mode == 0){
                                 entry = list.get(i-1);
                             }
-                            if(mode ==1){
-                                workProfileDBEntity = list2.get(i - 1);//修改后的
-                                workProfileDBEntity1 = select2.get(i - 1);//原来的
-                            }
 
                             Map.Entry<String, Integer> finalEntry = entry;
-                            org.fqaosp.entity.workProfileDBEntity finalWorkProfileDBEntity = workProfileDBEntity;
-                            org.fqaosp.entity.workProfileDBEntity finalWorkProfileDBEntity1 = workProfileDBEntity1;
                             Runnable runnable = new Runnable() {
                                 @Override
                                 public void run() {
@@ -123,19 +107,6 @@ public class sqliteManageActivity extends AppCompatActivity {
                                         if(select.get(editText.getText().toString()) == null){
                                             try {
                                                 killAppdb.update(finalEntry.getKey(), finalEntry.getValue(),editText.getText().toString(),Integer.valueOf(editText2.getText().toString()));
-                                            }catch (Exception e){
-                                                Toast.makeText(me, e.getMessage(), Toast.LENGTH_SHORT).show();
-                                            }
-                                        }
-                                    }
-
-                                    if(mode == 1){
-                                        if(editText.getText().toString().isEmpty() || editText2.getText().toString().isEmpty()){
-                                            workProfiledb.delete(finalWorkProfileDBEntity.getPkgname(), finalWorkProfileDBEntity.getUid());
-                                        }
-                                        if(!finalWorkProfileDBEntity1.getPkgname().equals(editText2.getText().toString())){
-                                            try {
-                                                workProfiledb.update(finalWorkProfileDBEntity.getPkgname(), finalWorkProfileDBEntity.getUid(),editText2.getText().toString(),Integer.valueOf(editText.getText().toString()));
                                             }catch (Exception e){
                                                 Toast.makeText(me, e.getMessage(), Toast.LENGTH_SHORT).show();
                                             }
@@ -157,9 +128,6 @@ public class sqliteManageActivity extends AppCompatActivity {
                                     showDatabase(killAppdb,tableLayout,horizontalScrollView,scrollView);
                                 }
 
-                                if(mode == 1){
-                                    showDatabase2(workProfiledb,tableLayout,horizontalScrollView,scrollView);
-                                }
                                 multiFunc.dismissDialog(show);
                                 break;
                             }
@@ -183,38 +151,10 @@ public class sqliteManageActivity extends AppCompatActivity {
                     killAppdb.delete(null,null);
                     showDatabase(killAppdb,tableLayout,horizontalScrollView,scrollView);
                 }
-                if(mode == 1){
-                    workProfiledb.delete(null,null);
-                    showDatabase2(workProfiledb,tableLayout,horizontalScrollView,scrollView);
-                }
             }
         });
 
 
-    }
-
-    private void showDatabase2( workProfileDB workProfiledb, TableLayout tableLayout,HorizontalScrollView horizontalScrollView,ScrollView scrollView){
-        list2.clear();
-        linearLayout1.removeAllViews();
-        horizontalScrollView.removeAllViews();
-        scrollView.removeAllViews();
-        tableLayout.removeAllViews();
-        TableRow tableRow = initTableRow();
-        String[] columNames = workProfiledb.getColumNames();
-        for (String columName : columNames) {
-            addTableText(tableRow,columName);
-        }
-        tableLayout.addView(tableRow);
-        select2 = workProfiledb.select(null, null);
-//        Log.d("size :: ",workProfiledb.count()+"");
-        for (workProfileDBEntity workProfileDBEntity : select2) {
-//            Log.d("sqlma :: ", " pkgname : "+workProfileDBEntity.getPkgname() + " - uid : " + workProfileDBEntity.getUid());
-            addTableData2(tableLayout,workProfileDBEntity);
-            list2.add(workProfileDBEntity);
-        }
-        horizontalScrollView.addView(tableLayout);
-        scrollView.addView(horizontalScrollView);
-        linearLayout1.addView(scrollView);
     }
 
     private void showDatabase(killAppDB killAppdb , TableLayout tableLayout,HorizontalScrollView horizontalScrollView,ScrollView scrollView){
@@ -258,20 +198,6 @@ public class sqliteManageActivity extends AppCompatActivity {
         tableLayout.addView(tableRow);
     }
 
-    private void  addTableData2(TableLayout tableLayout, workProfileDBEntity entry){
-        TableRow tableRow = initTableRow();
-        tableRow.addView(getEditText(entry.getUid().toString()));
-        tableRow.addView(getEditText(entry.getPkgname()));
-        tableLayout.addView(tableRow);
-    }
-
-    private void  addData(LinearLayout layout2,Map.Entry<String, Integer> entry){
-        LinearLayout layout = initLayout(LinearLayout.HORIZONTAL);
-        layout.addView(getEditText(entry.getKey()));
-        layout.addView(getEditText(entry.getValue().toString()));
-        layout2.addView(layout);
-    }
-
     private void addTableText(TableRow tableRow , String text){
         TextView tv = new TextView(me);
         tv.setText(text);
@@ -296,9 +222,8 @@ public class sqliteManageActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE,0,0,"切换killapp数据库");
-        menu.add(Menu.NONE,1,1,"切换应用分身数据库");
-        menu.add(Menu.NONE,2,2,"帮助");
-        menu.add(Menu.NONE,3,3,"退出");
+        menu.add(Menu.NONE,1,1,"帮助");
+        menu.add(Menu.NONE,2,2,"退出");
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -311,15 +236,12 @@ public class sqliteManageActivity extends AppCompatActivity {
                 mode=0;
                 break;
             case 1:
-                mode=1;
-                break;
-            case 2:
                 showInfoMsg(this,"帮助信息","该页面是用于编辑该软件产生的数据库文件。\r\n" +
                         "1.killapp（后台管理），即保存的默认后台进程信息.\r\n" +
                         "2.应用分身，即保存的应用分身信息。\r\n"
                 );
                 break;
-            case 3:
+            case 2:
                 fuckActivity.getIns().killall();
                 ;
         }

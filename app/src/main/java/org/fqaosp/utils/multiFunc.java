@@ -98,7 +98,7 @@ public class multiFunc {
                 return false;
             }
         } catch (Throwable e) {
-            Log.d("checkPermission",Log.getStackTraceString(e));
+//            Log.d("checkPermission",Log.getStackTraceString(e));
         }
 
         return false;

@@ -112,7 +112,7 @@ public class MainActivity extends Activity {
         menuEntities.add(new menuEntity("文件搜索","该功能是用于文件搜索的，你可以按照任意条件搜索/Android/data或者obb或者/sdcard/里面的文件。\r\n长按该选项即可进入。\n" ,fileSearchActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_file_foreground),false,false));
         menuEntities.add(new menuEntity("文件共享","该功能是用于文件、应用网络共享的，当有人跟你同处在一个局域网的时候，就可以通过这个功能来分享文件给对方，该功能不需要root权限。\r\n长按该选项即可进入。\n",fileSharingActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_file_foreground),false,false));
         menuEntities.add(new menuEntity("后台管理","该功能是用于后台进程管理的，需要root授权。\r\n长按该选项即可进入。\n",killAppActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_foreground),true,true));
-        menuEntities.add(new menuEntity("手机分身","该功能是用于手机分身管理的，但仅限于类原生，以及其它没有限制过多开用户的系统使用，国内定制系统使用会存在问题，包括moto的myui。需要root使用。\r\n长按该选项即可进入。\n",workProfileMenuActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_view_array_foreground),true,false));
+        menuEntities.add(new menuEntity("手机分身","该功能是用于手机分身管理的，但仅限于类原生，以及其它没有限制过多开用户的系统使用，国内定制系统使用会存在问题，包括moto的myui。需要root使用。\r\n长按该选项即可进入。\n",workProfileMenuActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_view_array_foreground),true,true));
         menuEntities.add(new menuEntity("U盘模式","该功能是用于挂载手机上的镜像文件，让电脑识别的，可以当U盘使用，可以给电脑安装系统，需要root权限授权。\r\n长按该选项即可进入。\n",mountLocalImageActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_usb_foreground),true,false));
         menuEntities.add(new menuEntity("apk反编译","该功能是用于apk回编译操作的，需要安装jdk与fqtools，采用传统apktool进行回编译操作,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n长按该选项即可进入。\n" ,apkDecompileMenuActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_foreground),false,false));
         menuEntities.add(new menuEntity("应用管理","该功能是用于应用管理的,支持应用提取、详情跳转、卸载应用、导出应用信息、安装apks/apk应用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n长按该选项即可进入。\n",appopsActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_android_foreground),true,true));
@@ -154,10 +154,10 @@ public class MainActivity extends Activity {
                         "FQAOSP(中文全称为: 法可油安卓),它是一个适用于类原生的搞机工具，同样也适用于国内定制ui系统，它拥有很多常用的功能，例如：后台清理、一键卸载与安装应用、安装某个指定的文件夹里面所有apk文件、将手机本地的pe镜像文件挂载给电脑重装系统、反/回编译软件、提取或者刷入系统分区文件、软件的备份与恢复、应用分身、共享手机本地文件给局域网内所有用户、搜索自己设定范围内的文件等等，未来还会加入更多功能，现在部分功能已经可以不再需要root，已经对接了shizuku，但是仍有部分需要root才能使用，后续会逐渐完善与shizuku的对接。\r\n" +
                         "如果有新功能或建议，可以在GitHub提issue！\r\n" +
                         "\n" +
-                        "1.修复重复弹窗问题.\n" +
-                        "2.修复安装本地apk文件出现空指针问题.\n" +
-                        "3.添加arm的busybox.\n" +
-                        "4.修改版本号为V1.2.8");
+                        "1.完善手机分身功能,修复旧bug.\n" +
+                        "2.手机分身功能对接shizuku权限,不需要root也可以实现分身.\n" +
+                        "3.删除workProfileDB数据库功能.\n" +
+                        "4.修改版本号为V1.2.9");
                 amupdate.setVisibility(View.VISIBLE);
                 dl.closeDrawer(Gravity.LEFT);
             }

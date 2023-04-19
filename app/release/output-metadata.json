@@ -11,9 +11,9 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 31,
-      "versionName": "1.2.8",
-      "outputFile": "fqaosp_v1.2.8_release.apk"
+      "versionCode": 32,
+      "versionName": "1.2.9",
+      "outputFile": "fqaosp_v1.2.9_release.apk"
     }
   ],
   "elementType": "File"

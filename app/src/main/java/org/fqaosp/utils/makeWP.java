@@ -43,7 +43,7 @@ public class makeWP {
     }
 
     public String getCreateWPCMD(){
-        return "pm create-user --profileOf "+getMyUID()+" --managed owp";
+        return "pm create-user --profileOf "+getMyUID()+" --managed fqaosop";
     }
 
     //创建一个工作空间
@@ -72,17 +72,6 @@ public class makeWP {
         return cmd.getResultCode() == 0;
     }
 
-    //同步传过来的pkginfo对象，将对应的apk都同步安装到其他用户空间里面
-    public void syncapk(Activity activity, PKGINFO pkginfo){
-        ArrayList<String> list = new ArrayList<>();
-        queryUSERS(activity,list);
-        for (String userid : list) {
-            startWP(userid);
-            String pkgname = pkginfo.getPkgname();
-            CMD cmd = new CMD(getInstallPkgCMD(userid,pkgname));
-            cmd.getResultCode();
-        }
-    }
     public String getInstallPkgCMD(String uid , String pkgname){
         return "pm install --user "+uid+" -r \"$(pm path "+pkgname+" | cut -d':' -f2 )\"";
     }
