@@ -11,6 +11,7 @@ import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
+import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.os.Build;
@@ -18,6 +19,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -73,6 +75,10 @@ public class romToolsActivity extends AppCompatActivity {
         File fqtoolsusrdir = new File(fqtoolsusr);
         if(!fqtoolsusrdir.exists()){
             showImportToolsDialog(this,"fqtools核心无法获取，请退出重试或者重新安装app","fqtools工具包没有找到,功能使用将受到限制或者异常,要继续使用吗？");
+        }
+        ActivityManager activityManager = (ActivityManager) getSystemService(this.ACTIVITY_SERVICE);
+        if(activityManager.isLowRamDevice()){
+            showInfoMsg(this,"警告","当前设备配置较低,运行此页面功能会出现问题!");
         }
         initViews();
     }

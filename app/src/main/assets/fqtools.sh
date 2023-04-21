@@ -432,13 +432,13 @@ unpack_rom_img(){
     esac
 	  case $ROMTYPE in
     	  paybin)
-    	    payload_dumper "$ROMFULLPATH" --out "$ROMOUTPATH/" && exit 0
+    	    fqromtools --tool payload --inputfile "$ROMFULLPATH" --out "$ROMOUTPATH/" && exit 0
     	    break;;
     	  sndat)
-    	    sdat2img "$(dirname $ROMFULLPATH)/$TRANSFER_LIST" $ROMFULLPATH "$ROMOUTPATH/$OUTIMGNAME" && exit 0
+    	    fqromtools --tool sdat2img --transferlist "$(dirname $ROMFULLPATH)/$TRANSFER_LIST" --inputfile $ROMFULLPATH --out "$ROMOUTPATH/$OUTIMGNAME" && exit 0
     	    break;;
     	  sndatbr)
-    	    brotli -d $ROMFULLPATH -o "$ROMOUTPATH/tmp.new.dat" -f && sdat2img "$(dirname $ROMFULLPATH)/$TRANSFER_LIST" "$ROMOUTPATH/tmp.new.dat" "$ROMOUTPATH/$OUTIMGNAME" && rm -rf "$ROMOUTPATH/tmp.new.dat" && exit 0
+    	    brotli -d $ROMFULLPATH -o "$ROMOUTPATH/tmp.new.dat" -f && fqromtools --tool sdat2img --transferlist "$(dirname $ROMFULLPATH)/$TRANSFER_LIST" --inputfile "$ROMOUTPATH/tmp.new.dat" --out "$ROMOUTPATH/$OUTIMGNAME" && rm -rf "$ROMOUTPATH/tmp.new.dat" && exit 0
     	    break;;
     	  super)
     	    simg2img "$ROMFULLPATH" "$ROMOUTPATH/tmp.img" && lpunpack "$ROMOUTPATH/tmp.img" "$ROMOUTPATH/" && rm -rf "$ROMOUTPATH/tmp.img" && exit 0
@@ -461,10 +461,10 @@ repack_rom_img(){
 	  fi
 	  case $REPACKTYPE in
 	    sdat)
-	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && img2sdat "$REPACKOUTPATH/tmp.img" -o "$REPACKOUTPATH/" -v "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && exit 0
+	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && fqromtools --tool img2sdat --inputfile "$REPACKOUTPATH/tmp.img" --out "$REPACKOUTPATH/" --androidversion "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && exit 0
 	      break;;
 	    sdatbr)
-	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && img2sdat "$REPACKOUTPATH/tmp.img" -o "$REPACKOUTPATH/" -v "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && brotli -f -q 11 "$REPACKOUTPATH/system.new.dat" && exit 0
+	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && fqromtools --tool img2sdat --inputfile  "$REPACKOUTPATH/tmp.img" -out "$REPACKOUTPATH/" --androidversion "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && brotli -f -q 11 "$REPACKOUTPATH/system.new.dat" && exit 0
 	      break;;
 	    sparseimg)
 	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/sparse.img"  && exit 0

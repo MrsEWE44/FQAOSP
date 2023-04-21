@@ -154,10 +154,10 @@ public class MainActivity extends Activity {
                         "FQAOSP(中文全称为: 法可油安卓),它是一个适用于类原生的搞机工具，同样也适用于国内定制ui系统，它拥有很多常用的功能，例如：后台清理、一键卸载与安装应用、安装某个指定的文件夹里面所有apk文件、将手机本地的pe镜像文件挂载给电脑重装系统、反/回编译软件、提取或者刷入系统分区文件、软件的备份与恢复、应用分身、共享手机本地文件给局域网内所有用户、搜索自己设定范围内的文件等等，未来还会加入更多功能，现在部分功能已经可以不再需要root，已经对接了shizuku，但是仍有部分需要root才能使用，后续会逐渐完善与shizuku的对接。\r\n" +
                         "如果有新功能或建议，可以在GitHub提issue！\r\n" +
                         "\n" +
-                        "1.完善手机分身功能,修复旧bug.\n" +
-                        "2.手机分身功能对接shizuku权限,不需要root也可以实现分身.\n" +
-                        "3.删除workProfileDB数据库功能.\n" +
-                        "4.修改版本号为V1.2.9");
+                        "1.合并payload/img2sdat/sdat2img源码.\n" +
+                        "2.修复分区提取与刷入功能.\n" +
+                        "3.更改makefqtools与rom工具功能参数位置\n" +
+                        "4.修改版本号为V1.3.0");
                 amupdate.setVisibility(View.VISIBLE);
                 dl.closeDrawer(Gravity.LEFT);
             }

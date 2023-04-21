@@ -2,6 +2,7 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
+import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
@@ -57,6 +58,8 @@ public class imgMenuActivity extends AppCompatActivity {
     private Boolean switchBool1,switchBool2,switchBool3;
     private Context context;
     private boolean isRoot = false;
+    private String bootdev="/dev/block/bootdevice";
+    private String mapperdev="/dev/block/mapper";
 
 
     @Override
@@ -125,7 +128,15 @@ public class imgMenuActivity extends AppCompatActivity {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
                         AlertDialog show = showMyDialog(context,"提示","正在刷入,请稍后(可能会出现无响应，请耐心等待)....");
-                        Handler handler = dismissDialogHandler(0,show);
+                        Handler handler = new Handler(){
+                            @Override
+                            public void handleMessage(@NonNull Message msg) {
+                                if(msg.what==0){
+                                    multiFunc.dismissDialog(show);
+                                    showInfoMsg(context,"信息",msg.obj.toString());
+                                }
+                            }
+                        };
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
@@ -142,11 +153,15 @@ public class imgMenuActivity extends AppCompatActivity {
                                         break;
                                     }
                                 }
-                                String cmdstr = "dd if="+localImgPath+" of=/dev/block/by-name/"+partname;
-                                Log.d("flash",localImgPath+" -- " + partname);
-                                CMD cmd = new CMD(cmdstr);
-                                Log.d("flashed",cmd.getResult()+" -- " + cmd.getResultCode());
-                                sendHandlerMSG(handler,0);
+                                String mpper=mapperdev+"/"+partname;
+                                String booter=bootdev+"/by-name/"+partname;
+                                String cmdhead="dd if="+localImgPath;
+                                String cmdstr = "if [ -b "+mpper+" ];then "+cmdhead+" of="+mpper+" ; elif [ -b "+booter +" ];then "+cmdhead+" of="+booter +"; else echo 'error !';fi";
+                                CMD cmd = getCMD(context, cmdstr, true);
+                                Message msg = new Message();
+                                msg.what=0;
+                                msg.obj="分区已刷入完毕: \r\n"+localImgPath+"  ------>>>>>   "+partname+"\r\n\r\n"+cmd.getResultCode()+" -- " + cmd.getResult();
+                                handler.sendMessage(msg);
                             }
                         }).start();
                     }
@@ -194,6 +209,9 @@ public class imgMenuActivity extends AppCompatActivity {
                 if(!file.exists()){
                     file.mkdirs();
                 }
+                StringBuilder sb = new StringBuilder();
+                sb.append("aaaa=(");
+
                 view.post(new Runnable() {
                     @Override
                     public void run() {
@@ -201,7 +219,7 @@ public class imgMenuActivity extends AppCompatActivity {
                             //未勾选
                             for (int i = 0; i < dumpCheckboxs.size(); i++) {
                                 if(!dumpCheckboxs.get(i)){
-                                    runDumpCMD(dumpList.get(i),outDir);
+                                    sb.append("\""+dumpList.get(i)+"\" ");
                                 }
                             }
                         }
@@ -210,7 +228,7 @@ public class imgMenuActivity extends AppCompatActivity {
                             //勾选
                             for (int i = 0; i < dumpCheckboxs.size(); i++) {
                                 if(dumpCheckboxs.get(i)){
-                                    runDumpCMD(dumpList.get(i),outDir);
+                                    sb.append("\""+dumpList.get(i)+"\" ");
                                 }
                             }
                         }
@@ -218,7 +236,7 @@ public class imgMenuActivity extends AppCompatActivity {
                         if(switchBool1){
                             //所有
                             for (String s : dumpList) {
-                                runDumpCMD(s,outDir);
+                                sb.append("\""+s+"\" ");
                             }
                         }
                         //都没有勾选
@@ -226,23 +244,25 @@ public class imgMenuActivity extends AppCompatActivity {
                             //如果都没有选择，我们就默认走已经勾选的
                             for (int i = 0; i < dumpCheckboxs.size(); i++) {
                                 if(dumpCheckboxs.get(i)){
-                                    runDumpCMD(dumpList.get(i),outDir);
+                                    sb.append("\""+dumpList.get(i)+"\" ");
                                 }
                             }
                         }
+                        String outCmd="of="+outDir+"/${pp}.img";
+                        String mpper=mapperdev+"/${pp}";
+                        String booter=bootdev+"/by-name/${pp}";
+                        String cmdstr = "if [ -b "+mpper+" ];then dd if="+mpper+" "+outCmd+";else dd if="+booter+" "+outCmd+";fi";
+                        sb.append(");for pp in ${aaaa[@]};do "+cmdstr+";done;");
+                        CMD cmd = getCMD(context, sb.toString(), true);
                         sendHandlerMSG(handler,0);
+                        showInfoMsg(context,"提示","已执行完毕: \r\n提取后的文件存放在 : "+outDir+"\r\n\r\n"+cmd.getResultCode()+" -- " + cmd.getResult());
                     }
                 });
+
 
             }
         });
 
-    }
-
-    private void runDumpCMD(String s,  String outDir){
-        String cmdstr = "dd if=/dev/block/by-name/"+s+" of="+outDir+"/"+s+".img";
-        CMD cmd = new CMD(cmdstr);
-        Log.d("runDumpCMD",cmd.getResult()+" -- " + cmd.getResultCode());
     }
 
     private void showIMGS(ListView lv,ArrayList<String> list,ArrayList<Boolean> checkboxs) {
@@ -439,7 +459,7 @@ public class imgMenuActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                CMD cmd = new CMD("ls /dev/block/by-name/");
+                CMD cmd = new CMD("if [ -d "+mapperdev+" ];then ls "+mapperdev+"/ && ls "+bootdev+"/by-name/ ;else ls "+bootdev+"/by-name/;fi");
                 for (String s1 : cmd.getResult().split("\n")) {
                     if(viewPageIndex == 0){
                         dumpList.add(s1);

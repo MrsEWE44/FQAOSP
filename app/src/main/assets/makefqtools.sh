@@ -1,5 +1,4 @@
 cache_dir_fqaosp="$HOME/fqaosp"
-ret=""
 termux_prefix_bin="../$PREFIX/bin/"
 fqtools_file="fqtools.tar.xz"
 getDepends()
@@ -13,7 +12,7 @@ download_depends(){
       mkdir -p $cache_dir_fqaosp
   fi
   cd $cache_dir_fqaosp
-  libs="android-tools libandroid-support libbz2 libffi $(apt search openjdk|grep jdk|cut -f1 -d'/'|head -n 1) xz-utils"
+  libs="android-tools libandroid-posix-semaphore mkbootimg libandroid-support libbz2 libffi $(apt search openjdk|grep jdk|cut -f1 -d'/'|head -n 1) xz-utils"
   i=0
   while [ $i -lt 5 ] ;
   do
@@ -47,34 +46,19 @@ extract_deb(){
 make_git_project(){
     if [ -d "$cache_dir_fqaosp" ];then
         cd $cache_dir_fqaosp
-        git clone https://gitee.com/SorryMyLife/payload_dumper.git
-        cd payload_dumper
+        git clone https://gitee.com/SorryMyLife/fqromtools.git
+        cd fqromtools
         pip install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
-        pyinstaller -F payload_dumper.py
-        cp dist/payload_dumper "$termux_prefix_bin"
-        cd ../
-        git clone https://gitee.com/SorryMyLife/sdat2img.git
-        cd sdat2img
-        pyinstaller -F sdat2img.py
-        cp dist/sdat2img "$termux_prefix_bin"
-        cd ../
-        git clone https://gitee.com/SorryMyLife/img2sdat.git
-        cd img2sdat
-        pyinstaller -F img2sdat.py
-        cp dist/img2sdat "$termux_prefix_bin"
+        pyinstaller -F fqromtools.py
+        cp dist/fqromtools "$termux_prefix_bin"
         cd $termux_prefix_bin
         cd ../
         curl -L -O https://gitee.com/SorryMyLife/FQAOSP/releases/download/V1.2.4-ROMBUILD/apktool.jar
-
     fi
 }
 
 make_fqtools(){
     if [ -d "$cache_dir_fqaosp" ];then
-        cd $cache_dir_fqaosp
-        cd "./$PREFIX/share/android-tools/mkbootimg"
-        pyinstaller -F mkbootimg.py
-        mv dist/mkbootimg "$cache_dir_fqaosp/.$PREFIX/bin/"
         cd  "$cache_dir_fqaosp/.$PREFIX/bin"
         pyinstaller -F mkdtboimg
         rm -rf mkdtboimg
