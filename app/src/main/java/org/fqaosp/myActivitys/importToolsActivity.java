@@ -132,7 +132,7 @@ public class importToolsActivity extends Activity {
         String download_url = "";
         String save_path = getMyStorageHomePath(context)+"/cache/download/";
         String filename = "";
-        download_url = "https://github.com/MrsEWE44/FQAOSP/releases/download/V1.2.4-ROMBUILD/fqtools.tar.xz";
+        download_url = "https://github.com/MrsEWE44/FQAOSP/releases/download/V1.3.0/fqtools.tar.xz";
         filename = fqfile;
         String fqfilepath = save_path+"/"+filename;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);

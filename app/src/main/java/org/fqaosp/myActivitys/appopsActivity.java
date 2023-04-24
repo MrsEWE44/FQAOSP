@@ -98,9 +98,12 @@ public class appopsActivity extends AppCompatActivity {
     private View nowItemView = null;
     private boolean isRoot=false;
     private boolean isDisable=false;
-    private String apops_permis[],apops_opt[];
+    private String apops_permis[] = {"通话/短信相关", "存储","剪切板","电池优化","后台运行","摄像头","麦克风","定位","日历","传感器扫描","通知","应用待机模式","应用待机活动"};
+    private String apops_opt[] = {"默认", "拒绝","允许","仅在运行时允许"};
+    private String apops_opt2[] = {"活跃", "工作集","常用","极少使用","受限"};
+    private String apops_opt3[] = {"允许","拒绝"};
     private String script_name = "fqtools.sh";
-    private int apops_permis_index,apops_opt_index;
+    private int apops_permis_index,apops_opt_index,mode=0;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -137,8 +140,6 @@ public class appopsActivity extends AppCompatActivity {
         lv1 = findViewById(R.id.apopsalv1);
         apopsasp1 = findViewById(R.id.apopsasp1);
         apopsasp2 = findViewById(R.id.apopsasp2);
-        apops_permis = new String[]{"通话/短信相关", "存储","剪切板","电池优化","后台运行","摄像头","麦克风","定位","日历","传感器扫描","通知"};
-        apops_opt = new String[]{"默认", "拒绝","允许","仅在运行时允许"};
         apopsasb1.setChecked(true);
         apopsasp1.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_permis));
         apopsasp2.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_opt));
@@ -153,6 +154,17 @@ public class appopsActivity extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 apops_permis_index = i;
+                if(apops_permis_index==11){
+                    mode=1;
+                    apopsasp2.setAdapter(new ArrayAdapter<String>(con, android.R.layout.simple_list_item_1, apops_opt3));
+                }else if(apops_permis_index==12){
+                    mode=2;
+                    apopsasp2.setAdapter(new ArrayAdapter<String>(con, android.R.layout.simple_list_item_1, apops_opt2));
+                }else{
+                    mode=0;
+                    apopsasp2.setAdapter(new ArrayAdapter<String>(con, android.R.layout.simple_list_item_1, apops_opt));
+                }
+
             }
 
             @Override
@@ -314,19 +326,50 @@ public class appopsActivity extends AppCompatActivity {
         String cmdWrite = "appops write-settings ";
         String modestr="";
 
-        switch (apops_opt_index){
-            case 0:
-                modestr = "default";
-                break;
-            case 1:
-                modestr = "ignore";
-                break;
-            case 2:
-                modestr = "allow";
-                break;
-            case 3:
-                modestr = "foreground";
-                break;
+        if(mode == 0){
+            switch (apops_opt_index){
+                case 0:
+                    modestr = "default";
+                    break;
+                case 1:
+                    modestr = "ignore";
+                    break;
+                case 2:
+                    modestr = "allow";
+                    break;
+                case 3:
+                    modestr = "foreground";
+                    break;
+            }
+        }
+        if(mode ==1){
+            switch (apops_opt_index){
+                case 0:
+                    modestr = "true";
+                    break;
+                case 1:
+                    modestr = "false";
+                    break;
+            }
+        }
+        if(mode ==2){
+            switch (apops_opt_index){
+                case 0:
+                    modestr = "active";
+                    break;
+                case 1:
+                    modestr = "working_set";
+                    break;
+                case 2:
+                    modestr = "frequent";
+                    break;
+                case 3:
+                    modestr = "rare";
+                    break;
+                case 4:
+                    modestr = "restricted";
+                    break;
+            }
         }
 
         switch (apops_permis_index){
@@ -441,6 +484,13 @@ public class appopsActivity extends AppCompatActivity {
                 sb.append(cmdHead+" android.permission-group.NOTIFICATIONS "+modestr+";");
                 sb.append(cmdHead+" ACCESS_NOTIFICATIONS "+modestr+";");
                 sb.append(cmdHead+" POST_NOTIFICATION "+modestr+";");
+                sb.append(cmdHead+" android.permission.POST_NOTIFICATIONS "+modestr+";");
+                break;
+            case 11:
+                sb.append("am set-inactive $pp "+modestr+";");
+                break;
+            case 12:
+                sb.append("am set-standby-bucket $pp " + modestr +";");
                 break;
         }
         sb.append(cmdWrite);

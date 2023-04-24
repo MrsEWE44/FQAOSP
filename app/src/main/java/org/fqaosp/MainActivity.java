@@ -52,6 +52,7 @@ import org.fqaosp.myActivitys.imgMenuActivity;
 import org.fqaosp.myActivitys.importToolsActivity;
 import org.fqaosp.myActivitys.killAppActivity;
 import org.fqaosp.myActivitys.mountLocalImageActivity;
+import org.fqaosp.myActivitys.otherToolsActivity;
 import org.fqaosp.myActivitys.romToolsActivity;
 import org.fqaosp.myActivitys.sqliteManageActivity;
 import org.fqaosp.myActivitys.workProfileMenuActivity;
@@ -120,6 +121,7 @@ public class MainActivity extends Activity {
         menuEntities.add(new menuEntity("数据库编辑","该功能是用于编辑该软件产生的数据库文件。\r\n长按该选项即可进入。\n",sqliteManageActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_foreground),false,false));
         menuEntities.add(new menuEntity("分区管理","用于提取系统分区到本地或者刷入本地分区文件到分区位置。此功能需要root权限。\r\n 长按该选项即可进入。\r\n", imgMenuActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_data_usage_foreground),true,false));
         menuEntities.add(new menuEntity("ROM工具","用于rom固件相关的操作，例如解包payload.bin、system.new.dat文件，部分功能仍需要root权限才能解决。\r\n 长按该选项即可进入。\r\n", romToolsActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_android_foreground),false,false));
+        menuEntities.add(new menuEntity("其它工具","杂七杂八的小工具合集.\r\n 长按该选项即可进入。\r\n", otherToolsActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_foreground),true,true));
         menuEntities.add(new menuEntity("组件检查","用于检查该设备是否已经安装部分功能所需的额外扩展组件。\r\n 长按该选项即可进入。\r\n",importToolsActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_find_foreground),false,false));
 
         //创建并设置适配器
@@ -154,10 +156,9 @@ public class MainActivity extends Activity {
                         "FQAOSP(中文全称为: 法可油安卓),它是一个适用于类原生的搞机工具，同样也适用于国内定制ui系统，它拥有很多常用的功能，例如：后台清理、一键卸载与安装应用、安装某个指定的文件夹里面所有apk文件、将手机本地的pe镜像文件挂载给电脑重装系统、反/回编译软件、提取或者刷入系统分区文件、软件的备份与恢复、应用分身、共享手机本地文件给局域网内所有用户、搜索自己设定范围内的文件等等，未来还会加入更多功能，现在部分功能已经可以不再需要root，已经对接了shizuku，但是仍有部分需要root才能使用，后续会逐渐完善与shizuku的对接。\r\n" +
                         "如果有新功能或建议，可以在GitHub提issue！\r\n" +
                         "\n" +
-                        "1.合并payload/img2sdat/sdat2img源码.\n" +
-                        "2.修复分区提取与刷入功能.\n" +
-                        "3.更改makefqtools与rom工具功能参数位置\n" +
-                        "4.修改版本号为V1.3.0");
+                        "1.加入小工具集合(同步设置国内标准时间/设置设备刷新率/开启墓碑模式).\n" +
+                        "2.在应用管理界面加入应用待机与强制应用打盹配置选项.\n" +
+                        "3.修改版本号为V1.3.1\n");
                 amupdate.setVisibility(View.VISIBLE);
                 dl.closeDrawer(Gravity.LEFT);
             }

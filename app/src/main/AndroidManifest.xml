@@ -25,6 +25,7 @@
         android:roundIcon="@mipmap/fqaosp_icon_launcher"
         android:supportsRtl="true"
         android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/Theme.FQAOSP">
 
         <activity
@@ -49,6 +50,7 @@
         <activity android:name=".myActivitys.fileSharingActivity"/>
         <activity android:name=".myActivitys.imgMenuActivity"/>
         <activity android:name=".myActivitys.romToolsActivity"/>
+        <activity android:name=".myActivitys.otherToolsActivity"/>
 
 
         <provider
