@@ -15,20 +15,19 @@ import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.getPathByLastNameType;
 import static org.fqaosp.utils.multiFunc.checkBoxs;
-import static org.fqaosp.utils.multiFunc.checkCMDResult;
 import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.clearList;
-import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.getMyUID;
+import static org.fqaosp.utils.multiFunc.getRunTraverseCMDStr;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
-import static org.fqaosp.utils.multiFunc.runTraverseCMD;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
+import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
@@ -43,7 +42,6 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -51,11 +49,9 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -72,7 +68,6 @@ import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeWP;
 import org.fqaosp.utils.multiFunc;
-import org.fqaosp.utils.netUtils;
 import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
@@ -83,22 +78,18 @@ import java.util.Comparator;
 
 public class appopsActivity extends AppCompatActivity {
 
-    private Button appopsab2,apopsab4,apopsab5,apopsab6;
+    private Button appopsab2,apopsab6;
     private ListView lv1;
     private EditText apopsaet1;
-    private Switch apopsasb1 , apopsasb2,apopsasb3;
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private String uid;
     private Spinner apopsasp1,apopsasp2;
-    private netUtils ipMange = new netUtils();
-    private boolean switch_mode_tmp,switch_mode_autostart,switch_mode_all;
-    private String magiskDir="/data/adb/post-fs-data.d";
     private int nowItemIndex=-1;
     private View nowItemView = null;
     private boolean isRoot=false;
     private boolean isDisable=false;
-    private String apops_permis[] = {"通话/短信相关", "存储","剪切板","电池优化","后台运行","摄像头","麦克风","定位","日历","传感器扫描","通知","应用待机模式","应用待机活动"};
+    private String apops_permis[] = {"通话/短信相关", "存储","剪切板","电池优化","后台运行","摄像头","麦克风","定位","日历","传感器扫描","通知","待机模式","待机活动","应用联网"};
     private String apops_opt[] = {"默认", "拒绝","允许","仅在运行时允许"};
     private String apops_opt2[] = {"活跃", "工作集","常用","极少使用","受限"};
     private String apops_opt3[] = {"允许","拒绝"};
@@ -129,18 +120,12 @@ public class appopsActivity extends AppCompatActivity {
     }
 
     private void initBt(){
-        apopsasb1 = findViewById(R.id.apopsasb1);
-        apopsasb2 = findViewById(R.id.apopsasb2);
-        apopsasb3 = findViewById(R.id.apopsasb3);
         appopsab2 = findViewById(R.id.apopsab2);
-        apopsab4 = findViewById(R.id.apopsab4);
-        apopsab5 = findViewById(R.id.apopsab5);
         apopsab6 = findViewById(R.id.apopsab6);
         apopsaet1 = findViewById(R.id.apopsaet1);
         lv1 = findViewById(R.id.apopsalv1);
         apopsasp1 = findViewById(R.id.apopsasp1);
         apopsasp2 = findViewById(R.id.apopsasp2);
-        apopsasb1.setChecked(true);
         apopsasp1.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_permis));
         apopsasp2.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_opt));
         checkTools(this);
@@ -149,12 +134,13 @@ public class appopsActivity extends AppCompatActivity {
 
     private void clickedBt(){
         Context con = this;
+        Activity activity = this;
 
         apopsasp1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 apops_permis_index = i;
-                if(apops_permis_index==11){
+                if(apops_permis_index==11||apops_permis_index==13){
                     mode=1;
                     apopsasp2.setAdapter(new ArrayAdapter<String>(con, android.R.layout.simple_list_item_1, apops_opt3));
                 }else if(apops_permis_index==12){
@@ -185,98 +171,13 @@ public class appopsActivity extends AppCompatActivity {
             }
         });
 
-        apopsasb1.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                switch_mode_tmp=b;
-            }
-        });
-
-        apopsasb2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                switch_mode_autostart=b;
-            }
-        });
-
-        apopsasb3.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                switch_mode_all=b;
-            }
-        });
 
         appopsab2.setOnClickListener((v)->{
             String searchStr = apopsaet1.getText().toString();
-            pkginfos = multiFunc.indexOfPKGS(appopsActivity.this,searchStr,pkginfos,checkboxs,0);
+            pkginfos = multiFunc.indexOfPKGS(activity,searchStr,pkginfos,checkboxs,0);
             showPKGS(lv1);
         });
 
-        apopsab4.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(isRoot){
-                    AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在禁用应用联网,请稍后(可能会出现无响应，请耐心等待)....");
-                    preventDismissDialog(show);
-                    view.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart && switch_mode_all){
-                                auto_start_clicked(0,true,show);
-                            }
-
-                            if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart==false && switch_mode_all){
-                                default_clicked(0,true,show);
-                            }
-
-                            if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart && switch_mode_all==false){
-                                auto_start_clicked(0,false,show);
-                            }
-
-                            if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart==false && switch_mode_all ==false){
-                                default_clicked(0,false,show);
-                            }
-                        }
-                    });
-                }else{
-                    showMyDialog(con,"提示","本功能需要root才能正常使用");
-                }
-
-            }
-        });
-
-        apopsab5.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(isRoot){
-                    AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在启用应用联网,请稍后(可能会出现无响应，请耐心等待)....");
-                    preventDismissDialog(show);
-                    view.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart && switch_mode_all){
-                                auto_start_clicked(1,true,show);
-                            }
-
-                            if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart==false && switch_mode_all){
-                                default_clicked(1,true,show);
-                            }
-
-                            if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart && switch_mode_all==false){
-                                auto_start_clicked(1,false,show);
-                            }
-
-                            if((switch_mode_tmp || switch_mode_tmp==false) && switch_mode_autostart==false && switch_mode_all ==false){
-                                default_clicked(1,false,show);
-                            }
-                        }
-                    });
-                }else{
-                    showMyDialog(con,"提示","本功能需要root才能正常使用");
-                }
-
-            }
-        });
 
         lv1.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -289,7 +190,7 @@ public class appopsActivity extends AppCompatActivity {
                     intent.putExtra("uid",uid);
                     startActivity(intent);
                 } catch (PackageManager.NameNotFoundException e) {
-                    Toast.makeText(appopsActivity.this, "未安装该应用", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(con, "未安装该应用", Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -307,14 +208,7 @@ public class appopsActivity extends AppCompatActivity {
 
         //应用appops权限更改
         apopsab6.setOnClickListener((v)->{
-            AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在应用更改,请稍后(可能会出现无响应，请耐心等待)....");
-            preventDismissDialog(show);
-            v.post(new Runnable() {
-                @Override
-                public void run() {
-                    runTraverseCMD(appopsActivity.this,pkginfos,checkboxs,spliceCMDStr(),isRoot,show,"权限修改完成","权限修改出现错误");
-                }
-            });
+            showCMDInfoMSG(con,v,getRunTraverseCMDStr(pkginfos,checkboxs,spliceCMDStr()),isRoot,"提示","正在应用更改,请稍后(可能会出现无响应，请耐心等待)....");
         });
 
     }
@@ -492,9 +386,14 @@ public class appopsActivity extends AppCompatActivity {
             case 12:
                 sb.append("am set-standby-bucket $pp " + modestr +";");
                 break;
+            case 13:
+                appopsCmdStr acs = new appopsCmdStr();
+                sb.append(modestr.equals("true")?acs.enableAppByAPPUIDCMD("$pp"):acs.disableAppByAPPUIDCMD("$pp"));
+                break;
         }
-        sb.append(cmdWrite);
-
+        if(apops_permis_index < 11){
+            sb.append(cmdWrite);
+        }
         return sb.toString();
     }
 
@@ -538,116 +437,60 @@ public class appopsActivity extends AppCompatActivity {
 
     }
 
-
-    //安装文件夹里面所有apk文件
-    private CMD installApkOnDir(String dir){
-        Context that = this;
-        String filesDir =getMyHomeFilesPath(that);
-        String barfile = filesDir+"/"+script_name;
-        String cmdstr = "";
-        if(isRoot){
-//            Log.d("installApkOnDir","禁用脚本已存在");
-            cmdstr = "sh "+barfile+" inapkonpath " + dir;
-        }else if(isRoot == false && checkShizukuPermission(6)){
-            String tmpPath = "/data/local/tmp/aa.apk";
-            cmdstr = " for p in $(find "+dir+" -name \"*.apk\") ;do cp $p "+tmpPath+"; pm install "+tmpPath+"; rm -rf "+tmpPath+"; done; exit 0;";
-        }else{
-            showImportToolsDialog(that,"apks安装脚本无法获取，请退出重试或者重新安装app","apks安装脚本没有找到,请补全脚本再尝试安装.");
-        }
-        return getCMD(that,cmdstr,isRoot);
-    }
-
-    //安装apks文件
-    private void installAPKS(String apksFilePath){
-        String filesDir =getMyHomeFilesPath(this);
-        String barfile = filesDir+"/"+script_name;
-        String cmdstr = "sh "+barfile+" inapks " + apksFilePath;
-        CMD cmd = isRoot ? new CMD(cmdstr) : new CMD(cmdstr.split(" "));
-        checkCMDResult(appopsActivity.this,cmd,"安装apks成功","安装apks失败");
-    }
-
     //安装本地文件
     private void installLocalPKG(int install_mode){
-        AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
-        nowItemView.post(new Runnable() {
-            @Override
-            public void run() {
-                int hit=0;
-                appopsCmdStr acs = new appopsCmdStr();
-                StringBuilder sb = new StringBuilder();
-                sb.append("aaa=(");
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        String apkpath = pkginfo.getApkpath();
-                        if(getPathByLastNameType(apkpath).equals("apks")){
-                            installAPKS(apkpath);
-                        }else{
-                            sb.append("\""+apkpath+"\" ");
-                        }
-                        hit++;
-                    }
-                }
-                if(hit ==0){
-                    PKGINFO pkginfo = pkginfos.get(nowItemIndex);
-                    String apkpath = pkginfo.getApkpath();
-                    if(getPathByLastNameType(apkpath).equals("apks")){
-                        installAPKS(apkpath);
-                    }else{
-                        sb.append("\""+apkpath+"\" ");
-                    }
-                }
-                String cmdstr = "";
-                switch (install_mode){
-                    case 0:
-                        cmdstr = acs.getInstallLocalPkgCMD(uid, "$pp");
-                        break;
-                    case 1:
-                        cmdstr = acs.getInstallLocalPkgOnDowngradeCMD(uid, "$pp");
-                        break;
-                    case 2:
-                        cmdstr = acs.getInstallLocalPkgOnDebugCMD(uid, "$pp");
-                        break;
-                    case 3:
-                        cmdstr = acs.getInstallLocalPkgOnExistsCMD(uid, "$pp");
-                        break;
-                }
-                sb.append(");for pp in ${aaa[@]};do "+cmdstr+";done;");
-                CMD cmd = getCMD(appopsActivity.this,sb.toString(),isRoot);
-                multiFunc.dismissDialog(show);
-                checkCMDResult( appopsActivity.this,cmd,"成功安装","安装失败");
+        int hit=0;
+        appopsCmdStr acs = new appopsCmdStr();
+        StringBuilder sb = new StringBuilder();
+        String filesDir =getMyHomeFilesPath(this);
+        String barfile = filesDir+"/"+script_name;
+        //安装apks文件
+        String apkscmdstr = "sh "+barfile+" inapks $pp";
+        sb.append("aaa=(");
+        for (int i = 0; i < checkboxs.size(); i++) {
+            if(checkboxs.get(i)){
+                PKGINFO pkginfo = pkginfos.get(i);
+                String apkpath = pkginfo.getApkpath();
+                sb.append("\""+apkpath+"\" ");
+                hit++;
             }
-        });
+        }
+        if(hit ==0){
+            PKGINFO pkginfo = pkginfos.get(nowItemIndex);
+            String apkpath = pkginfo.getApkpath();
+            sb.append("\""+apkpath+"\" ");
+        }
+        String cmdstr = "";
+        switch (install_mode){
+            case 0:
+                cmdstr = acs.getInstallLocalPkgCMD(uid, "$pp");
+                break;
+            case 1:
+                cmdstr = acs.getInstallLocalPkgOnDowngradeCMD(uid, "$pp");
+                break;
+            case 2:
+                cmdstr = acs.getInstallLocalPkgOnDebugCMD(uid, "$pp");
+                break;
+            case 3:
+                cmdstr = acs.getInstallLocalPkgOnExistsCMD(uid, "$pp");
+                break;
+        }
+        sb.append(");for pp in ${aaa[@]};do if [[ `echo $pp |grep \".apks\"` != \"\" ]];then "+apkscmdstr+";else "+cmdstr+" fi;done;");
+        showCMDInfoMSG(appopsActivity.this,nowItemView,sb.toString(),isRoot,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
     }
-
 
     //卸载应用
     private void uninstallPKG(){
-        AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在卸载应用,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
-        nowItemView.post(new Runnable() {
-            @Override
-            public void run() {
-                makeWP makewp = new makeWP();
-                String cmdstr = makewp.getUninstallPkgByUIDCMD(uid, "$pp");
-                runTraverseCMD(appopsActivity.this,pkginfos,checkboxs,cmdstr,isRoot,show,"成功卸载","卸载失败");
-            }
-        });
+        makeWP makewp = new makeWP();
+        String cmdstr = makewp.getUninstallPkgByUIDCMD(uid, "$pp");
+        showCMDInfoMSG(appopsActivity.this,nowItemView,getRunTraverseCMDStr(pkginfos,checkboxs,cmdstr),isRoot,"提示","正在卸载应用,请稍后(可能会出现无响应，请耐心等待)....");
     }
 
     //修改应用状态,禁用或者启用
     private void changePKGState(){
-        AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在"+(isDisable?"启动":"禁用")+"应用,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
-        nowItemView.post(new Runnable() {
-            @Override
-            public void run() {
-                makeWP makewp = new makeWP();
-                String cmdstr = isDisable?makewp.getChangePkgOnEnableByUIDCMD(uid, "$pp"):makewp.getChangePkgOnDisableByUIDCMD(uid,"$pp");
-                runTraverseCMD(appopsActivity.this,pkginfos,checkboxs,cmdstr,isRoot,show,"修改成功","修改失败");
-            }
-        });
+        makeWP makewp = new makeWP();
+        String cmdstr = isDisable?makewp.getChangePkgOnEnableByUIDCMD(uid, "$pp"):makewp.getChangePkgOnDisableByUIDCMD(uid,"$pp");
+        showCMDInfoMSG(appopsActivity.this,nowItemView,getRunTraverseCMDStr(pkginfos,checkboxs,cmdstr),isRoot,"提示","正在"+(isDisable?"启动":"禁用")+"应用,请稍后(可能会出现无响应，请耐心等待)....");
     }
 
     //提取apk文件
@@ -770,96 +613,9 @@ public class appopsActivity extends AppCompatActivity {
         return super.onContextItemSelected(item);
     }
 
-    private void getUserEnablePKGS(){
-        multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
-    }
-
-    //获取启用的应用程序
-    private void getEnablePKGS(){
-        multiFunc.queryEnablePKGS(this,pkginfos,checkboxs,0);
-    }
-
-    //获取对应的应用程序
-    private void getUserPKGS(){
-        multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
-    }
-
-    //获取对应的应用程序
-    private void getPKGS(){
-        multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
-    }
-
     private void showPKGS(ListView listView){
         PKGINFOAdapter pkginfoAdapter = new PKGINFOAdapter(pkginfos, appopsActivity.this, checkboxs);
         listView.setAdapter(pkginfoAdapter);
-    }
-
-    private  void default_clicked(int mode,boolean isall,AlertDialog show){
-        if(isall){
-            for (int i = 0; i < checkboxs.size(); i++) {
-                PKGINFO pkginfo = pkginfos.get(i);
-                default_click(pkginfo,mode);
-            }
-        }else{
-            for (int i = 0; i < checkboxs.size(); i++) {
-                if(checkboxs.get(i)){
-                    PKGINFO pkginfo = pkginfos.get(i);
-                    default_click(pkginfo,mode);
-                }
-            }
-        }
-        multiFunc.dismissDialog(show);
-    }
-
-    private void default_click(PKGINFO pkginfo,int mode){
-        String cmdStr = ipMange.disableAppByAPPUIDCMD(pkginfo.getApkuid());
-        if(mode == 1){
-            cmdStr = ipMange.enableAppByAPPUIDCMD(pkginfo.getApkuid());
-        }
-        CMD cmd = new CMD(cmdStr);
-        if(cmd.getResultCode() == 0){
-            Toast.makeText(appopsActivity.this, pkginfo.getAppname() +" 已经执行完成", Toast.LENGTH_SHORT).show();
-        }else{
-            Toast.makeText(appopsActivity.this, pkginfo.getAppname() +" 看样子不能执行", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void auto_start(PKGINFO pkginfo,String magiskDir,String filepath,int mode){
-        String cmdStr = "[ -d "+magiskDir+" ] && echo '"+ipMange.disableAppByAPPUIDCMD(pkginfo.getApkuid()) +" #"+pkginfo.getAppname()+"' >> "+filepath +" && chmod 755 "+filepath;
-        if(mode == 1){
-            cmdStr = "[ -d "+magiskDir+" ] && echo '"+ipMange.enableAppByAPPUIDCMD(pkginfo.getApkuid()) +" #"+pkginfo.getAppname()+"' >> "+filepath +" && chmod 755 "+filepath;
-        }
-        CMD cmd = new CMD(cmdStr);
-        if(cmd.getResultCode() != 0){
-            Toast.makeText(appopsActivity.this, "需要安装alpha面具", Toast.LENGTH_SHORT).show();
-        }
-        Log.i("auto_start :: ",cmd.getResultCode() + " -- "+cmd.getResult());
-    }
-
-    private  void auto_start_clicked(int mode,boolean isall,AlertDialog show){
-        String autoStartScriptName = "disableIptables.sh";
-        if(mode == 1){
-            autoStartScriptName = "enableIptables.sh";
-        }
-        String filepath=magiskDir + "/" + autoStartScriptName;
-        String firstcmd="[ -f "+filepath +" ] && rm -rf "+ filepath;
-        CMD cmd1 = new CMD(firstcmd);
-        cmd1.getResultCode();
-        if(isall){
-            for (int i = 0; i < checkboxs.size(); i++) {
-                PKGINFO pkginfo = pkginfos.get(i);
-                auto_start(pkginfo,magiskDir,filepath,mode);
-            }
-        }else{
-            for (int i = 0; i < checkboxs.size(); i++) {
-                if(checkboxs.get(i)){
-                    PKGINFO pkginfo = pkginfos.get(i);
-                    auto_start(pkginfo,magiskDir,filepath,mode);
-                }
-            }
-        }
-        multiFunc.dismissDialog(show);
-
     }
 
     @Override
@@ -874,11 +630,6 @@ public class appopsActivity extends AppCompatActivity {
         menu.add(Menu.NONE,7,7,"帮助");
         menu.add(Menu.NONE,8,8,"退出");
         return super.onCreateOptionsMenu(menu);
-    }
-
-    //获取已经禁用的应用程序
-    private void getDisablePKGS(){
-        multiFunc.queryDisablePKGS(this,pkginfos,checkboxs,0);
     }
 
     private void getPKGByUID(String cmdstr){
@@ -943,7 +694,7 @@ public class appopsActivity extends AppCompatActivity {
         switch (itemId){
             case 0:
                 if(uid == null || uid.equals(getMyUID())){
-                    getEnablePKGS();
+                    multiFunc.queryEnablePKGS(this,pkginfos,checkboxs,0);
                     showPKGS(lv1);
                 }else{
                     getPKGByUID(wp.getPkgByUIDCMD(uid));
@@ -951,7 +702,7 @@ public class appopsActivity extends AppCompatActivity {
                 break;
             case 1:
                 if(uid == null || uid.equals(getMyUID())){
-                    getPKGS();
+                    multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
                     showPKGS(lv1);
                 }else{
                     getPKGByUID(wp.getPkgByUIDCMD(uid));
@@ -960,7 +711,7 @@ public class appopsActivity extends AppCompatActivity {
                 break;
             case 2:
                 if(uid == null|| uid.equals(getMyUID())){
-                    getUserEnablePKGS();
+                    multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
                     showPKGS(lv1);
                 }else{
                     getPKGByUID(wp.getUserPkgByUIDCMD(uid));
@@ -969,7 +720,7 @@ public class appopsActivity extends AppCompatActivity {
                 break;
             case 3:
                 if(uid == null|| uid.equals(getMyUID())){
-                    getUserPKGS();
+                    multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
                     showPKGS(lv1);
                 }else{
                     getPKGByUID(wp.getUserPkgByUIDCMD(uid));
@@ -978,7 +729,7 @@ public class appopsActivity extends AppCompatActivity {
             case 4:
                 isDisable=true;
                 if(uid == null || uid.equals(getMyUID())){
-                    getDisablePKGS();
+                    multiFunc.queryDisablePKGS(this,pkginfos,checkboxs,0);
                     showPKGS(lv1);
                 }else{
                     getPKGByUID(wp.getDisablePkgByUIDCMD(uid));
@@ -993,14 +744,12 @@ public class appopsActivity extends AppCompatActivity {
                 break;
             case 7:
                 showInfoMsg(this,"帮助信息","该页面是用于应用管理的,支持应用提取、详情跳转、卸载应用、导出应用信息、安装apks/apk应用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
-                        "1.禁用联网，勾选列出来的应用，即可批量禁用联网权限.\r\n" +
-                        "2.启用联网，勾选列出来的应用，即可批量禁用联网权限.\r\n" +
-                        "3.上面有个搜索框，支持中英文搜索，无大小写限制.\r\n" +
-                        "4.长按应用列表会出现相关操作菜单，根据自己需求点击即可。支持批量操作。\r\n" +
-                        "5.右上角\"选择本地应用\",支持选择apks进行安装，传统apk文件可以加载出图标。\r\n" +
-                        "6.点击应用列表，则会进入到应用配置页面.\r\n" +
-                        "7.右上角\"选择本地安装包文件夹\"，选择一个文件夹，会自动安装里面所有apk/apks文件.如果你是通过mt直接从/data/app连同文件夹一起提取的，效果会更好。\r\n" +
-                        "8.应用更改，该按钮的作用是用来配置应用权限，可以批量或者勾选操作，不勾选则默认全部生效。左边是你想要操作的权限名称，右边是设置的模式。\r\n假如你想要将fqaosp的存储权限给拒绝掉：可以先点击左边的权限列表，选中\"存储\"，然后在右边列表中选择\"拒绝\"，最后勾选中fqaosp(如果不勾选而直接点击按钮，则会默认生效所有应用，请斟酌！)，点击\"应用更改\"即可生效。\r\n");
+                        "1.搜索框，支持中英文搜索，无大小写限制.\r\n" +
+                        "2.长按应用列表会出现相关操作菜单，根据自己需求点击即可。支持批量操作。\r\n" +
+                        "3.右上角\"选择本地应用\",支持选择apks进行安装，传统apk文件可以加载出图标。\r\n" +
+                        "4.点击应用列表，则会进入到应用配置页面.\r\n" +
+                        "5.右上角\"选择本地安装包文件夹\"，选择一个文件夹，会自动安装里面所有apk/apks文件.如果你是通过mt直接从/data/app连同文件夹一起提取的，效果会更好。\r\n" +
+                        "6.应用更改，该按钮的作用是用来配置应用权限(部分权限配置需要root权限)，可以批量或者勾选操作，不勾选则默认全部生效。左边是你想要操作的权限名称，右边是设置的模式。\r\n假如你想要将fqaosp的存储权限给拒绝掉：可以先点击左边的权限列表，选中\"存储\"，然后在右边列表中选择\"拒绝\"，最后勾选中fqaosp(如果不勾选而直接点击按钮，则会默认生效所有应用，请斟酌！)，点击\"应用更改\"即可生效。\r\n");
                 break;
             case 8:
                 fuckActivity.getIns().killall();
@@ -1033,6 +782,7 @@ public class appopsActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         String storage = Environment.getExternalStorageDirectory().toString();
+        Context that = this;
         if(requestCode == 0){
             clearList(pkginfos,checkboxs);
             PackageManager pm = getPackageManager();
@@ -1049,34 +799,23 @@ public class appopsActivity extends AppCompatActivity {
             showPKGS(lv1);
         }
 
+        //安装文件夹里面所有apk文件
         if(requestCode == 43){
             if(data.getData() != null) {//只有一个文件咯
                 Uri uri = data.getData();
                 String filePath = storage + "/" +uri.getPath().replaceAll("/tree/primary:","");
-                AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
-                preventDismissDialog(show);
-                Handler handler = new Handler(){
-                    @Override
-                    public void handleMessage(@NonNull Message msg) {
-                        multiFunc.dismissDialog(show);
-                        if(msg.what==0){
-                            showInfoMsg(appopsActivity.this,"提示","安装 [ " + filePath + " ] 文件夹里所有程序成功");
-                        }else{
-                            showInfoMsg(appopsActivity.this,"提示","安装 [ " + filePath + " ] 文件夹里程序失败");
-
-                        }
-                    }
-                };
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        CMD cmd = installApkOnDir(filePath);
-                        Message msg = new Message();
-                        msg.what=cmd.getResultCode();
-                        msg.obj=cmd.getResult();
-                        handler.sendMessage(msg);
-                    }
-                }).start();
+                String filesDir =getMyHomeFilesPath(that);
+                String barfile = filesDir+"/"+script_name;
+                String cmdstr = "";
+                if(isRoot){
+                    cmdstr = "sh "+barfile+" inapkonpath " + filePath;
+                }else if(isRoot == false && checkShizukuPermission(6)){
+                    String tmpPath = "/data/local/tmp/aa.apk";
+                    cmdstr = " for p in $(find "+filePath+" -name \"*.apk\") ;do cp $p "+tmpPath+"; pm install "+tmpPath+"; rm -rf "+tmpPath+"; done; exit 0;";
+                }else{
+                    showInfoMsg(that,"错误","该功能需要adb或者root权限才能使用!!!!");
+                }
+                showCMDInfoMSG(that,null,cmdstr,isRoot,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
             }
         }
     }

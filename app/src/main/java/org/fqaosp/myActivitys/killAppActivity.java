@@ -8,6 +8,7 @@ import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
@@ -132,62 +133,55 @@ public class killAppActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                view.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        StringBuilder sb = new StringBuilder();
-                        sb.append("aaa=(");
-                        if(kaasb3Bool){
-                            for (int i = 0; i < checkboxs.size(); i++) {
-                                if(!checkboxs.get(i)){
-                                    PKGINFO pkginfo = pkginfos.get(i);
-                                    if(!pkginfo.getPkgname().equals(getPackageName())){
-                                        sb.append("\""+pkginfo.getPkgname()+"\" ");
-                                    }
-                                }
-                            }
-                        }
 
-                        if(kaasb2Bool){
-                            for (int i = 0; i < checkboxs.size(); i++) {
-                                if(checkboxs.get(i)){
-                                    PKGINFO pkginfo = pkginfos.get(i);
-                                    if(!pkginfo.getPkgname().equals(getPackageName())){
-                                        sb.append("\""+pkginfo.getPkgname()+"\" ");
-                                    }
-                                }
+                StringBuilder sb = new StringBuilder();
+                sb.append("aaa=(");
+                if(kaasb3Bool){
+                    for (int i = 0; i < checkboxs.size(); i++) {
+                        if(!checkboxs.get(i)){
+                            PKGINFO pkginfo = pkginfos.get(i);
+                            if(!pkginfo.getPkgname().equals(getPackageName())){
+                                sb.append("\""+pkginfo.getPkgname()+"\" ");
                             }
                         }
-
-                        if(kaasb1Bool){
-                            for (PKGINFO pkginfo : pkginfos) {
-                                if(!pkginfo.getPkgname().equals(getPackageName())){
-                                    sb.append("\""+pkginfo.getPkgname()+"\" ");
-                                }
-                            }
-                        }
-
-                        if(kaasb1Bool==false && kaasb2Bool ==false && kaasb3Bool ==false){
-                            if(killAppdb.count() == 0){
-                                for (PKGINFO pkginfo : pkginfos) {
-                                    if(!pkginfo.getPkgname().equals(getPackageName())){
-                                        sb.append("\""+pkginfo.getPkgname()+"\" ");
-                                    }
-                                }
-                            }else{
-                                HashMap<String, Integer> select = killAppdb.select(null, 0);
-                                for (Map.Entry<String, Integer> entry : select.entrySet()) {
-                                    sb.append("\""+entry.getKey()+"\" ");
-                                }
-                            }
-                        }
-                        Toast.makeText(killAppActivity.this, "所有进程都已终止 ", Toast.LENGTH_SHORT).show();
-                        sb.append(");for pp in ${aaa[@]};do am force-stop $pp ;done;");
-                        CMD cmd = getCMD(killAppActivity.this,sb.toString(),isRoot);
-                        checkCMDResult(killAppActivity.this,cmd,"已全部终止","终止后台进程失败 : ");
-                        getRunning(1);
                     }
-                });
+                }
+
+                if(kaasb2Bool){
+                    for (int i = 0; i < checkboxs.size(); i++) {
+                        if(checkboxs.get(i)){
+                            PKGINFO pkginfo = pkginfos.get(i);
+                            if(!pkginfo.getPkgname().equals(getPackageName())){
+                                sb.append("\""+pkginfo.getPkgname()+"\" ");
+                            }
+                        }
+                    }
+                }
+
+                if(kaasb1Bool){
+                    for (PKGINFO pkginfo : pkginfos) {
+                        if(!pkginfo.getPkgname().equals(getPackageName())){
+                            sb.append("\""+pkginfo.getPkgname()+"\" ");
+                        }
+                    }
+                }
+
+                if(kaasb1Bool==false && kaasb2Bool ==false && kaasb3Bool ==false){
+                    if(killAppdb.count() == 0){
+                        for (PKGINFO pkginfo : pkginfos) {
+                            if(!pkginfo.getPkgname().equals(getPackageName())){
+                                sb.append("\""+pkginfo.getPkgname()+"\" ");
+                            }
+                        }
+                    }else{
+                        HashMap<String, Integer> select = killAppdb.select(null, 0);
+                        for (Map.Entry<String, Integer> entry : select.entrySet()) {
+                            sb.append("\""+entry.getKey()+"\" ");
+                        }
+                    }
+                }
+                sb.append(");for pp in ${aaa[@]};do am force-stop $pp ;done;");
+                showCMDInfoMSG(killAppActivity.this,view,sb.toString(),isRoot,"提示","正在清理后台进程,请稍后(可能会出现无响应，请耐心等待)....");
             }
         });
 

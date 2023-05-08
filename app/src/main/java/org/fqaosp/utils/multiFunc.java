@@ -395,7 +395,7 @@ public class multiFunc {
         };
     }
 
-    public static void runTraverseCMD(Context context, ArrayList<PKGINFO> pkginfos,ArrayList<Boolean> checkboxs ,String cmdstr,Boolean isRoot,AlertDialog show,String msg1,String msg2){
+    public static String getRunTraverseCMDStr(ArrayList<PKGINFO> pkginfos,ArrayList<Boolean> checkboxs ,String cmdstr){
         int hit=0;
         StringBuilder sb = new StringBuilder();
         sb.append("aaa=(");
@@ -412,8 +412,11 @@ public class multiFunc {
         }
 
         sb.append(");for pp in ${aaa[@]};do "+cmdstr+";done;");
+        return sb.toString();
+    }
 
-        CMD cmd = getCMD(context ,sb.toString(),isRoot);
+    public static void runTraverseCMD(Context context, ArrayList<PKGINFO> pkginfos,ArrayList<Boolean> checkboxs ,String cmdstr,Boolean isRoot,AlertDialog show,String msg1,String msg2){
+        CMD cmd = getCMD(context ,getRunTraverseCMDStr(pkginfos,checkboxs,cmdstr),isRoot);
         multiFunc.dismissDialog(show);
         checkCMDResult(context,cmd,msg1,msg2);
     }
@@ -428,9 +431,49 @@ public class multiFunc {
         }
     }
 
+    public static void showCMDInfoMSG(Context context,View v,String cmdstr,Boolean isRoot,String dialogTitle,String dialogMsg){
+        AlertDialog show = showMyDialog(context,dialogTitle,dialogMsg);
+        preventDismissDialog(show);
+        Handler handler = new Handler(){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                super.handleMessage(msg);
+                if(msg.what == 0){
+                    multiFunc.dismissDialog(show);
+                    showInfoMsg(context,"提示","已执行完毕: \r\n\r\n"+msg.obj.toString());
+                }
+            }
+        };
+        if(v == null){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    CMD cmd = getCMD(context,cmdstr,isRoot);
+                    sendHandlerMSG(handler,0,cmd.getResultCode()+"---->"+cmd.getResult());
+                }
+            }).start();
+        }else{
+            v.post(new Runnable() {
+                @Override
+                public void run() {
+                    CMD cmd = getCMD(context,cmdstr,isRoot);
+                    sendHandlerMSG(handler,0,cmd.getResultCode()+"---->"+cmd.getResult());
+                }
+            });
+        }
+
+    }
+
     public static void sendHandlerMSG(Handler handler , int value){
         Message msg = new Message();
         msg.what=value;
+        handler.sendMessage(msg);
+    }
+
+    public static void sendHandlerMSG(Handler handler , int value,Object obj){
+        Message msg = new Message();
+        msg.what=value;
+        msg.obj=obj;
         handler.sendMessage(msg);
     }
 

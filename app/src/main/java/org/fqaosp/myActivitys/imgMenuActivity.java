@@ -158,10 +158,7 @@ public class imgMenuActivity extends AppCompatActivity {
                                 String cmdhead="dd if="+localImgPath;
                                 String cmdstr = "if [ -b "+mpper+" ];then "+cmdhead+" of="+mpper+" ; elif [ -b "+booter +" ];then "+cmdhead+" of="+booter +"; else echo 'error !';fi";
                                 CMD cmd = getCMD(context, cmdstr, true);
-                                Message msg = new Message();
-                                msg.what=0;
-                                msg.obj="分区已刷入完毕: \r\n"+localImgPath+"  ------>>>>>   "+partname+"\r\n\r\n"+cmd.getResultCode()+" -- " + cmd.getResult();
-                                handler.sendMessage(msg);
+                                sendHandlerMSG(handler,0,"分区已刷入完毕: \r\n"+localImgPath+"  ------>>>>>   "+partname+"\r\n\r\n"+cmd.getResultCode()+" -- " + cmd.getResult());
                             }
                         }).start();
                     }
@@ -215,37 +212,18 @@ public class imgMenuActivity extends AppCompatActivity {
                 view.post(new Runnable() {
                     @Override
                     public void run() {
-                        if(switchBool3){
-                            //未勾选
-                            for (int i = 0; i < dumpCheckboxs.size(); i++) {
-                                if(!dumpCheckboxs.get(i)){
-                                    sb.append("\""+dumpList.get(i)+"\" ");
-                                }
-                            }
-                        }
-
-                        if(switchBool2){
-                            //勾选
-                            for (int i = 0; i < dumpCheckboxs.size(); i++) {
-                                if(dumpCheckboxs.get(i)){
-                                    sb.append("\""+dumpList.get(i)+"\" ");
-                                }
-                            }
-                        }
-
-                        if(switchBool1){
-                            //所有
-                            for (String s : dumpList) {
+                        for (int i = 0; i < dumpCheckboxs.size(); i++) {
+                            String s  =dumpList.get(i);
+                            if(switchBool3 && !dumpCheckboxs.get(i)){
                                 sb.append("\""+s+"\" ");
                             }
-                        }
-                        //都没有勾选
-                        if(switchBool1==false && switchBool2 ==false && switchBool3 ==false){
-                            //如果都没有选择，我们就默认走已经勾选的
-                            for (int i = 0; i < dumpCheckboxs.size(); i++) {
-                                if(dumpCheckboxs.get(i)){
-                                    sb.append("\""+dumpList.get(i)+"\" ");
-                                }
+
+                            if(switchBool2 && dumpCheckboxs.get(i)){
+                                sb.append("\""+s+"\" ");
+                            }
+
+                            if(switchBool1){
+                                sb.append("\""+s+"\" ");
                             }
                         }
                         String outCmd="of="+outDir+"/${pp}.img";

@@ -19,5 +19,18 @@ public class appopsCmdStr {
         return "rm -rf "+localTmpFile+" && cp \""+apkPath+"\" " + localTmpFile +" && pm install --user "+uid+" -r " + localTmpFile;
     }
 
+    public String getPKGUIDByCMD(String pkgname){
+        return "pm list packages -U|grep "+pkgname+"|cut -d ':' -f3";
+    }
+
+    public String disableAppByAPPUIDCMD(String pkgname){
+        String cmd = "iptables -I OUTPUT -m owner --uid-owner $("+getPKGUIDByCMD(pkgname)+") -j DROP";
+        return cmd;
+    }
+
+    public String enableAppByAPPUIDCMD(String pkgname){
+        String cmd = "iptables -I OUTPUT -m owner --uid-owner $("+getPKGUIDByCMD(pkgname)+") -j ACCEPT";
+        return cmd;
+    }
 
 }

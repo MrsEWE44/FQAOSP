@@ -41,6 +41,27 @@
             android:layout_weight="1"
             android:id="@+id/otabt3"
             android:text="调整刷新率"></Button>
+        <Button
+            android:layout_marginLeft="5px"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:id="@+id/otabt4"
+            android:text="去掉信号X"></Button>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:id="@+id/otabt5"
+            android:text="设置ntp服务器"></Button>
 
     </LinearLayout>
 
