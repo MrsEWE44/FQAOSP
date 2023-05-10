@@ -1,11 +1,10 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -81,9 +80,8 @@ public class sqliteManageActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
-                AlertDialog show = showMyDialog(sqliteManageActivity.this,"提示","正在更新数据库,请稍后(可能会出现无响应，请耐心等待)....");
-                preventDismissDialog(show);
-                view.post(new Runnable() {
+                ProgressDialog show = showMyDialog(sqliteManageActivity.this,"正在更新数据库,请稍后(可能会出现无响应，请耐心等待)....");
+                new Thread(new Runnable() {
                     @Override
                     public void run() {
                         int childCount = tableLayout.getChildCount();
@@ -128,7 +126,7 @@ public class sqliteManageActivity extends AppCompatActivity {
                                     showDatabase(killAppdb,tableLayout,horizontalScrollView,scrollView);
                                 }
 
-                                multiFunc.dismissDialog(show);
+                                show.dismiss();
                                 break;
                             }
                             try {
@@ -140,7 +138,7 @@ public class sqliteManageActivity extends AppCompatActivity {
 
 
                     }
-                });
+                }).start();
 
             }
         });

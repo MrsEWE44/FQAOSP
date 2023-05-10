@@ -5,21 +5,19 @@ import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.writeDataToPath;
 import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.ActivityManager;
-import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -39,7 +37,6 @@ import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
-import org.fqaosp.utils.multiFunc;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -132,24 +129,23 @@ public class romToolsActivity extends AppCompatActivity {
         });
 
         rrab1.setOnClickListener((v)->{
-            AlertDialog show = showMyDialog(context,"提示","正在扫描本地IMG镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
-            preventDismissDialog(show);
+            ProgressDialog show = showMyDialog(context,"正在扫描本地IMG镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
             Handler handler = new Handler(){
                 @Override
                 public void handleMessage(@NonNull Message msg) {
                     if(msg.what==0){
                         showRomImgs(rralv1);
-                        multiFunc.dismissDialog(show);
+                        show.dismiss();
                     }
                 }
             };
-            v.post(new Runnable() {
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
                     findROMImgs();
                     sendHandlerMSG(handler,0);
                 }
-            });
+            }).start();
 
         });
 
@@ -178,24 +174,23 @@ public class romToolsActivity extends AppCompatActivity {
         });
 
         ruab1.setOnClickListener((v)->{
-            AlertDialog show = showMyDialog(context,"提示","正在扫描本地ROM镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
-            preventDismissDialog(show);
+            ProgressDialog show = showMyDialog(context,"正在扫描本地ROM镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
             Handler handler = new Handler(){
                 @Override
                 public void handleMessage(@NonNull Message msg) {
                     if(msg.what==0){
                         showRomImgs(rualv1);
-                        multiFunc.dismissDialog(show);
+                        show.dismiss();
                     }
                 }
             };
-            v.post(new Runnable() {
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
                     findROMImgs();
                     sendHandlerMSG(handler,0);
                 }
-            });
+            }).start();
 
         });
 
@@ -208,12 +203,11 @@ public class romToolsActivity extends AppCompatActivity {
     private void btClicked(Context context,View v,int mode){
         String storage = context.getExternalCacheDir().toString();
         String outDir = storage+"/"+(mode ==0 ?"romunpack":"romrepack");
-        AlertDialog show = showMyDialog(context,"提示","正在"+(mode ==0?"解":"打")+"包ROM,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
+        ProgressDialog show = showMyDialog(context,"正在"+(mode ==0?"解":"打")+"包ROM,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = dismissDialogHandler(0,show);
         StringBuilder sb = new StringBuilder();
         StringBuilder sb2 = new StringBuilder();
-        v.post(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 for (int i = 0; i < checkboxs.size(); i++) {
@@ -242,7 +236,7 @@ public class romToolsActivity extends AppCompatActivity {
                     showInfoMsg(context,"错误",(mode==0?"解":"打")+"包失败,日志存放在 >>  "+ff);
                 }
             }
-        });
+        }).start();
     }
 
     private void initOnListen() {

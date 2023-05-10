@@ -15,6 +15,7 @@ import static org.fqaosp.utils.multiFunc.showMyDialog;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -249,7 +250,7 @@ public class importToolsActivity extends Activity {
         if(copyFile(s,outName)){
             checkTools(this);
             String cmd = "cd " + filesPath + " && sh extract.sh && cd ../ && chown -R "+myuid+":"+myuid+ " files/";
-            AlertDialog show = showMyDialog(importToolsActivity.this,"提示","正在安装插件,请稍后(可能会出现无响应，请耐心等待)....");
+            ProgressDialog show = showMyDialog(importToolsActivity.this,"正在安装插件,请稍后(可能会出现无响应，请耐心等待)....");
             Handler handler = dismissDialogHandler(0,show);
             new Thread(new Runnable() {
                 @Override

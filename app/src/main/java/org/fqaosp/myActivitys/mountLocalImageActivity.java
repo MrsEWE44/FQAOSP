@@ -3,12 +3,10 @@ package org.fqaosp.myActivitys;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -17,14 +15,12 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
@@ -39,7 +35,6 @@ import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeImgToPC;
-import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
@@ -79,7 +74,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
             initBt();
             permissionRequest.getExternalStorageManager(mountLocalImageActivity.this);
         }else{
-            showMyDialog(this,"提示","本功能需要root才能正常使用");
+            showInfoMsg(this,"提示","本功能需要root才能正常使用");
         }
 
     }
@@ -116,24 +111,23 @@ public class mountLocalImageActivity extends AppCompatActivity {
         mliab2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog show = showMyDialog(context,"提示","正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
-                preventDismissDialog(show);
+                AlertDialog show = showMyDialog(context,"正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
                 Handler handler = new Handler(){
                     @Override
                     public void handleMessage(@NonNull Message msg) {
                         if(msg.what==0){
                             showImgs(lv1);
-                            multiFunc.dismissDialog(show);
+                            show.dismiss();
                         }
                     }
                 };
-                view.post(new Runnable() {
+                new Thread(new Runnable() {
                     @Override
                     public void run() {
                         getImgs();
                         sendHandlerMSG(handler,0);
                     }
-                });
+                }).start();
             }
         });
 

@@ -4,7 +4,6 @@ import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
@@ -12,7 +11,7 @@ import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Build;
@@ -43,7 +42,6 @@ import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
 import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
-import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.permissionRequest;
@@ -97,7 +95,7 @@ public class backupRestoreActivity extends AppCompatActivity {
             initViews();
             checkTools(this);
         }else{
-            showMyDialog(this,"提示","本功能需要root才能正常使用");
+            showInfoMsg(this,"提示","本功能需要root才能正常使用");
         }
     }
 
@@ -158,7 +156,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                             }
                         }
                         sb.append(");for pp in ${aaa[@]};do "+cmdstr+" ;done;");
-                        showCMDInfoMSG(backupRestoreActivity.this,view,sb.toString(),isRoot,"提示","正在恢复应用,请稍后(可能会出现无响应，请耐心等待)....");
+                        showCMDInfoMSG(backupRestoreActivity.this,false,sb.toString(),isRoot,"正在恢复应用,请稍后(可能会出现无响应，请耐心等待)....","恢复应用结束.");
                     }else{
                         Toast.makeText(backupRestoreActivity.this, "请切换回恢复模式", Toast.LENGTH_SHORT).show();
                     }
@@ -234,7 +232,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                             }
                         }
                         sb.append(");for pp in ${aaa[@]};do "+cmdstr+" ;done;");
-                        showCMDInfoMSG(backupRestoreActivity.this,view,sb.toString(),isRoot,"提示","正在备份应用,请稍后(可能会出现无响应，请耐心等待)....");
+                        showCMDInfoMSG(backupRestoreActivity.this,false,sb.toString(),isRoot,"正在备份应用,请稍后(可能会出现无响应，请耐心等待)....","备份应用结束.");
 
                     }else{
                         Toast.makeText(backupRestoreActivity.this, "请切换回备份模式", Toast.LENGTH_SHORT).show();
@@ -370,14 +368,13 @@ public class backupRestoreActivity extends AppCompatActivity {
         String s = Environment.getExternalStorageDirectory().toString();
         String localBackupDir= s+"/backup_app";
         File file = new File(localBackupDir);
-        AlertDialog show = showMyDialog(backupRestoreActivity.this,"提示","正在扫描本地备份文件,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
+        ProgressDialog show = showMyDialog(backupRestoreActivity.this,"正在扫描本地备份文件,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
                     showPKGS(restoreLv1);
-                    multiFunc.dismissDialog(show);
+                    show.dismiss();
                 }
             }
         };

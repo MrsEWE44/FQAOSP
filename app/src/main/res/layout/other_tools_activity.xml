@@ -63,6 +63,14 @@
             android:id="@+id/otabt5"
             android:text="设置ntp服务器"></Button>
 
+        <Button
+            android:layout_marginLeft="5px"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_weight="1"
+            android:id="@+id/otabt6"
+            android:text="修改屏幕分辨率"></Button>
+
     </LinearLayout>
 
 </LinearLayout>

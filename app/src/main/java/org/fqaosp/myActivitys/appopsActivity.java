@@ -21,14 +21,13 @@ import static org.fqaosp.utils.multiFunc.clearList;
 import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.getRunTraverseCMDStr;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
@@ -208,7 +207,7 @@ public class appopsActivity extends AppCompatActivity {
 
         //应用appops权限更改
         apopsab6.setOnClickListener((v)->{
-            showCMDInfoMSG(con,v,getRunTraverseCMDStr(pkginfos,checkboxs,spliceCMDStr()),isRoot,"提示","正在应用更改,请稍后(可能会出现无响应，请耐心等待)....");
+            showCMDInfoMSG(con,false,getRunTraverseCMDStr(pkginfos,checkboxs,spliceCMDStr()),isRoot,"正在应用更改,请稍后(可能会出现无响应，请耐心等待)....","应用更改结束.");
         });
 
     }
@@ -381,10 +380,10 @@ public class appopsActivity extends AppCompatActivity {
                 sb.append(cmdHead+" android.permission.POST_NOTIFICATIONS "+modestr+";");
                 break;
             case 11:
-                sb.append("am set-inactive $pp "+modestr+";");
+                sb.append("am set-inactive $pp "+modestr);
                 break;
             case 12:
-                sb.append("am set-standby-bucket $pp " + modestr +";");
+                sb.append("am set-standby-bucket $pp " + modestr );
                 break;
             case 13:
                 appopsCmdStr acs = new appopsCmdStr();
@@ -476,32 +475,42 @@ public class appopsActivity extends AppCompatActivity {
                 break;
         }
         sb.append(");for pp in ${aaa[@]};do if [[ `echo $pp |grep \".apks\"` != \"\" ]];then "+apkscmdstr+";else "+cmdstr+" fi;done;");
-        showCMDInfoMSG(appopsActivity.this,nowItemView,sb.toString(),isRoot,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
+        showCMDInfoMSG(appopsActivity.this,true,sb.toString(),isRoot,"正在安装应用,请稍后(可能会出现无响应，请耐心等待)....","安装应用结束.");
     }
 
     //卸载应用
     private void uninstallPKG(){
         makeWP makewp = new makeWP();
         String cmdstr = makewp.getUninstallPkgByUIDCMD(uid, "$pp");
-        showCMDInfoMSG(appopsActivity.this,nowItemView,getRunTraverseCMDStr(pkginfos,checkboxs,cmdstr),isRoot,"提示","正在卸载应用,请稍后(可能会出现无响应，请耐心等待)....");
+        showCMDInfoMSG(appopsActivity.this,true,getRunTraverseCMDStr(pkginfos,checkboxs,cmdstr),isRoot,"正在卸载应用,请稍后(可能会出现无响应，请耐心等待)....","卸载应用结束.");
     }
 
     //修改应用状态,禁用或者启用
     private void changePKGState(){
         makeWP makewp = new makeWP();
         String cmdstr = isDisable?makewp.getChangePkgOnEnableByUIDCMD(uid, "$pp"):makewp.getChangePkgOnDisableByUIDCMD(uid,"$pp");
-        showCMDInfoMSG(appopsActivity.this,nowItemView,getRunTraverseCMDStr(pkginfos,checkboxs,cmdstr),isRoot,"提示","正在"+(isDisable?"启动":"禁用")+"应用,请稍后(可能会出现无响应，请耐心等待)....");
+        showCMDInfoMSG(appopsActivity.this,true,getRunTraverseCMDStr(pkginfos,checkboxs,cmdstr),isRoot,"正在"+(isDisable?"启动":"禁用")+"应用,请稍后(可能会出现无响应，请耐心等待)....",(isDisable?"启动":"禁用")+"应用结束.");
     }
 
     //提取apk文件
     private void extractPKGFileToLocal(){
-        AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在提取应用,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
+        ProgressDialog show = showMyDialog(appopsActivity.this,"正在提取应用,请稍后(可能会出现无响应，请耐心等待)....");
         File cacheDir = this.getExternalCacheDir();
-        nowItemView.post(new Runnable() {
+        String myStorageHomePath = cacheDir.toString()+"/apks";
+        Handler handler = new Handler(){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                super.handleMessage(msg);
+                if(msg.what == 0){
+                    show.dismiss();
+                    showInfoMsg(appopsActivity.this,"提示","文件保存在: "+myStorageHomePath);
+                }
+            }
+        };
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                String myStorageHomePath = cacheDir.toString()+"/apks";
+
                 File file = new File(myStorageHomePath);
                 if(!file.exists()){
                     //创建/sdcard/Android/data/包名/cache文件夹,可以不需要申请存储权限实现
@@ -524,11 +533,9 @@ public class appopsActivity extends AppCompatActivity {
                     String outpath = myStorageHomePath+"/"+pkginfo.getPkgname()+".apk";
                     copyFile(apkpath,outpath);
                 }
-
-                multiFunc.dismissDialog(show);
-                showInfoMsg(appopsActivity.this,"提示","文件保存在: "+myStorageHomePath);
+                sendHandlerMSG(handler,0);
             }
-        });
+        }).start();
 
     }
 
@@ -633,14 +640,13 @@ public class appopsActivity extends AppCompatActivity {
     }
 
     private void getPKGByUID(String cmdstr){
-        AlertDialog show = showMyDialog(appopsActivity.this,"提示","正在检索用户 "+uid+" 下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
+        ProgressDialog show = showMyDialog(appopsActivity.this,"正在检索用户 "+uid+" 下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
                     showPKGS(lv1);
-                    multiFunc.dismissDialog(show);
+                    show.dismiss();
                 }
             }
         };
@@ -815,7 +821,7 @@ public class appopsActivity extends AppCompatActivity {
                 }else{
                     showInfoMsg(that,"错误","该功能需要adb或者root权限才能使用!!!!");
                 }
-                showCMDInfoMSG(that,null,cmdstr,isRoot,"提示","正在安装应用,请稍后(可能会出现无响应，请耐心等待)....");
+                showCMDInfoMSG(that,true,cmdstr,isRoot,"正在安装"+filePath+"路径下的应用,请稍后(可能会出现无响应，请耐心等待)....","安装"+filePath+"路径下的应用结束.");
             }
         }
     }

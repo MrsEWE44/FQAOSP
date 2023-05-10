@@ -4,12 +4,12 @@ import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
@@ -17,7 +17,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -72,7 +71,7 @@ public class imgMenuActivity extends AppCompatActivity {
         if(isRoot){
             initViews();
         }else{
-            showMyDialog(this,"提示","本功能需要root才能正常使用");
+            showInfoMsg(this,"提示","本功能需要root才能正常使用");
         }
     }
 
@@ -127,12 +126,12 @@ public class imgMenuActivity extends AppCompatActivity {
                 ab.setNeutralButton("继续", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        AlertDialog show = showMyDialog(context,"提示","正在刷入,请稍后(可能会出现无响应，请耐心等待)....");
+                        ProgressDialog show = showMyDialog(context,"正在刷入,请稍后(可能会出现无响应，请耐心等待)....");
                         Handler handler = new Handler(){
                             @Override
                             public void handleMessage(@NonNull Message msg) {
                                 if(msg.what==0){
-                                    multiFunc.dismissDialog(show);
+                                    show.dismiss();
                                     showInfoMsg(context,"信息",msg.obj.toString());
                                 }
                             }
@@ -198,7 +197,7 @@ public class imgMenuActivity extends AppCompatActivity {
         b2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog show = showMyDialog(context,"提示","正在提取分区,请稍后(可能会出现无响应，请耐心等待)....");
+                ProgressDialog show = showMyDialog(context,"正在提取分区,请稍后(可能会出现无响应，请耐心等待)....");
                 Handler handler = dismissDialogHandler(0,show);
                 String myStorageHomePath = getMyStorageHomePath(context);
                 String outDir=myStorageHomePath+"/cache/dumpimg";
@@ -209,7 +208,7 @@ public class imgMenuActivity extends AppCompatActivity {
                 StringBuilder sb = new StringBuilder();
                 sb.append("aaaa=(");
 
-                view.post(new Runnable() {
+                new Thread(new Runnable() {
                     @Override
                     public void run() {
                         for (int i = 0; i < dumpCheckboxs.size(); i++) {
@@ -235,7 +234,7 @@ public class imgMenuActivity extends AppCompatActivity {
                         sendHandlerMSG(handler,0);
                         showInfoMsg(context,"提示","已执行完毕: \r\n提取后的文件存放在 : "+outDir+"\r\n\r\n"+cmd.getResultCode()+" -- " + cmd.getResult());
                     }
-                });
+                }).start();
 
 
             }
@@ -388,14 +387,13 @@ public class imgMenuActivity extends AppCompatActivity {
 
     private void listLocalImgName(){
         clearFlash1List();
-        AlertDialog show = showMyDialog(context,"提示","正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
+        ProgressDialog show = showMyDialog(context,"正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
                     showIMGS(flashLv1,flashList1,flashCheckboxs1);
-                    multiFunc.dismissDialog(show);
+                    show.dismiss();
                 }
             }
         };
@@ -419,8 +417,7 @@ public class imgMenuActivity extends AppCompatActivity {
         }else{
             clearFlash2List();
         }
-        AlertDialog show = showMyDialog(context,"提示","正在扫描本地分区系统,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
+        AlertDialog show = showMyDialog(context,"正在扫描本地分区系统,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
@@ -430,7 +427,7 @@ public class imgMenuActivity extends AppCompatActivity {
                     }else{
                         showIMGS(flashLv2,flashList2,flashCheckboxs2);
                     }
-                    multiFunc.dismissDialog(show);
+                    show.dismiss();
                 }
             }
         };

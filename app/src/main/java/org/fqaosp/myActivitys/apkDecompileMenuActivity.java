@@ -13,7 +13,7 @@ import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -154,9 +154,9 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
 
     //按钮点击事件
     private void btClick(Context context , View view ,Activity activity , int mode){
-        AlertDialog show = showMyDialog(context, "提示", "请稍后，正在"+(mode == 0 ? "回" : "反")+"编译中...(可能会出现无响应，请耐心等待)....");
+        ProgressDialog show = showMyDialog(context,  "请稍后，正在"+(mode == 0 ? "回" : "反")+"编译中...(可能会出现无响应，请耐心等待)....");
         Handler handler = dismissDialogHandler(0, show);
-        view.post(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 String filesDir = getMyHomeFilesPath(context);
@@ -208,7 +208,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                 }
                 sendHandlerMSG(handler, 0);
             }
-        });
+        }).start();
     }
 
     private void clearList() {
@@ -396,9 +396,9 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                 showPKGS(delv);
                 break;
             case R.id.arab2:
-                AlertDialog show = showMyDialog(context,"提示","正在扫描默认路径内容,请稍后(可能会出现无响应，请耐心等待)....");
+                ProgressDialog show = showMyDialog(context,"正在扫描默认路径内容,请稍后(可能会出现无响应，请耐心等待)....");
                 Handler handler = dismissDialogHandler(0,show);
-                view.post(new Runnable() {
+                new Thread(new Runnable() {
                     @Override
                     public void run() {
                         clearList();
@@ -421,7 +421,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                         }
                         sendHandlerMSG(handler,0);
                     }
-                });
+                }).start();
                 break;
         }
     }

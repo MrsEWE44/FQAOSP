@@ -2,24 +2,21 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.multiFunc.checkCMDResult;
 import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -181,7 +178,7 @@ public class killAppActivity extends AppCompatActivity {
                     }
                 }
                 sb.append(");for pp in ${aaa[@]};do am force-stop $pp ;done;");
-                showCMDInfoMSG(killAppActivity.this,view,sb.toString(),isRoot,"提示","正在清理后台进程,请稍后(可能会出现无响应，请耐心等待)....");
+                showCMDInfoMSG(killAppActivity.this,false,sb.toString(),isRoot,"正在清理后台进程,请稍后(可能会出现无响应，请耐心等待)....","清理后台结束.");
             }
         });
 
@@ -210,14 +207,13 @@ public class killAppActivity extends AppCompatActivity {
 
     //获取在后台运行的程序
     private void getRunning(int ss){
-        AlertDialog show = showMyDialog(killAppActivity.this,"提示","正在获取后台应用,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
+        ProgressDialog show = showMyDialog(killAppActivity.this,"正在获取后台应用,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
                     showPKGS(lv1);
-                    multiFunc.dismissDialog(show);
+                    show.dismiss();
                 }
             }
         };

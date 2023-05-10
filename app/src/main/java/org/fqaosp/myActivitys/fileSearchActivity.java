@@ -1,26 +1,19 @@
 package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.checkDocum;
-import static org.fqaosp.utils.multiFunc.jump;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
-import static org.fqaosp.utils.permissionRequest.getExternalStorageManager;
-import static org.fqaosp.utils.permissionRequest.grantAndroidData;
-import static org.fqaosp.utils.permissionRequest.grantAndroidObb;
 import static org.fqaosp.utils.permissionRequest.intoGrantDataOrObb;
-import static org.fqaosp.utils.permissionRequest.requestExternalStoragePermission;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -50,16 +43,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.FileProvider;
 import androidx.documentfile.provider.DocumentFile;
 
-import org.fqaosp.MainActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.FILESEARCHAdapter;
 import org.fqaosp.adapter.FILESELECTAdapter;
-import org.fqaosp.adapter.USERAdapter;
-import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.entity.SearchFileInfo;
 import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
-import org.fqaosp.utils.multiFunc;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -69,8 +58,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 
 public class fileSearchActivity extends AppCompatActivity {
@@ -224,24 +211,23 @@ public class fileSearchActivity extends AppCompatActivity {
         fsabt1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog show = showMyDialog(that, "提示", "正在搜索匹配的文件,请稍后(可能会出现无响应，请耐心等待)....");
-                preventDismissDialog(show);
+                ProgressDialog show = showMyDialog(that, "正在搜索匹配的文件,请稍后(可能会出现无响应，请耐心等待)....");
                 Handler handler = new Handler() {
                     @Override
                     public void handleMessage(@NonNull Message msg) {
                         if (msg.what == 0) {
                             showFiles(lv1);
-                            multiFunc.dismissDialog(show);
+                            show.dismiss();
                         }
                     }
                 };
-                view.post(new Runnable() {
+                new Thread(new Runnable() {
                     @Override
                     public void run() {
                         searchFile(that);
                         sendHandlerMSG(handler, 0);
                     }
-                });
+                }).start();
             }
         });
 

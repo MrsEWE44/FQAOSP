@@ -7,7 +7,7 @@ import static org.fqaosp.utils.multiFunc.showMyDialog;
 import static org.fqaosp.utils.permissionRequest.requestExternalStoragePermission;
 
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -30,7 +30,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.documentfile.provider.DocumentFile;
 import androidx.viewpager.widget.ViewPager;
 
 import org.fqaosp.R;
@@ -54,8 +53,6 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -99,7 +96,7 @@ public class fileSharingActivity extends AppCompatActivity {
             fsaet1.setText("当前未连接WiFi或开启热点");
             fsab1.setEnabled(false);
         } else {
-            AlertDialog show = showMyDialog(this, "提示", "正在加载内容,请稍后(可能会出现无响应，请耐心等待)....");
+            ProgressDialog show = showMyDialog(this,  "正在加载内容,请稍后(可能会出现无响应，请耐心等待)....");
 //            preventDismissDialog(show);
             Handler handler = new Handler() {
                 @Override
@@ -107,7 +104,7 @@ public class fileSharingActivity extends AppCompatActivity {
                     if (msg.what == 0) {
                         FILESHARINGVIEWPAGERAdapter adapter = new FILESHARINGVIEWPAGERAdapter(views, slist);
                         viewPager.setAdapter(adapter);
-                        multiFunc.dismissDialog(show);
+                        show.dismiss();
                     }
                 }
             };

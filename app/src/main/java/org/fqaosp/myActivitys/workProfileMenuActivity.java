@@ -7,13 +7,13 @@ import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.getUID;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
@@ -86,7 +86,7 @@ public class workProfileMenuActivity extends AppCompatActivity {
         if(isRoot || checkShizukuPermission(1)){
             initViews();
         }else{
-            showMyDialog(this,"提示","本功能需要root或者shizuku授权才能正常使用");
+            showInfoMsg(this,"提示","本功能需要root或者shizuku授权才能正常使用");
         }
 
     }
@@ -148,9 +148,9 @@ public class workProfileMenuActivity extends AppCompatActivity {
                 //获取需要多开的用户数量
                 Integer num = (null==s||s.isEmpty())?1:Integer.valueOf(s);
                 if(num < wp.getInitsize() && num > 0){
-                    AlertDialog show = showMyDialog(context, "提示", "正在创建分身空间,请稍后(可能会出现无响应，请耐心等待)....");
+                    ProgressDialog show = showMyDialog(context, "正在创建分身空间,请稍后(可能会出现无响应，请耐心等待)....");
                     Handler handler = dismissDialogHandler(0, show);
-                    view.post(new Runnable() {
+                    new Thread(new Runnable() {
                         @Override
                         public void run() {
                             UserManager um = (UserManager) getSystemService(Context.USER_SERVICE);
@@ -193,7 +193,7 @@ public class workProfileMenuActivity extends AppCompatActivity {
                                 showInfoMsg(context,"cmd错误",cmd.getResult());
                             }
                         }
-                    });
+                    }).start();
                 }else{
                     showInfoMsg(context,"警告","请输入 " + wp.getInitsize() + " 以内并且大于0的数值");
                 }
@@ -257,18 +257,17 @@ public class workProfileMenuActivity extends AppCompatActivity {
     }
 
     private void wpBtClicked(Context context,View view,int mode){
-        AlertDialog show = showMyDialog(context, "提示", "正在"+(mode==0?"安装":"删除")+"应用,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
+        AlertDialog show = showMyDialog(context, "正在"+(mode==0?"安装":"删除")+"应用,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler() {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if (msg.what == 0) {
                     getPKGByUID(1);
-                    multiFunc.dismissDialog(show);
+                    show.dismiss();
                 }
             }
         };
-        view.post(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 StringBuilder sb = new StringBuilder();
@@ -296,7 +295,7 @@ public class workProfileMenuActivity extends AppCompatActivity {
                     showInfoMsg(context,"错误",cmd.getResult());
                 }
             }
-        });
+        }).start();
     }
 
     //分身删除
@@ -314,20 +313,19 @@ public class workProfileMenuActivity extends AppCompatActivity {
     }
 
     private void wpfrBtClicked(Context context,View view,boolean delall){
-        AlertDialog show = showMyDialog(context, "提示", "正在删除已经选中的分身用户,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
+        ProgressDialog show = showMyDialog(context, "正在删除已经选中的分身用户,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler() {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if (msg.what == 0) {
                     getUsers();
                     showUsers(wpfrLv);
-                    multiFunc.dismissDialog(show);
+                    show.dismiss();
                 }
             }
         };
 
-        view.post(new Runnable() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
                 StringBuilder sb = new StringBuilder();
@@ -348,7 +346,7 @@ public class workProfileMenuActivity extends AppCompatActivity {
                 sendHandlerMSG(handler, 0);
                 checkCMDResult(context,cmd,"删除成功","删除失败");
             }
-        });
+        }).start();
     }
 
     private void hidePKGS(UserHandle userHandle){
@@ -425,7 +423,7 @@ public class workProfileMenuActivity extends AppCompatActivity {
     //启动已经创建好的分身用户
     private void startupUsers(){
         Context context = this;
-        AlertDialog show = showMyDialog(context, "提示", "正在启动应用分身,请稍后(可能会出现无响应，请耐心等待)....");
+        ProgressDialog show = showMyDialog(context, "正在启动应用分身,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = dismissDialogHandler(0,show);
         Handler handler2 = new Handler();
         new Thread(new Runnable() {
@@ -461,14 +459,13 @@ public class workProfileMenuActivity extends AppCompatActivity {
         if (wpfmUserList.size() == 0) {
             getUsers();
         }
-        AlertDialog show = showMyDialog(workProfileMenuActivity.this, "提示", "正在检索用户下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
-        preventDismissDialog(show);
+        ProgressDialog show = showMyDialog(workProfileMenuActivity.this, "正在检索用户下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler() {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if (msg.what == 0) {
                     showPKGS(wpfmLv2);
-                    multiFunc.dismissDialog(show);
+                    show.dismiss();
                 }
             }
         };

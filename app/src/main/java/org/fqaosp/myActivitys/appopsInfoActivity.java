@@ -9,14 +9,13 @@ package org.fqaosp.myActivitys;
  * */
 
 import static org.fqaosp.utils.multiFunc.isSuEnable;
-import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.AppOpsManager;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -76,27 +75,26 @@ public class appopsInfoActivity extends AppCompatActivity {
         fuckActivity.getIns().add(this);
         setTitle("应用详细操作");
         isRoot=isSuEnable();
-        if(isRoot){
-            Intent intent = getIntent();
-            pkgname = intent.getStringExtra("pkgname");
-            uid = intent.getStringExtra("uid");
-            pm = getPackageManager();
-            try {
-                packageInfo = pm.getPackageInfo(pkgname, PackageManager.GET_PERMISSIONS|PackageManager.GET_ACTIVITIES|PackageManager.GET_DISABLED_COMPONENTS);
-                appInfo =  packageInfo.applicationInfo;
-                ImageView iv1 = findViewById(R.id.apaiv1);
-                TextView tv1 = findViewById(R.id.apatv1);
-                TextView tv2 = findViewById(R.id.apatv2);
-                initButton();
-                lv1 = findViewById(R.id.apalv1);
-                iv1.setImageDrawable(appInfo.loadIcon(pm));
-                tv1.setText(appInfo.packageName);
-                tv2.setText(appInfo.loadLabel(pm));
-            } catch (PackageManager.NameNotFoundException e) {
-                Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        }else{
-            showMyDialog(this,"提示","本功能需要root才能正常使用");
+        Intent intent = getIntent();
+        pkgname = intent.getStringExtra("pkgname");
+        uid = intent.getStringExtra("uid");
+        pm = getPackageManager();
+        try {
+            packageInfo = pm.getPackageInfo(pkgname, PackageManager.GET_PERMISSIONS|PackageManager.GET_ACTIVITIES|PackageManager.GET_DISABLED_COMPONENTS);
+            appInfo =  packageInfo.applicationInfo;
+            ImageView iv1 = findViewById(R.id.apaiv1);
+            TextView tv1 = findViewById(R.id.apatv1);
+            TextView tv2 = findViewById(R.id.apatv2);
+            initButton();
+            lv1 = findViewById(R.id.apalv1);
+            iv1.setImageDrawable(appInfo.loadIcon(pm));
+            tv1.setText(appInfo.packageName);
+            tv2.setText(appInfo.loadLabel(pm));
+        } catch (PackageManager.NameNotFoundException e) {
+            showInfoMsg(this,e.getClass().getName(),e.toString());
+        }
+        if(!isRoot){
+            showInfoMsg(this,"提示","本功能需要root才能正常使用");
         }
 
     }
@@ -335,19 +333,18 @@ public class appopsInfoActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog show = showMyDialog(that, "提示", "正在操作中,请稍后(可能会出现无响应，请耐心等待)....");
-                preventDismissDialog(show);
+                ProgressDialog show = showMyDialog(that, "正在操作中,请稍后(可能会出现无响应，请耐心等待)....");
                 Handler handler = new Handler() {
                     @Override
                     public void handleMessage(@NonNull Message msg) {
                         if (msg.what == 0) {
                             checkMode();
                             showListView(lv1);
-                            multiFunc.dismissDialog(show);
+                            show.dismiss();
                         }
                     }
                 };
-                view.post(new Runnable() {
+                new Thread(new Runnable() {
                     @Override
                     public void run() {
                         //应用更改
@@ -379,7 +376,7 @@ public class appopsInfoActivity extends AppCompatActivity {
                         }
                         sendHandlerMSG(handler,0);
                     }
-                });
+                }).start();
             }
         });
 

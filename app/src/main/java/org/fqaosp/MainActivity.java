@@ -13,6 +13,7 @@ import static org.fqaosp.utils.multiFunc.showMyDialog;
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -156,9 +157,9 @@ public class MainActivity extends Activity {
                         "FQAOSP(中文全称为: 法可油安卓),它是一个适用于类原生的搞机工具，同样也适用于国内定制ui系统，它拥有很多常用的功能，例如：后台清理、一键卸载与安装应用、安装某个指定的文件夹里面所有apk文件、将手机本地的pe镜像文件挂载给电脑重装系统、反/回编译软件、提取或者刷入系统分区文件、软件的备份与恢复、应用分身、共享手机本地文件给局域网内所有用户、搜索自己设定范围内的文件等等，未来还会加入更多功能，现在部分功能已经可以不再需要root，已经对接了shizuku，但是仍有部分需要root才能使用，后续会逐渐完善与shizuku的对接。\r\n" +
                         "如果有新功能或建议，可以在GitHub提issue！\r\n" +
                         "\n" +
-                        "1.加入ntp服务器、状态栏去X标志功能.\n" +
-                        "2.合并应用管理里面得联网控制至权限列表选项里面.需要root权限使用.\n" +
-                        "3.修改版本号为V1.3.2");
+                        "1.加入屏幕分辨率修改功能.\n" +
+                        "2.修复anr弹窗无响应问题.\n" +
+                        "3.修改版本号为1.3.3");
                 amupdate.setVisibility(View.VISIBLE);
                 dl.closeDrawer(Gravity.LEFT);
             }
@@ -194,7 +195,7 @@ public class MainActivity extends Activity {
                 }
                 //如果有更新，那就直接获取更新日志与下载连接
                 if(haveupdate){
-                    AlertDialog show = showMyDialog(MainActivity.this,"提示","正在获取更新内容,请稍后(可能会出现无响应，请耐心等待)....");
+                    ProgressDialog show = showMyDialog(MainActivity.this,"正在获取更新内容,请稍后(可能会出现无响应，请耐心等待)....");
                     AlertDialog.Builder ab = new AlertDialog.Builder(context);
                     View view2 = activity.getLayoutInflater().inflate(R.layout.update_activity, null);
                     TextView updateatv1 = view2.findViewById(R.id.updateatv1);
@@ -207,7 +208,7 @@ public class MainActivity extends Activity {
                         @Override
                         public void handleMessage(@NonNull Message msg) {
                             if(msg.what==0){
-                                multiFunc.dismissDialog(show);
+                                show.dismiss();
                                 alertDialog.show();
                             }
                         }
@@ -322,7 +323,7 @@ public class MainActivity extends Activity {
                     ab.setNegativeButton("检测", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            AlertDialog show = showMyDialog(MainActivity.this,"提示","正在检查更新,请稍后(可能会出现无响应，请耐心等待)....");
+                            ProgressDialog show = showMyDialog(MainActivity.this,"正在检查更新,请稍后(可能会出现无响应，请耐心等待)....");
                             Handler handler = dismissDialogHandler(0,show);
                             new Thread(new Runnable() {
                                 @Override

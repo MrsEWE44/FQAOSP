@@ -8,6 +8,7 @@ import static org.fqaosp.utils.fileTools.writeDataToPath;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -32,7 +33,6 @@ import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.myActivitys.importToolsActivity;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -356,40 +356,12 @@ public class multiFunc {
         pkginfos.clear();
     }
 
-    /**
-     * 通过反射 阻止关闭对话框
-     */
-    public static void preventDismissDialog(AlertDialog ddd) {
-        try {
-            Field field = ddd.getClass().getSuperclass().getDeclaredField("mShowing");
-            field.setAccessible(true);
-            //设置mShowing值，欺骗android系统
-            field.set(ddd, false);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * 关闭对话框
-     */
-    public static void dismissDialog(AlertDialog ddd) {
-        try {
-            Field field = ddd.getClass().getSuperclass().getDeclaredField("mShowing");
-            field.setAccessible(true);
-            field.set(ddd, true);
-        } catch (Exception e) {
-        }
-        ddd.dismiss();
-    }
-
-    public static Handler dismissDialogHandler(int value,AlertDialog show){
-        preventDismissDialog(show);
+    public static Handler dismissDialogHandler(int value,ProgressDialog show){
         return new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==value){
-                    dismissDialog(show);
+                    show.dismiss();
                 }
             }
         };
@@ -415,12 +387,6 @@ public class multiFunc {
         return sb.toString();
     }
 
-    public static void runTraverseCMD(Context context, ArrayList<PKGINFO> pkginfos,ArrayList<Boolean> checkboxs ,String cmdstr,Boolean isRoot,AlertDialog show,String msg1,String msg2){
-        CMD cmd = getCMD(context ,getRunTraverseCMDStr(pkginfos,checkboxs,cmdstr),isRoot);
-        multiFunc.dismissDialog(show);
-        checkCMDResult(context,cmd,msg1,msg2);
-    }
-
     public static void checkCMDResult(Context context, CMD cmd,String msg , String msg2){
         if( cmd.getResultCode() ==0){
             Log.d("checkCMDResult",msg);
@@ -431,36 +397,30 @@ public class multiFunc {
         }
     }
 
-    public static void showCMDInfoMSG(Context context,View v,String cmdstr,Boolean isRoot,String dialogTitle,String dialogMsg){
-        AlertDialog show = showMyDialog(context,dialogTitle,dialogMsg);
-        preventDismissDialog(show);
+    public static void showCMDInfoMSG(Context context,boolean isOutLog,String cmdstr,Boolean isRoot,String msg,String msg2){
+        ProgressDialog progressDialog = showMyDialog(context, msg);
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 super.handleMessage(msg);
                 if(msg.what == 0){
-                    multiFunc.dismissDialog(show);
-                    showInfoMsg(context,"提示","已执行完毕: \r\n\r\n"+msg.obj.toString());
+                    progressDialog.dismiss();
+                    if(isOutLog){
+                        showInfoMsg(context,"提示",msg2+" : \r\n\r\n"+msg.obj.toString());
+                    }else{
+                        showInfoMsg(context,"提示",msg2);
+                    }
+
                 }
             }
         };
-        if(v == null){
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    CMD cmd = getCMD(context,cmdstr,isRoot);
-                    sendHandlerMSG(handler,0,cmd.getResultCode()+"---->"+cmd.getResult());
-                }
-            }).start();
-        }else{
-            v.post(new Runnable() {
-                @Override
-                public void run() {
-                    CMD cmd = getCMD(context,cmdstr,isRoot);
-                    sendHandlerMSG(handler,0,cmd.getResultCode()+"---->"+cmd.getResult());
-                }
-            });
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                CMD cmd = getCMD(context,cmdstr,isRoot);
+                sendHandlerMSG(handler,0,cmd.getResultCode()+"---->"+cmd.getResult());
+            }
+        }).start();
 
     }
 
@@ -587,12 +547,15 @@ public class multiFunc {
     }
 
     //显示提示框
-    public static AlertDialog showMyDialog(Context context,String title , String msg){
-        AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
-        alertDialog.setTitle(title);
-        alertDialog.setMessage(msg);
-        return alertDialog.show();
+    public static ProgressDialog showMyDialog(Context context, String msg){
+        ProgressDialog pd = new ProgressDialog(context);//初始化等待条
+        pd.setMessage(msg);//等待显示条的信息
+        pd.setCanceledOnTouchOutside(false);
+        pd.setCancelable(false);
+        pd.show();//等待显示条
+        return pd;
     }
+
 
     public static void showImportToolsDialog(Context context,String toastMsg , String msg){
         Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show();
