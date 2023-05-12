@@ -8,7 +8,6 @@ package org.fqaosp.myActivitys;
  *
  * */
 
-import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
@@ -66,7 +65,7 @@ public class appopsInfoActivity extends AppCompatActivity {
     private String pkgname,uid;
     private Boolean apasb1Bool,apasb2Bool;
     private int mode;
-    private boolean isRoot = false;
+    private boolean isRoot = false,isADB=false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -74,8 +73,9 @@ public class appopsInfoActivity extends AppCompatActivity {
         setContentView(R.layout.appopsinfo_activity);
         fuckActivity.getIns().add(this);
         setTitle("应用详细操作");
-        isRoot=isSuEnable();
         Intent intent = getIntent();
+        isRoot = intent.getBooleanExtra("isRoot",false);
+        isADB = intent.getBooleanExtra("isADB",false);
         pkgname = intent.getStringExtra("pkgname");
         uid = intent.getStringExtra("uid");
         pm = getPackageManager();
@@ -348,31 +348,14 @@ public class appopsInfoActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         //应用更改
-//                clickFun(0,"撤销权限成功","撤销权限失败");
-                        if(apasb1Bool){
-                            view.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    for (int i = 0; i < checkboxs.size(); i++) {
-                                        if(checkboxs.get(i)){
-                                            multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
-                                        }
-                                    }
-                                }
-                            });
-                        }
+                        for (int i = 0; i < checkboxs.size(); i++) {
+                            if(apasb1Bool && checkboxs.get(i)){
+                                multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                            }
+                            if(apasb2Bool && !checkboxs.get(i)){
+                                multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
+                            }
 
-                        if(apasb2Bool){
-                            view.post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    for (int i = 0; i < checkboxs.size(); i++) {
-                                        if(!checkboxs.get(i)){
-                                            multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
-                                        }
-                                    }
-                                }
-                            });
                         }
                         sendHandlerMSG(handler,0);
                     }
@@ -383,7 +366,7 @@ public class appopsInfoActivity extends AppCompatActivity {
         apasearchbt1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                view.post(new Runnable() {
+                new Thread(new Runnable() {
                     @Override
                     public void run() {
                         String searchStr = apaet1.getText().toString();
@@ -405,7 +388,7 @@ public class appopsInfoActivity extends AppCompatActivity {
                         switbs=switbs2;
                         showListView(lv1);
                     }
-                });
+                }).start();
             }
         });
 

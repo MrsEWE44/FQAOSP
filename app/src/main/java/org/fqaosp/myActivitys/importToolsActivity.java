@@ -4,47 +4,35 @@ import static org.fqaosp.utils.fileTools.copyFile;
 import static org.fqaosp.utils.fileTools.execFileSelect;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
-import static org.fqaosp.utils.fileTools.getSize;
 import static org.fqaosp.utils.fileTools.selectFile;
 import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Message;
 import android.os.Process;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import org.fqaosp.R;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
+import org.fqaosp.utils.netUtils;
 import org.fqaosp.utils.permissionRequest;
 
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 
 public class importToolsActivity extends Activity {
@@ -52,11 +40,9 @@ public class importToolsActivity extends Activity {
     private ArrayList<String> list = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private TextView itatv1;
-    private Button itab1 , itab2,itab5,itab6,itab7;
+    private Button itab1 , itab2,itab5,itab6,itab7,itab8;
     private String fqfile="fqtools.tar.xz";
-    boolean mIsCancel;
-    private int mProgress;
-    private long downloaded_sum;
+    private boolean isRoot=false , isADB=false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -65,6 +51,9 @@ public class importToolsActivity extends Activity {
         fuckActivity.getIns().add(this);
         initButton();
         permissionRequest.getExternalStorageManager(importToolsActivity.this);
+        Intent intent = getIntent();
+        isRoot = intent.getBooleanExtra("isRoot",false);
+        isADB = intent.getBooleanExtra("isADB",false);
     }
 
     private  void initButton(){
@@ -74,6 +63,7 @@ public class importToolsActivity extends Activity {
         itab5 = findViewById(R.id.itab5);
         itab6 = findViewById(R.id.itab6);
         itab7 = findViewById(R.id.itab7);
+        itab8 = findViewById(R.id.itab8);
         clickButton();
     }
 
@@ -98,17 +88,23 @@ public class importToolsActivity extends Activity {
 
         itab6.setOnClickListener((v)->{
             //fqtools下载点击事件
-            showDownloadDialog(context,activity,0);
+//            showDownloadDialog(context,activity,0);
+            String url = "https://github.com/MrsEWE44/FQAOSP/releases/download/V1.3.0/fqtools.tar.xz";;
+            String myStorageHomeCachePath = context.getExternalCacheDir().toString();
+            String filepath = myStorageHomeCachePath+"/"+new File(url).getName();
+            new netUtils().downloadFileOnUrlByAndorid(context,filepath,url);
+            showInfoMsg(context,"提示","等待下载完成之后,就可以手动安装了!下载完成后的文件,会保存在 "+filepath);
         });
 
         itab7.setOnClickListener((v)->{
-            String filesPath = getMyHomeFilesPath(importToolsActivity.this);
+            String filesPath = getMyHomeFilesPath(context);
             String s = Environment.getExternalStorageDirectory().toString();
             String makeFQTOOLSScriptFile = filesPath+"/makefqtools.sh";
             File makeFQTOOLSScriptF = new File(makeFQTOOLSScriptFile);
-            if(!makeFQTOOLSScriptF.exists()){
-                extactAssetsFile(this,"makefqtools.sh",makeFQTOOLSScriptFile);
+            if(makeFQTOOLSScriptF.exists()){
+                makeFQTOOLSScriptF.delete();
             }
+            extactAssetsFile(this,"makefqtools.sh",makeFQTOOLSScriptFile);
             String outPath = s+"/Download/FQTOOLS";
             String fqtools = filesPath+"/makefqtools.sh";
             String outFile = outPath+"/makefqtools.sh";
@@ -126,115 +122,32 @@ public class importToolsActivity extends Activity {
             }
         });
 
-    }
-
-    //显示在线下载提示框
-    private void showDownloadDialog(Context context,Activity activity,int mode){
-        String download_url = "";
-        String save_path = getMyStorageHomePath(context)+"/cache/download/";
-        String filename = "";
-        download_url = "https://github.com/MrsEWE44/FQAOSP/releases/download/V1.3.0/fqtools.tar.xz";
-        filename = fqfile;
-        String fqfilepath = save_path+"/"+filename;
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle("下载中");
-        View view = LayoutInflater.from(context).inflate(R.layout.download_process_bar, null);
-        ProgressBar mProgressBar = (ProgressBar) view.findViewById(R.id.dpbpb);
-        TextView dpbtv1 = view.findViewById(R.id.dpbtv1);
-        TextView dpbtv2 = view.findViewById(R.id.dpbtv2);
-        TextView dpbtv3 = view.findViewById(R.id.dpbtv3);
-        dpbtv3.setText(download_url);
-        builder.setView(view);
-        builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // 隐藏当前对话框
-                dialog.dismiss();
-                // 设置下载状态为取消
-                mIsCancel = true;
+        itab8.setOnClickListener((v)->{
+            String filesPath = getMyHomeFilesPath(context);
+            String s = Environment.getExternalStorageDirectory().toString();
+            String scriptName="startADBServiceByFQAOSP.sh";
+            String makeFQTOOLSScriptFile = filesPath+"/"+scriptName;
+            File makeFQTOOLSScriptF = new File(makeFQTOOLSScriptFile);
+            if(!makeFQTOOLSScriptF.exists()){
+                extactAssetsFile(context,scriptName,makeFQTOOLSScriptFile);
+            }
+            String outPath = s+"/Download/FQTOOLS";
+            String fqtools = filesPath+"/"+scriptName;
+            String outFile = outPath+"/"+scriptName;
+            File file = new File(outPath);
+            if(!file.exists()){
+                file.mkdirs();
+            }
+            if(copyFile(fqtools,outFile)){
+                File file1 = new File(outFile);
+                if(file1.exists()){
+                    itatv1.setText("你只需要复制下面这段命令在adb shell里边执行,随后等待出现\"run fqtools ok !\" 字样即可.\r\nsh "+outFile+"\r\n");
+                }
+            }else{
+                itatv1.setText("请给予存储权限");
             }
         });
-        AlertDialog alertDialog = builder.create();
-        Handler mUpdateProgressHandler = new Handler() {
 
-            public void handleMessage(Message msg) {
-                switch (msg.what) {
-                    case 0:
-                        // 设置进度条
-                        mProgressBar.setProgress(mProgress);
-                        break;
-                    case 1:
-                        // 隐藏当前下载对话框
-                        alertDialog.dismiss();
-                        itatv1.setText("文件下载完成，保存在:"+fqfilepath);
-                        extractFile(fqfilepath,fqfile);
-                }
-            }
-        };
-        Handler handler2 = new Handler();
-        Handler handler3 = new Handler(){
-            @SuppressLint("HandlerLeak")
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                downloaded_sum +=msg.what;
-                dpbtv1.setText(getSize(downloaded_sum,0));
-            }
-        };
-
-        alertDialog.show();
-        downloadFile(download_url,save_path,filename,mUpdateProgressHandler,dpbtv2,handler2,handler3);
-
-    }
-
-    //开始下载并同步更新进度条
-    private void downloadFile(String download_url , String dir_path , String filename,Handler handler,TextView dpbtv2,Handler handler2,Handler handler3) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                String fileSavePath = dir_path+"/"+filename;
-                try{
-                    File dir = new File(dir_path);
-                    if (!dir.exists()){
-                        dir.mkdirs();
-                    }
-                    // 下载文件
-                    HttpURLConnection conn = (HttpURLConnection) new URL(download_url).openConnection();
-                    conn.connect();
-                    InputStream is = conn.getInputStream();
-                    long length = conn.getContentLengthLong();
-                    handler2.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            dpbtv2.setText(getSize(length,0));
-                        }
-                    });
-                    File apkFile = new File(fileSavePath);
-                    FileOutputStream fos = new FileOutputStream(apkFile);
-
-                    int count = 0;
-                    byte[] buffer = new byte[1024];
-                    while (!mIsCancel) {
-                        int numread = is.read(buffer);
-                        count += numread;
-                        // 计算进度条当前位置
-                        mProgress = (int) (((float) count / length) * 100);
-                        // 下载完成
-                        if (numread < 0) {
-                            handler.sendEmptyMessage(1);
-                            break;
-                        }
-                        fos.write(buffer, 0, numread);
-                        // 更新进度条
-                        handler.sendEmptyMessage(0);
-                        handler3.sendEmptyMessage(numread);
-                    }
-                    fos.close();
-                    is.close();
-                }catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-        }).start();
     }
 
     private void clearList(){
@@ -248,7 +161,7 @@ public class importToolsActivity extends Activity {
         new File(filesPath).mkdirs();
         String outName = filesPath+"/"+fff;
         if(copyFile(s,outName)){
-            checkTools(this);
+            checkTools(this,isADB);
             String cmd = "cd " + filesPath + " && sh extract.sh && cd ../ && chown -R "+myuid+":"+myuid+ " files/";
             ProgressDialog show = showMyDialog(importToolsActivity.this,"正在安装插件,请稍后(可能会出现无响应，请耐心等待)....");
             Handler handler = dismissDialogHandler(0,show);

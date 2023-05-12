@@ -2,9 +2,7 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.getCMD;
-import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
@@ -14,6 +12,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -44,6 +43,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class killAppActivity extends AppCompatActivity {
 
@@ -55,7 +56,7 @@ public class killAppActivity extends AppCompatActivity {
     private Switch kaasb1,kaasb2,kaasb3;
     private Boolean kaasb1Bool,kaasb2Bool,kaasb3Bool;
     private killAppDB killAppdb = new killAppDB(killAppActivity.this, "killApp.db", null, 1);
-    private boolean isRoot=false;
+    private boolean isRoot=false,isADB=false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -63,8 +64,10 @@ public class killAppActivity extends AppCompatActivity {
         setContentView(R.layout.kill_app_activity);
         fuckActivity.getIns().add(this);
         setTitle("后台管理");
-        isRoot=isSuEnable();
-        if(isRoot == false && checkShizukuPermission(1) == false){
+        Intent intent = getIntent();
+        isRoot = intent.getBooleanExtra("isRoot",false);
+        isADB = intent.getBooleanExtra("isADB",false);
+        if(isRoot == false && isADB == false){
             Toast.makeText(this, "没有被授权,将无法正常使用该功能", Toast.LENGTH_SHORT).show();
         }
         initBt();
@@ -133,33 +136,22 @@ public class killAppActivity extends AppCompatActivity {
 
                 StringBuilder sb = new StringBuilder();
                 sb.append("aaa=(");
-                if(kaasb3Bool){
-                    for (int i = 0; i < checkboxs.size(); i++) {
-                        if(!checkboxs.get(i)){
-                            PKGINFO pkginfo = pkginfos.get(i);
-                            if(!pkginfo.getPkgname().equals(getPackageName())){
-                                sb.append("\""+pkginfo.getPkgname()+"\" ");
-                            }
-                        }
-                    }
-                }
-
-                if(kaasb2Bool){
-                    for (int i = 0; i < checkboxs.size(); i++) {
-                        if(checkboxs.get(i)){
-                            PKGINFO pkginfo = pkginfos.get(i);
-                            if(!pkginfo.getPkgname().equals(getPackageName())){
-                                sb.append("\""+pkginfo.getPkgname()+"\" ");
-                            }
-                        }
-                    }
-                }
-
-                if(kaasb1Bool){
-                    for (PKGINFO pkginfo : pkginfos) {
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    PKGINFO pkginfo = pkginfos.get(i);
+                    if(kaasb3Bool && !checkboxs.get(i)){
                         if(!pkginfo.getPkgname().equals(getPackageName())){
                             sb.append("\""+pkginfo.getPkgname()+"\" ");
                         }
+                    }
+
+                    if(kaasb2Bool && checkboxs.get(i)){
+                        if(!pkginfo.getPkgname().equals(getPackageName())){
+                            sb.append("\""+pkginfo.getPkgname()+"\" ");
+                        }
+                    }
+
+                    if(kaasb1Bool){
+                        sb.append("\""+pkginfo.getPkgname()+"\" ");
                     }
                 }
 
@@ -218,6 +210,7 @@ public class killAppActivity extends AppCompatActivity {
             }
         };
         Activity activity = this;
+        Context context =this;
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -229,15 +222,32 @@ public class killAppActivity extends AppCompatActivity {
                 }else{
                     multiFunc.queryAllRunningPKGS(activity,pkginfos,checkboxs,0);
                 }
-                checkRunningPKG();
+                checkRunningPKG(context);
                 sendHandlerMSG(handler,0);
             }
         }).start();
 
     }
 
-    private void checkRunningPKG(){
-        String filesPath = getMyHomeFilesPath(killAppActivity.this);
+    /**
+     * <p>
+     * 进行字符串正则提取
+     */
+    public String getByString(String src, String regex, String re_str) {
+        StringBuilder tmp = new StringBuilder();
+        Matcher m = Pattern.compile(regex).matcher(src);
+        while (m.find()) {
+            tmp.append(m.group().replaceAll(re_str, "") + "\n");
+        }
+        return tmp.toString();
+    }
+
+    private void checkRunningPKG(Context context){
+        String datab="/data/local/tmp/busybox";
+        String filesPath = getMyHomeFilesPath(context);
+        if(isADB){
+            filesPath=context.getExternalCacheDir().toString();
+        }
         String busyboxFile = filesPath+"/busybox";
         File busyF = new File(busyboxFile);
         File filesP = new File(filesPath);
@@ -247,9 +257,12 @@ public class killAppActivity extends AppCompatActivity {
         if(!busyF.exists()){
             extactAssetsFile(this,"busybox",busyboxFile);
         }
-        String cmdstr="chmod 755 "+busyboxFile +" && "+busyboxFile+" ps  && exit 0;";
-        CMD cmd = getCMD(killAppActivity.this,cmdstr,isRoot);
-//        Log.d("cmd",cmd.getResultCode() + " -- " +cmd.getResult());
+        String cmdstr="chmod 755 "+busyboxFile +" && "+busyboxFile+" ps";
+        if(isADB){
+            CMD cmd = getCMD(this, "cp " + busyboxFile + " "+datab+" && chmod 777 "+datab, false);
+            cmdstr="chmod 777 "+datab+" && "+datab+" ps";
+        }
+        CMD cmd = getCMD(context,cmdstr,isRoot);
         if(cmd.getResultCode() == 0){
             String[] split = cmd.getResult().split("\n");
             for (int i = 0; i < pkginfos.size(); i++) {
@@ -264,10 +277,9 @@ public class killAppActivity extends AppCompatActivity {
                             }
                             pid=pid.replaceAll("\\s+","");
                             if(!pid.isEmpty()){
-                                String proc_pid_status_cmd="cat /proc/"+pid+"/status |grep 'VmRSS' | "+busyboxFile+" awk '{print $2}'  && exit 0;";
-                                CMD cmd1 = getCMD(killAppActivity.this,proc_pid_status_cmd,isRoot);
+                                String proc_pid_status_cmd="cat /proc/"+pid+"/status |grep 'VmRSS' | "+(isADB?datab:busyboxFile)+" awk '{print $2}'";
+                                CMD cmd1 = getCMD(context,proc_pid_status_cmd,isRoot);
                                 if(cmd1.getResultCode() == 0){
-//                                Log.d("ppp",pkginfo.getAppname()+ " -- " + cmd1.getResult());
                                     pkginfos.get(i).setFilesize((Long.parseLong(cmd1.getResult().trim())*1024));
                                 }
                             }
@@ -277,6 +289,7 @@ public class killAppActivity extends AppCompatActivity {
             }
         }
     }
+
 
     private void showPKGS(ListView listView){
         PKGINFOAdapter pkginfoAdapter = new PKGINFOAdapter(pkginfos, killAppActivity.this, checkboxs);

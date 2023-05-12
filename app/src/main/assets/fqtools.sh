@@ -15,6 +15,15 @@ export JAVA_HOME="$fqaosp_usr/opt/openjdk"
 export PATH=$PATH:"$fqaosp_usr/bin":"$JAVA_HOME/bin"
 export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:"$fqaosp_usr/lib":"$JAVA_HOME/lib"
 
+if [ -d "/mnt/sdcard/0/Android/data" ];then
+  sdcard_android_path="/mnt/sdcard/0/Android"
+  backup_app_home="/mnt/sdcard/0/backup_app"
+fi
+
+if [[ `id|grep shell` != "" ]];then
+  busybox_my="$data_local_tmp/busybox"
+fi
+
 install_apks(){
 	apks_path=$1
 	if [ -f "$apks_path" ];then
@@ -35,37 +44,15 @@ install_apk_on_path(){
 	apk_dir_path=$1
 	if [ -d "$apk_dir_path" ];then
 		cd $apk_dir_path/
-		apk_files=$(find -name "*.apk" -o -name "*.apks"|xargs dirname|uniq)
-		if [ $apk_files == "." ];then
-			find -name "*.apk" -o -name "*.apks"|while read apkff 
-			do
-				echo "apkff :::: $apkff"
-				if [[ `echo $apkff |grep ".apks"` != "" ]];then
-					install_apks "./$apkff"
-				else
-					cp "$apkff" $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
-				fi
-			done
-		else
-			for apkd in $apk_files
-			do
-				cd $apkd 
-				apks_sum=`find -name "*.apk" |wc -l`
-				apkff=`find -name "*.apk" -o -name "*.apks"`
-				if [[ `echo $apkff |grep ".apks"` != "" ]];then
-					install_apks "./$apkff"
-				fi
-				if [ $apks_sum -gt 1 ];then
-					install_split_apks
-				else
-					cp $apkff $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
-				fi
-				cd $apk_dir_path/
-			done
-		fi
-		
-		
-		exit 0;
+		apk_files=$(find -name "*.apk" -o -name "*.apks"|$busybox_my uniq)
+		for apkd in $apk_files
+    do
+      if [[ `echo $apkd |grep ".apks"` != "" ]];then
+        install_apks "./$apkd"
+      else
+        cp $apkd $data_local_tmp/base.apk && chmod 777 $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
+      fi
+    done
 	else
 		echo "$apk_dir_path not exists"
 		help_msg
@@ -144,17 +131,21 @@ backup_app(){
 					exit -1;
 				fi
 			fi
-			cd "$sdcard_android_path/data"
-			if [ -d $pkgname ];then
-				$busybox_my tar "$tar_parm" "$out_dir_path/sddata.${fffend}" $pkgname && $xz_cmdstr "$out_dir_path/sddata.${fffend}"
+			if [ -d "$sdcard_android_path/data" ];then
+        cd "$sdcard_android_path/data"
+        if [ -d $pkgname ];then
+          $busybox_my tar "$tar_parm" "$out_dir_path/sddata.${fffend}" $pkgname && $xz_cmdstr "$out_dir_path/sddata.${fffend}"
+        fi
 			fi
-			cd "$sdcard_android_path/obb"
-			if [ -d $pkgname ];then
-				$busybox_my tar "$tar_parm" "$out_dir_path/sdobb.${fffend}" $pkgname && $xz_cmdstr "$out_dir_path/sdobb.${fffend}"
+			if [ -d "$sdcard_android_path/obb" ];then
+        cd "$sdcard_android_path/obb"
+        if [ -d $pkgname ];then
+          $busybox_my tar "$tar_parm" "$out_dir_path/sdobb.${fffend}" $pkgname && $xz_cmdstr "$out_dir_path/sdobb.${fffend}"
+        fi
 			fi
 			cd $out_dir_path
 			cd ../
-			$busybox_my tar "$tar_parm" "$pkgname.${fffend}" $pkgname && $xz_cmdstr "$pkgname.${fffend}" && rm -rf $pkgname && exit 0;
+			$busybox_my tar "$tar_parm" "$pkgname.${fffend}" $pkgname && $xz_cmdstr "$pkgname.${fffend}" && rm -rf $pkgname;
 		
 		break;;
 		data)
@@ -170,13 +161,17 @@ backup_app(){
 					exit -1;
 				fi
 			fi
-			cd "$sdcard_android_path/data"
-			if [ -d $pkgname ];then
-				$busybox_my tar "$tar_parm" "$out_dir_path/sddata.${fffend}" $pkgname && $xz_cmdstr "$out_dir_path/sddata.${fffend}"
+			if [ -d "$sdcard_android_path/data" ];then
+        cd "$sdcard_android_path/data"
+        if [ -d $pkgname ];then
+          $busybox_my tar "$tar_parm" "$out_dir_path/sddata.${fffend}" $pkgname && $xz_cmdstr "$out_dir_path/sddata.${fffend}"
+        fi
 			fi
-			cd "$sdcard_android_path/obb"
-			if [ -d $pkgname ];then
-				$busybox_my tar "$tar_parm" "$out_dir_path/sdobb.${fffend}" $pkgname && $xz_cmdstr "$out_dir_path/sdobb.${fffend}"
+			if [ -d "$sdcard_android_path/obb" ];then
+        cd "$sdcard_android_path/obb"
+        if [ -d $pkgname ];then
+          $busybox_my tar "$tar_parm" "$out_dir_path/sdobb.${fffend}" $pkgname && $xz_cmdstr "$out_dir_path/sdobb.${fffend}"
+        fi
 			fi
 			cd $out_dir_path
 			cd ../
@@ -240,9 +235,13 @@ restory_app(){
 					if [ $apks_sum -gt 1 ];then
 						install_split_apks
 					else
-						cp base.apk $data_local_tmp/ && pm install $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
+						cp base.apk $data_local_tmp/ && chmod 777 $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
 					fi
-					in_app_uid=$(pm list packages -U $pkgname |cut -d ':' -f 3)
+					if [ "$(getprop ro.build.version.sdk)" == "19" ];then
+					  in_app_uid=$(cat /data/system/packages.xml |grep "$pkgname"|cut -d' ' -f14|cut -d'"' -f2)
+					else
+					  in_app_uid=$(pm list packages -U $pkgname |cut -d ':' -f 3)
+					fi
 					cd "$backup_app_home/$pkgname"
 					pkg_data_dir="/data/data"
 					pkg_dir_path="$pkg_data_dir/$pkgname"
@@ -273,7 +272,7 @@ restory_app(){
 					for dddf in $($busybox_my ls -l $pkg_dir_path|$busybox_my awk '$3=="root" {print $9}')
 					do
 						if [ $dddf != "lib" ];then
-							chown -R $in_app_uid:$in_app_uid $pkg_dir_path/$dddf
+							$busybox_my chown -R $in_app_uid:$in_app_uid $pkg_dir_path/$dddf
 						fi
 					done
 					if [ -f "sddata.${r_fffend}" ];then
@@ -309,7 +308,11 @@ restory_app(){
         fi
 				cd $pkgname
 				if [ -f "data.${r_fffend}" ];then
-					in_app_uid=$(pm list packages -U $pkgname |cut -d ':' -f 3)
+					if [ "$(getprop ro.build.version.sdk)" == "19" ];then
+          		in_app_uid=$(cat /data/system/packages.xml |grep "$pkgname"|cut -d' ' -f14|cut -d'"' -f2)
+          else
+      			  in_app_uid=$(pm list packages -U $pkgname |cut -d ':' -f 3)
+      		fi
 					cd "$backup_app_home/$pkgname"
 					pkg_data_dir="/data/data"
 					pkg_dir_path="$pkg_data_dir/$pkgname"
@@ -340,7 +343,7 @@ restory_app(){
 					for dddf in $($busybox_my ls -l $pkg_dir_path|$busybox_my awk '$3=="root" {print $9}')
 					do
 						if [ $dddf != "lib" ];then
-							chown -R $in_app_uid:$in_app_uid $pkg_dir_path/$dddf
+							$busybox_my chown -R $in_app_uid:$in_app_uid $pkg_dir_path/$dddf
 						fi
 					done
 					if [ -f "sddata.${r_fffend}" ];then
@@ -386,7 +389,7 @@ restory_app(){
 					if [ $apks_sum -gt 1 ];then
 						install_split_apks
 					else
-						cp base.apk $data_local_tmp/ && pm install $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
+						cp base.apk $data_local_tmp/ && chmod 777 $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
 					fi
 					cd ../
 					rm -rf $pkgname && exit 0;
@@ -432,16 +435,16 @@ unpack_rom_img(){
     esac
 	  case $ROMTYPE in
     	  paybin)
-    	    fqromtools --tool payload --inputfile "$ROMFULLPATH" --out "$ROMOUTPATH/" && exit 0
+    	    fqromtools --tool payload --inputfile "$ROMFULLPATH" --out "$ROMOUTPATH/"
     	    break;;
     	  sndat)
-    	    fqromtools --tool sdat2img --transferlist "$(dirname $ROMFULLPATH)/$TRANSFER_LIST" --inputfile $ROMFULLPATH --out "$ROMOUTPATH/$OUTIMGNAME" && exit 0
+    	    fqromtools --tool sdat2img --transferlist "$(dirname $ROMFULLPATH)/$TRANSFER_LIST" --inputfile $ROMFULLPATH --out "$ROMOUTPATH/$OUTIMGNAME"
     	    break;;
     	  sndatbr)
-    	    brotli -d $ROMFULLPATH -o "$ROMOUTPATH/tmp.new.dat" -f && fqromtools --tool sdat2img --transferlist "$(dirname $ROMFULLPATH)/$TRANSFER_LIST" --inputfile "$ROMOUTPATH/tmp.new.dat" --out "$ROMOUTPATH/$OUTIMGNAME" && rm -rf "$ROMOUTPATH/tmp.new.dat" && exit 0
+    	    brotli -d $ROMFULLPATH -o "$ROMOUTPATH/tmp.new.dat" -f && fqromtools --tool sdat2img --transferlist "$(dirname $ROMFULLPATH)/$TRANSFER_LIST" --inputfile "$ROMOUTPATH/tmp.new.dat" --out "$ROMOUTPATH/$OUTIMGNAME" && rm -rf "$ROMOUTPATH/tmp.new.dat"
     	    break;;
     	  super)
-    	    simg2img "$ROMFULLPATH" "$ROMOUTPATH/tmp.img" && lpunpack "$ROMOUTPATH/tmp.img" "$ROMOUTPATH/" && rm -rf "$ROMOUTPATH/tmp.img" && exit 0
+    	    simg2img "$ROMFULLPATH" "$ROMOUTPATH/tmp.img" && lpunpack "$ROMOUTPATH/tmp.img" "$ROMOUTPATH/" && rm -rf "$ROMOUTPATH/tmp.img"
     	    break;;
     	esac
   else
@@ -461,13 +464,13 @@ repack_rom_img(){
 	  fi
 	  case $REPACKTYPE in
 	    sdat)
-	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && fqromtools --tool img2sdat --inputfile "$REPACKOUTPATH/tmp.img" --out "$REPACKOUTPATH/" --androidversion "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && exit 0
+	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && fqromtools --tool img2sdat --inputfile "$REPACKOUTPATH/tmp.img" --out "$REPACKOUTPATH/" --androidversion "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img"
 	      break;;
 	    sdatbr)
-	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && fqromtools --tool img2sdat --inputfile  "$REPACKOUTPATH/tmp.img" -out "$REPACKOUTPATH/" --androidversion "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && brotli -f -q 11 "$REPACKOUTPATH/system.new.dat" && exit 0
+	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/tmp.img"  && fqromtools --tool img2sdat --inputfile  "$REPACKOUTPATH/tmp.img" -out "$REPACKOUTPATH/" --androidversion "$ANDROIDLEVEL" && rm -rf "$REPACKOUTPATH/tmp.img" && brotli -f -q 11 "$REPACKOUTPATH/system.new.dat"
 	      break;;
 	    sparseimg)
-	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/sparse.img"  && exit 0
+	      img2simg "$IMGFULLPATH" "$REPACKOUTPATH/sparse.img"
 	      break;;
 	  esac
   else
@@ -500,6 +503,7 @@ help_msg(){
 }
 
 if [ -f $busybox_my ];then
+  chmod 777 $busybox_my
 	mmm=$1
 	pkgname=$2
 	backup_mode=$3

@@ -2,10 +2,10 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.checkBoxsHashMap;
 import static org.fqaosp.utils.multiFunc.checkCMDResult;
-import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.getUID;
+import static org.fqaosp.utils.multiFunc.isADB;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
@@ -83,10 +83,10 @@ public class workProfileMenuActivity extends AppCompatActivity {
         fuckActivity.getIns().add(this);
         setTitle("分身部分");
         isRoot=isSuEnable();
-        if(isRoot || checkShizukuPermission(1)){
+        if((isRoot || isADB()) && Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT){
             initViews();
         }else{
-            showInfoMsg(this,"提示","本功能需要root或者shizuku授权才能正常使用");
+            showInfoMsg(this,"提示","本功能需要root或者shizuku授权才能正常使用,不支持安卓4.x设备.");
         }
 
     }
@@ -108,21 +108,9 @@ public class workProfileMenuActivity extends AppCompatActivity {
         slist.add("分身删除");
         FILESHARINGVIEWPAGERAdapter adapter = new FILESHARINGVIEWPAGERAdapter(views, slist);
         wpmavp.setAdapter(adapter);
-        initOnListen();
         initwpf();
         initwpfm();
         initwpfr();
-    }
-
-    private void initOnListen() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            wpmavp.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-                @Override
-                public void onScrollChange(View view, int i, int i1, int i2, int i3) {
-                    viewPageIndex = wpmavp.getCurrentItem();
-                }
-            });
-        }
     }
 
     //分身创建
@@ -170,13 +158,15 @@ public class workProfileMenuActivity extends AppCompatActivity {
                                     }
                                 }
                                 sb1.append(");for pp in ${aaa[@]};do ");
-                                for (UserHandle userHandle : um.getUserProfiles()) {
-                                    String uid = getUID(userHandle.toString());
-                                    //如果用户不在之前获取的列表里面，那么就开始同步选中的应用程序到新建的用户空间下
-                                    if(haveUser(userList,uid)){
-                                        sb1.append(wp.getInstallPkgCMD(uid, "$pp")+";");
-                                        sb2.append(wp.getStartWPCMD(uid)+";");
-                                        hidePKGS(userHandle);
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                    for (UserHandle userHandle : um.getUserProfiles()) {
+                                        String uid = getUID(userHandle.toString());
+                                        //如果用户不在之前获取的列表里面，那么就开始同步选中的应用程序到新建的用户空间下
+                                        if(haveUser(userList,uid)){
+                                            sb1.append(wp.getInstallPkgCMD(uid, "$pp")+";");
+                                            sb2.append(wp.getStartWPCMD(uid)+";");
+                                            hidePKGS(userHandle);
+                                        }
                                     }
                                 }
                                 sb1.append("done;");
@@ -350,22 +340,26 @@ public class workProfileMenuActivity extends AppCompatActivity {
     }
 
     private void hidePKGS(UserHandle userHandle){
-        StringBuilder sb = new StringBuilder();
-        LauncherApps launcherApps = (LauncherApps) getSystemService(Context.LAUNCHER_APPS_SERVICE);
-        List<LauncherActivityInfo> activityList = launcherApps.getActivityList(null, userHandle);
-        sb.append("aaa=(");
-        for (LauncherActivityInfo launcherActivityInfo : activityList) {
-            sb.append("\""+launcherActivityInfo.getApplicationInfo().packageName+"\" ");
-        }
-        sb.append(");for aa in ${aaa[@]};do pm hide --user "+getUID(userHandle.toString())+" $aa ;done;");
-        CMD cmd = getCMD(this, sb.toString(), isRoot);
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP){
+            StringBuilder sb = new StringBuilder();
+            LauncherApps launcherApps = (LauncherApps) getSystemService(Context.LAUNCHER_APPS_SERVICE);
+            List<LauncherActivityInfo> activityList = launcherApps.getActivityList(null, userHandle);
+            sb.append("aaa=(");
+            for (LauncherActivityInfo launcherActivityInfo : activityList) {
+                sb.append("\""+launcherActivityInfo.getApplicationInfo().packageName+"\" ");
+            }
+            sb.append(");for aa in ${aaa[@]};do pm hide --user "+getUID(userHandle.toString())+" $aa ;done;");
+            CMD cmd = getCMD(this, sb.toString(), isRoot);
 //        Log.d("hidecmd",cmd.getResultCode()+" -- " + cmd.getResult());
+        }
     }
 
     private ArrayList<String> getExistsUsers(UserManager um){
         ArrayList<String> userList = new ArrayList<>();
-        for (UserHandle userHandle : um.getUserProfiles()) {
-            userList.add(getUID(userHandle.toString()));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            for (UserHandle userHandle : um.getUserProfiles()) {
+                userList.add(getUID(userHandle.toString()));
+            }
         }
         return userList;
     }
@@ -515,6 +509,7 @@ public class workProfileMenuActivity extends AppCompatActivity {
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
         menu.clear();
+        viewPageIndex = wpmavp.getCurrentItem();
         switch (viewPageIndex) {
             case 0:
                 menu.add(Menu.NONE, 0, 0, "显示所有应用");
@@ -554,6 +549,7 @@ public class workProfileMenuActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
+        viewPageIndex = wpmavp.getCurrentItem();
         switch (viewPageIndex) {
             case 0:
                 switch (itemId) {

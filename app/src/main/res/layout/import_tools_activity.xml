@@ -66,6 +66,13 @@
         <Button
             android:layout_width="match_parent"
             android:layout_height="60dp"
+            android:text="adb授权命令"
+            android:id="@+id/itab8"
+            ></Button>
+
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
             android:text="退出"
             android:id="@+id/itab5"
             ></Button>

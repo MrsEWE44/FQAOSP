@@ -14,7 +14,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
@@ -67,6 +66,7 @@ public class fileSharingActivity extends AppCompatActivity {
     private ViewPager viewPager;
     private EditText fsaet1, fsaet2;
     private Button fsab1;
+    private boolean isRoot=false , isADB=false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -75,6 +75,9 @@ public class fileSharingActivity extends AppCompatActivity {
         fuckActivity.getIns().add(this);
         setTitle("文件共享");
         initLayout();
+        Intent intent = getIntent();
+        isRoot = intent.getBooleanExtra("isRoot",false);
+        isADB = intent.getBooleanExtra("isADB",false);
     }
 
     private void initLayout() {
@@ -108,7 +111,7 @@ public class fileSharingActivity extends AppCompatActivity {
                     }
                 }
             };
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
+            new Thread(new Runnable() {
                 @Override
                 public void run() {
                     fsaet1.setText(ipAddress);
@@ -116,7 +119,7 @@ public class fileSharingActivity extends AppCompatActivity {
                     initAppView();
                     sendHandlerMSG(handler, 0);
                 }
-            });
+            }).start();
 
         }
     }
@@ -152,13 +155,13 @@ public class fileSharingActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 fsab1.setEnabled(false);
-                new Thread(new Runnable() {
+                view.post(new Runnable() {
                     @Override
                     public void run() {
                         fsab1.setText("当前正在运行");
                         new HttpServer().start(that);
                     }
-                }).start();
+                });
             }
         });
     }
@@ -362,26 +365,29 @@ public class fileSharingActivity extends AppCompatActivity {
 
         private Context context;
 
+        private ServerSocket serverSocket = null;
+
         public void start(Context context2) {
-            ServerSocket serverSocket = null;
             ExecutorService executorService = Executors.newCachedThreadPool();
             context = context2;
             tempList.addAll(fileList);
-            try {
-                String extstorage = Environment.getExternalStorageDirectory().toString();
-                serverSocket = new ServerSocket(s.isEmpty() ? 26456 : Integer.valueOf(s));
-                Log.d(fileSharingActivity.class.getName(), "listen port : " + serverSocket.getLocalPort());
+            String extstorage = Environment.getExternalStorageDirectory().toString();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        serverSocket = new ServerSocket(s.isEmpty() ? 26456 : Integer.valueOf(s));
+                        Log.d(fileSharingActivity.class.getName(), "listen port : " + serverSocket.getLocalPort());
 //                System.out.println("服务器端正在监听端口："+serverSocket.getLocalPort());
-                while (true) {//死循环时刻监听客户端链接
-                    Socket socket = serverSocket.accept();
-                    Log.d(fileSharingActivity.class.getName(), "new con : " + socket.getInetAddress() + ":" + socket.getPort());
+
+
+                        while (true) {//死循环时刻监听客户端链接
+                            //开始服务
+                            try {
+                                Socket socket = serverSocket.accept();
+                                Log.d(fileSharingActivity.class.getName(), "new con : " + socket.getInetAddress() + ":" + socket.getPort());
 //                    System.out.println("建立了与客户端一个新的tcp连接，客户端地址为："+socket.getInetAddress()
 //                            +":"+socket.getPort());
-                    //开始服务
-                    executorService.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
                                 //读取HTTP请求信息
                                 InputStream socketIn = socket.getInputStream();
                                 int size = socketIn.available();
@@ -475,19 +481,16 @@ public class fileSharingActivity extends AppCompatActivity {
                                 socket.shutdownInput();
                                 socket.shutdownOutput();
                                 socket.close();
-
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                             isFirst=false;
                         }
-                    });
-                    //开始服务
-                    //service(socket);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            }).start();
         }
 
         //返回文件列表

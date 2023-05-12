@@ -1,8 +1,7 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.getCMD;
-import static org.fqaosp.utils.multiFunc.isSuEnable;
+import static org.fqaosp.utils.multiFunc.isADB;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
@@ -13,13 +12,13 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -47,14 +46,16 @@ public class otherToolsActivity extends AppCompatActivity {
 
     private Button otabt1,otabt2,otabt3,otabt4,otabt5,otabt6;
     int otrrasp1_index=0,otrrasp2_index=0,otnsasp1_index=0;
-    private boolean isRoot=false;
+    private boolean isRoot=false,isADB=false;
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.other_tools_activity);
         fuckActivity.getIns().add(this);
         setTitle("杂七杂八小工具");
-        isRoot=isSuEnable();
+        Intent intent = getIntent();
+        isRoot = intent.getBooleanExtra("isRoot",false);
+        isADB = intent.getBooleanExtra("isADB",false);
         initBt();
     }
 
@@ -279,7 +280,7 @@ public class otherToolsActivity extends AppCompatActivity {
     private void checkBt(Button button , boolean needRoot , boolean needADB){
         if(isRoot|| (needRoot == false && needADB == false)){
             button.setBackgroundColor(Color.rgb(17,179,98));
-        }else if(needADB && checkShizukuPermission(1)){
+        }else if(needADB && isADB()){
             button.setBackgroundColor(Color.rgb(176,198,39));
         }else{
             button.setBackgroundColor(Color.rgb(223,90,90));

@@ -7,6 +7,7 @@ import static org.fqaosp.utils.multiFunc.queryUSERS;
 import android.app.Activity;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
 
 import org.fqaosp.entity.PKGINFO;
@@ -96,6 +97,9 @@ public class makeWP {
     }
 
     public String getUninstallPkgByUIDCMD(String uid,String pkgname){
+        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
+            return "pm uninstall "+pkgname;
+        }
         return "pm uninstall --user "+uid+" "+pkgname;
     }
 

@@ -13,6 +13,7 @@ import static org.fqaosp.utils.multiFunc.showMyDialog;
 import android.app.ActivityManager;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -59,6 +60,7 @@ public class romToolsActivity extends AppCompatActivity {
     private String rom_imgs[] = {"system.new.dat","product.new.dat","vendor.new.dat","system.new.dat.br","product.new.dat.br","vendor.new.dat.br","payload.bin","super.img"};
     private String rom_imgs2[] = {"system.new.dat","system.new.dat.br","sparse img"};
     private String rom_imgs2_ver[] = {"5.0","5.1","6.x","7.x+"};
+    private boolean isRoot=false,isADB=false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -66,18 +68,25 @@ public class romToolsActivity extends AppCompatActivity {
         setContentView(R.layout.rom_tools_activity);
         fuckActivity.getIns().add(this);
         setTitle("ROM工具");
-        String filesDir =getMyHomeFilesPath(this);
-        checkTools(this);
-        String fqtoolsusr = filesDir+"/usr";
-        File fqtoolsusrdir = new File(fqtoolsusr);
-        if(!fqtoolsusrdir.exists()){
-            showImportToolsDialog(this,"fqtools核心无法获取，请退出重试或者重新安装app","fqtools工具包没有找到,功能使用将受到限制或者异常,要继续使用吗？");
+        Intent intent = getIntent();
+        isRoot = intent.getBooleanExtra("isRoot",false);
+        isADB = intent.getBooleanExtra("isADB",false);
+        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
+            showInfoMsg(this,"警告","该功能暂时不支持安卓4.x设备.");
+        }else{
+            String filesDir =getMyHomeFilesPath(this);
+            checkTools(this,isADB);
+            String fqtoolsusr = filesDir+"/usr";
+            File fqtoolsusrdir = new File(fqtoolsusr);
+            if(!fqtoolsusrdir.exists()){
+                showImportToolsDialog(this,"fqtools核心无法获取，请退出重试或者重新安装app","fqtools工具包没有找到,功能使用将受到限制或者异常,要继续使用吗？",isRoot,isADB);
+            }
+            ActivityManager activityManager = (ActivityManager) getSystemService(this.ACTIVITY_SERVICE);
+            if(activityManager.isLowRamDevice()){
+                showInfoMsg(this,"警告","当前设备配置较低,运行此页面功能会出现问题!");
+            }
+            initViews();
         }
-        ActivityManager activityManager = (ActivityManager) getSystemService(this.ACTIVITY_SERVICE);
-        if(activityManager.isLowRamDevice()){
-            showInfoMsg(this,"警告","当前设备配置较低,运行此页面功能会出现问题!");
-        }
-        initViews();
     }
 
     private void initViews() {
@@ -90,7 +99,6 @@ public class romToolsActivity extends AppCompatActivity {
         slist.add("ROM文件打包");
         FILESHARINGVIEWPAGERAdapter adapter = new FILESHARINGVIEWPAGERAdapter(views, slist);
         rtavp.setAdapter(adapter);
-        initOnListen();
         initRomUnpackView();
         initRomRepackView();
     }
@@ -202,6 +210,9 @@ public class romToolsActivity extends AppCompatActivity {
 
     private void btClicked(Context context,View v,int mode){
         String storage = context.getExternalCacheDir().toString();
+        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
+            storage="/mnt/sdcard/0/"+storage.replaceAll(Environment.getExternalStorageDirectory().toString(),"");
+        }
         String outDir = storage+"/"+(mode ==0 ?"romunpack":"romrepack");
         ProgressDialog show = showMyDialog(context,"正在"+(mode ==0?"解":"打")+"包ROM,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = dismissDialogHandler(0,show);
@@ -239,18 +250,8 @@ public class romToolsActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void initOnListen() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            rtavp.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-                @Override
-                public void onScrollChange(View view, int i, int i1, int i2, int i3) {
-                    viewPageIndex = rtavp.getCurrentItem();
-                }
-            });
-        }
-    }
-
     private String getRomType(){
+        viewPageIndex = rtavp.getCurrentItem();
         if(viewPageIndex == 0){
             switch (rom_img_index){
                 case 0:
@@ -296,6 +297,7 @@ public class romToolsActivity extends AppCompatActivity {
     }
 
     private void findROMImgs(){
+        viewPageIndex = rtavp.getCurrentItem();
         list.clear();
         checkboxs.clear();
         String storage = Environment.getExternalStorageDirectory().toString();
@@ -323,6 +325,7 @@ public class romToolsActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
+        viewPageIndex = rtavp.getCurrentItem();
         switch (itemId){
             case 0:
                 if(viewPageIndex == 0){

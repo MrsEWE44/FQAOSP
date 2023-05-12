@@ -1,9 +1,7 @@
 package org.fqaosp.utils;
 
-import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.writeDataToPath;
 
 import android.app.Activity;
@@ -16,6 +14,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Process;
@@ -30,17 +29,21 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.entity.ProcessEntity;
 import org.fqaosp.myActivitys.importToolsActivity;
+import org.fqaosp.service.adbSocketClient;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-
-import rikka.shizuku.Shizuku;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 通用功能函数集合
@@ -56,8 +59,10 @@ public class multiFunc {
     private static String TAG="multiFunc";
 
     //页面布局跳转
-    public static void jump(Context srcA , Class<?> cls){
+    public static void jump(Context srcA , Class<?> cls,Boolean isRoot,Boolean isADB){
         Intent intent = new Intent(srcA, cls);
+        intent.putExtra("isRoot", isRoot);
+        intent.putExtra("isADB",isADB);
         srcA.startActivity(intent);
     }
 
@@ -73,7 +78,7 @@ public class multiFunc {
             for (String path : paths) {
                 file = new File(path + "su");
                 if (file.exists() && file.canExecute()) {
-                    return true;
+                    return testRoot();
                 }
             }
         } catch (Exception x) {
@@ -82,41 +87,44 @@ public class multiFunc {
         return false;
     }
 
-    //检查shizuku是否被授权
-    public static boolean checkShizukuPermission(int code) {
-        if (Shizuku.isPreV11()) {
-            return false;
-        }
-        try {
-            if (Shizuku.checkSelfPermission() == PERMISSION_GRANTED) {
-                return true;
-            } else if (Shizuku.shouldShowRequestPermissionRationale()) {
-                Log.d("checkPermission","User denied permission (shouldShowRequestPermissionRationale=true)");
-                return false;
-            } else {
-                Shizuku.requestPermission(code);
-                return false;
-            }
-        } catch (Throwable e) {
-//            Log.d("checkPermission",Log.getStackTraceString(e));
-        }
-
-        return false;
+    public static boolean testRoot(){
+        CMD cmd = new CMD("id");
+        return cmd.getResultCode() == 0;
     }
 
+    public static boolean isADB(){
+        CMD cmd = runADBCmd("id|grep shell");
+        return !cmd.toString().isEmpty();
+    }
+
+    public static CMD runADBCmd(String cmdstr){
+        adbSocketClient adbSocketClient2 = new adbSocketClient(cmdstr,new adbSocketClient.SocketListener() {
+            @Override
+            public void getCMD(CMD cmd) {
+//                Log.d("runADBCMD",cmd.toString());
+            }
+        });
+        return adbSocketClient2.getCMD();
+    }
 
     //页面布局跳转
-    public static void jump(Button b , Context srcA , Class<?> cls){
+    public static void jump(Button b , Context srcA , Class<?> cls,Boolean isRoot,Boolean isADB){
         b.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                jump(srcA,cls);
+                jump(srcA,cls,isRoot,isADB);
             }
         });
     }
 
-    public static void checkTools(Context context){
+    public static void checkTools(Context context,boolean isADB){
         String filesDir =getMyHomeFilesPath(context);
+        if(isADB){
+            filesDir=context.getExternalCacheDir().toString();
+        }
+        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
+            filesDir="/mnt/sdcard/0/"+filesDir.replaceAll(Environment.getExternalStorageDirectory().toString(),"");
+        }
         String scriptName = "fqtools.sh";
         String barfile = filesDir+"/"+scriptName;
         String busyFile = filesDir+"/busybox";
@@ -130,14 +138,19 @@ public class multiFunc {
             }else if(Build.CPU_ABI.equals("armeabi-v7a") || Build.CPU_ABI2.equals("armeabi")){
                 extactAssetsFile(context,"busybox_arm",busyFile);
             }
-            busyfile.setExecutable(true);
         }
         if(!barFile.exists()){
             extactAssetsFile(context,scriptName,barfile);
         }
-        if(!extractScriptFilef.exists()){
-            extactAssetsFile(context,"extract.sh",extractScriptFile);
+
+        if(!extractScriptFilef.exists()) {
+            extactAssetsFile(context, "extract.sh", extractScriptFile);
         }
+
+        if(isADB){
+            CMD cmd = getCMD(context, "cp " + busyFile + " /data/local/tmp/", false);
+        }
+
     }
 
     //显示一个弹窗
@@ -179,18 +192,22 @@ public class multiFunc {
         UserManager um = (UserManager) activity.getSystemService(Context.USER_SERVICE);
         if(checkboxs != null){
             checkboxs.clear();
-            for (UserHandle userHandle : um.getUserProfiles()) {
-                String uid = getUID(userHandle.toString());
-                if(!uid.equals(getMyUID())){
-                    us.add(uid);
-                    checkboxs.add(false);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                for (UserHandle userHandle : um.getUserProfiles()) {
+                    String uid = getUID(userHandle.toString());
+                    if(!uid.equals(getMyUID())){
+                        us.add(uid);
+                        checkboxs.add(false);
+                    }
                 }
             }
         }else{
-            for (UserHandle userHandle : um.getUserProfiles()) {
-                String uid = getUID(userHandle.toString());
-                if(!uid.equals(getMyUID())){
-                    us.add(uid);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                for (UserHandle userHandle : um.getUserProfiles()) {
+                    String uid = getUID(userHandle.toString());
+                    if(!uid.equals(getMyUID())){
+                        us.add(uid);
+                    }
                 }
             }
         }
@@ -227,14 +244,18 @@ public class multiFunc {
     }
 
     public static CMD getCMD(Context context , String cmdstr,Boolean isRoot){
-        String myStorageHomePath = getMyStorageHomePath(context);
-        String tmpFile = myStorageHomePath + "/cache/temp.sh";
+        String ss = context.getExternalCacheDir().toString();
+        String tmpFile = ss + "/temp.sh";
         Boolean aBoolean = writeDataToPath(cmdstr, tmpFile, false);
+        if(Build.VERSION.SDK_INT==Build.VERSION_CODES.KITKAT){
+            ss = "/mnt/sdcard/0/"+context.getExternalCacheDir().toString().replaceAll(Environment.getExternalStorageDirectory().toString(),"");
+            tmpFile = ss+"/temp.sh";
+        }
         if(aBoolean){
             if(isRoot){
                 return new CMD("sh "+tmpFile);
             }else{
-                return new CMD(new String[]{"sh",tmpFile});
+                return runADBCmd("sh "+tmpFile);
             }
         }else{
             Log.e("error","write temp script error");
@@ -532,6 +553,61 @@ public class multiFunc {
       sortPKGINFOS(pkginfos);
     }
 
+    /**
+     * <p>
+     * 进行字符串正则提取
+     */
+    public static String getByString(String src, String regex, String re_str) {
+        StringBuilder tmp = new StringBuilder();
+        Matcher m = Pattern.compile(regex).matcher(src);
+        if (m.find()) {
+            tmp.append(m.group().replaceAll(re_str, "") + "\n");
+        }
+        return tmp.toString();
+    }
+
+    /**
+     * <p>
+     * 进行字符串正则提取
+     */
+    public static String getByAllString(String src, String regex, String re_str) {
+        StringBuilder tmp = new StringBuilder();
+        Matcher m = Pattern.compile(regex).matcher(src);
+        while (m.find()) {
+            tmp.append(m.group().replaceAll(re_str, "") + "\n");
+        }
+        return tmp.toString();
+    }
+
+    public static String getProcessValue(String src,String key){
+        return getByString(src,key+":(.+?\\n)",key+":");
+    }
+
+    //查询/proc路径下所有进程
+    public static Set<ProcessEntity> queryAllProcess(Context context , boolean isRoot){
+        Set<ProcessEntity> set = new HashSet<>();
+        String cmdstr = "for p in `ls /proc |grep -E \"[0-9]\"`;do cat \"/proc/$p/status\";echo \"FQAOSPLINE\";done";
+        CMD cmd = getCMD(context, cmdstr, isRoot);
+        if(cmd.getResultCode()==0){
+            for (String s : getByAllString(cmd.getResult(), "Name:([\\s\\S]*)FQAOSPLINE", "").split("FQAOSPLINE")) {
+                if(!s.trim().isEmpty()){
+                    set.add(new ProcessEntity(getProcessValue(s,"Name"),getProcessValue(s,"Umask"),getProcessValue(s,"State"),getProcessValue(s,"Tgid"),
+                            getProcessValue(s,"Ngid"),getProcessValue(s,"Pid"),getProcessValue(s,"PPid"),getProcessValue(s,"TracerPid"),getProcessValue(s,"Uid"),
+                            getProcessValue(s,"Gid"),getProcessValue(s,"FDSize"),getProcessValue(s,"Groups"),getProcessValue(s,"VmPeak"),getProcessValue(s,"VmSize"),getProcessValue(s,"VmLck"),
+                            getProcessValue(s,"VmPin"),getProcessValue(s,"VmHWM"),getProcessValue(s,"VmRSS"),getProcessValue(s,"RssAnon"),getProcessValue(s,"RssFile"),
+                            getProcessValue(s,"RssShmem"),getProcessValue(s,"VmData"),getProcessValue(s,"VmStk"),getProcessValue(s,"VmExe"),getProcessValue(s,"VmLib"),getProcessValue(s,"VmPTE"),
+                            getProcessValue(s,"VmSwap"),getProcessValue(s,"CoreDumping"),getProcessValue(s,"Threads"),getProcessValue(s,"SigQ"),getProcessValue(s,"SigPnd"),getProcessValue(s,"ShdPnd"),
+                            getProcessValue(s,"SigBlk"),getProcessValue(s,"SigIgn"),getProcessValue(s,"SigCgt"),getProcessValue(s,"CapInh"),getProcessValue(s,"CapPrm"),getProcessValue(s,"CapEff"),getProcessValue(s,"CapBnd"),
+                            getProcessValue(s,"CapAmb"),getProcessValue(s,"NoNewPrivs"),getProcessValue(s,"Seccomp"),getProcessValue(s,"Speculation_Store_Bypass"),getProcessValue(s,"Cpus_allowed"),getProcessValue(s,"Cpus_allowed_list"),getProcessValue(s,"Mems_allowed"),getProcessValue(s,"Mems_allowed_list"),
+                            getProcessValue(s,"voluntary_ctxt_switches"),getProcessValue(s,"nonvoluntary_ctxt_switches")
+                    ));
+                }
+            }
+        }
+        return  set;
+    }
+
+
     //查询当前运行在后台的应用，用户安装部分
     public static void queryRunningPKGS(Activity activity, ArrayList<PKGINFO> pkginfos , ArrayList<Boolean> checkboxs,Integer types){
         PackageManager packageManager = activity.getPackageManager();
@@ -557,7 +633,7 @@ public class multiFunc {
     }
 
 
-    public static void showImportToolsDialog(Context context,String toastMsg , String msg){
+    public static void showImportToolsDialog(Context context,String toastMsg , String msg,Boolean isRoot,Boolean isADB){
         Toast.makeText(context, toastMsg, Toast.LENGTH_SHORT).show();
         AlertDialog.Builder alertDialog = new AlertDialog.Builder(context);
         alertDialog.setTitle("警告");
@@ -568,11 +644,11 @@ public class multiFunc {
                 dialogInterface.dismiss();
             }
         });
-        alertDialog.setNegativeButton("补全组件脚本", new DialogInterface.OnClickListener() {
+        alertDialog.setNegativeButton("补全功能组件", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 dialogInterface.dismiss();
-                jump(context, importToolsActivity.class);
+                jump(context, importToolsActivity.class,isRoot,isADB);
             }
         });
         alertDialog.show();

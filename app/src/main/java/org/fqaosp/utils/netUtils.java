@@ -1,5 +1,9 @@
 package org.fqaosp.utils;
 
+import android.app.DownloadManager;
+import android.content.Context;
+import android.net.Uri;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -76,6 +80,19 @@ public class netUtils {
         inputStream.close();
         br.close();
         return pageHTML.toString();
+    }
+
+    public void downloadFileOnUrlByAndorid(Context context , String filepath, String url){
+        //创建下载任务,downloadUrl就是下载链接
+        DownloadManager.Request request = new DownloadManager.Request(Uri.parse(url));
+        //允许漫游
+        request.setAllowedOverRoaming(true);
+        //指定下载保存路径
+        request.setDestinationUri(Uri.fromFile(new File(filepath)));
+        //获取下载管理器
+        DownloadManager downloadManager= (DownloadManager) context.getSystemService(Context.DOWNLOAD_SERVICE);
+        //将下载任务加入下载队列，否则不会进行下载
+        downloadManager.enqueue(request);
     }
 
 

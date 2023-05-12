@@ -61,6 +61,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
     private ArrayList<String> list = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
+    private boolean isRoot,isADB;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -68,13 +69,21 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
         setContentView(R.layout.apk_decompile_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("软件反编译");
-        extractAssetsFiles();
-        initViews();
+        Intent intent = getIntent();
+        isRoot = intent.getBooleanExtra("isRoot",false);
+        isADB = intent.getBooleanExtra("isADB",false);
+        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
+            showInfoMsg(this,"警告","安卓4.x设备暂不支持该功能");
+        }else{
+            extractAssetsFiles();
+            initViews();
+        }
+
     }
 
     private void extractAssetsFiles() {
         try {
-            checkTools(this);
+            checkTools(this,isADB);
             String filesDir = getMyHomeFilesPath(apkDecompileMenuActivity.this);
             String jdkDir = filesDir + "/usr/opt/openjdk";
             String apktoolFile = filesDir + "/usr/apktool.jar";
@@ -86,11 +95,11 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
             }
             if (!jdkD.exists() ) {
                 showInfoMsg(this,"错误","未找到jdk，请重新导入工具包后再执行此项");
-                jump(apkDecompileMenuActivity.this, importToolsActivity.class);
+                jump(apkDecompileMenuActivity.this, importToolsActivity.class,isRoot,isADB);
             }
             if (!apkToolF.exists()) {
                 showInfoMsg(this,"错误","未找到apktool.jar，请重新导入工具包后再执行此项");
-                jump(apkDecompileMenuActivity.this, importToolsActivity.class);
+                jump(apkDecompileMenuActivity.this, importToolsActivity.class,isRoot,isADB);
             }
         } catch (Exception e) {
             showInfoMsg(this,"错误",e.toString());
@@ -107,20 +116,8 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
         slist.add("回编译");
         FILESHARINGVIEWPAGERAdapter adapter = new FILESHARINGVIEWPAGERAdapter(views, slist);
         admavp.setAdapter(adapter);
-        initOnListen();
         initDecompileView();
         initRecompileView();
-    }
-
-    private void initOnListen() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            admavp.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-                @Override
-                public void onScrollChange(View view, int i, int i1, int i2, int i3) {
-                    viewPageIndex = admavp.getCurrentItem();
-                }
-            });
-        }
     }
 
     //初始化反编译界面与功能
@@ -256,6 +253,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
         menu.clear();
+        viewPageIndex = admavp.getCurrentItem();
         switch (viewPageIndex) {
             case 0:
                 menu.add(Menu.NONE, 0, 0, "显示所有应用");
@@ -282,6 +280,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
+        viewPageIndex = admavp.getCurrentItem();
         switch (viewPageIndex) {
             case 0:
                 switch (itemId) {
@@ -332,6 +331,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        viewPageIndex = admavp.getCurrentItem();
         if (resultCode == Activity.RESULT_OK) {
             clearList();
             String msg = null, eq = null;

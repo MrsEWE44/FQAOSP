@@ -1,12 +1,13 @@
 package org.fqaosp;
 
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
-import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
+import static org.fqaosp.utils.multiFunc.isADB;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
@@ -58,7 +59,6 @@ import org.fqaosp.myActivitys.romToolsActivity;
 import org.fqaosp.myActivitys.sqliteManageActivity;
 import org.fqaosp.myActivitys.workProfileMenuActivity;
 import org.fqaosp.utils.fuckActivity;
-import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.netUtils;
 import org.fqaosp.utils.permissionRequest;
 
@@ -80,7 +80,7 @@ public class MainActivity extends Activity {
     private String updatefile=updatehost+"releases/download/";
     private int versioncode;
     private boolean haveupdate=false;
-    private boolean isRoot , isShizuku;
+    private boolean isRoot , isADB;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,9 +94,15 @@ public class MainActivity extends Activity {
             showInfoMsg(this,"警告","你当前的系统是存在问题，不能够读写Android/data/"+getPackageName()+"/cache路径.\r\n错误内容: " + e.toString());
         }
         isRoot=isSuEnable();
-        isShizuku=checkShizukuPermission(1);
+        if(!isRoot){
+            try{
+                isADB=isADB();
+            }catch (Exception e){
+                showImportToolsDialog(this,"当前没有root跟adb权限授权哦!软件使用将会受限","当前没有root跟adb权限授权哦!软件使用将会受限",isRoot,isADB);
+            }
+        }
         initBut();
-        checkTools(this);
+        checkTools(this,isADB);
     }
 
     private  void initBut(){
@@ -126,7 +132,7 @@ public class MainActivity extends Activity {
         menuEntities.add(new menuEntity("组件检查","用于检查该设备是否已经安装部分功能所需的额外扩展组件。\r\n 长按该选项即可进入。\r\n",importToolsActivity.class, ContextCompat.getDrawable(this,R.drawable.left_menu_icon_find_foreground),false,false));
 
         //创建并设置适配器
-        MENUSELECTAdapter adapter = new MENUSELECTAdapter(menuEntities,this,isRoot,isShizuku);
+        MENUSELECTAdapter adapter = new MENUSELECTAdapter(menuEntities,this,isRoot,isADB);
         lv.setAdapter(adapter);
         amupdate.setVisibility(View.INVISIBLE);
         bt1.setOnClickListener(new View.OnClickListener() {
@@ -154,12 +160,14 @@ public class MainActivity extends Activity {
             public void onClick(View view) {
                 tv1.setText("帮助信息");
                 tv2.setText("红色是当前状态下不能使用的功能.\n黄色是当前状态下只可以使用部分功能,剩下部分则不能使用.\n默认绿色则是代表当前状态可以完美正常使用该功能.\n\n" +
-                        "FQAOSP(中文全称为: 法可油安卓),它是一个适用于类原生的搞机工具，同样也适用于国内定制ui系统，它拥有很多常用的功能，例如：后台清理、一键卸载与安装应用、安装某个指定的文件夹里面所有apk文件、将手机本地的pe镜像文件挂载给电脑重装系统、反/回编译软件、提取或者刷入系统分区文件、软件的备份与恢复、应用分身、共享手机本地文件给局域网内所有用户、搜索自己设定范围内的文件等等，未来还会加入更多功能，现在部分功能已经可以不再需要root，已经对接了shizuku，但是仍有部分需要root才能使用，后续会逐渐完善与shizuku的对接。\r\n" +
+                        "FQAOSP(中文全称为: 法可油安卓),它是一个适用于类原生的搞机工具，同样也适用于国内定制ui系统，它拥有很多常用的功能，例如：后台清理、一键卸载与安装应用、安装某个指定的文件夹里面所有apk文件、将手机本地的pe镜像文件挂载给电脑重装系统、反/回编译软件、提取或者刷入系统分区文件、软件的备份与恢复、应用分身、共享手机本地文件给局域网内所有用户、搜索自己设定范围内的文件等等，未来还会加入更多功能，现在部分功能已经可以不再需要root，已经对接了adb授权，但是仍有部分需要root才能使用，后续会逐渐完善与adb权限的对接。\r\n" +
                         "如果有新功能或建议，可以在GitHub提issue！\r\n" +
                         "\n" +
-                        "1.加入屏幕分辨率修改功能.\n" +
-                        "2.修复anr弹窗无响应问题.\n" +
-                        "3.修改版本号为1.3.3");
+                        "当前最新版本为:V1.3.4\r\n" +
+                        "1.加入adb授权支持,可以通过adb shell来授权该应用,来运行一些需要adb权限才能做到的事情.\n" +
+                        "2.加入安卓4.4支持,安卓4.4设备也可以使用该应用了.\n" +
+                        "3.移除shizuku依赖.\n" +
+                        "4.修改版本号为V1.3.4.");
                 amupdate.setVisibility(View.VISIBLE);
                 dl.closeDrawer(Gravity.LEFT);
             }
@@ -168,7 +176,7 @@ public class MainActivity extends Activity {
         lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                jump(activity, menuEntities.get(i).getClassz());
+                jump(activity, menuEntities.get(i).getClassz(),isRoot,isADB);
                 return false;
             }
         });

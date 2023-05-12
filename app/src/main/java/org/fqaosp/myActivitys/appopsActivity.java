@@ -15,12 +15,10 @@ import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.getPathByLastNameType;
 import static org.fqaosp.utils.multiFunc.checkBoxs;
-import static org.fqaosp.utils.multiFunc.checkShizukuPermission;
 import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.clearList;
 import static org.fqaosp.utils.multiFunc.getMyUID;
 import static org.fqaosp.utils.multiFunc.getRunTraverseCMDStr;
-import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
@@ -36,6 +34,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -85,8 +84,7 @@ public class appopsActivity extends AppCompatActivity {
     private String uid;
     private Spinner apopsasp1,apopsasp2;
     private int nowItemIndex=-1;
-    private View nowItemView = null;
-    private boolean isRoot=false;
+    private boolean isRoot=false,isADB=false;
     private boolean isDisable=false;
     private String apops_permis[] = {"通话/短信相关", "存储","剪切板","电池优化","后台运行","摄像头","麦克风","定位","日历","传感器扫描","通知","待机模式","待机活动","应用联网"};
     private String apops_opt[] = {"默认", "拒绝","允许","仅在运行时允许"};
@@ -101,8 +99,10 @@ public class appopsActivity extends AppCompatActivity {
         setContentView(R.layout.appops_activity);
         fuckActivity.getIns().add(this);
         setTitle("应用管理");
-        isRoot=isSuEnable();
-        if(isRoot == false && checkShizukuPermission(1) == false){
+        Intent intent = getIntent();
+        isRoot = intent.getBooleanExtra("isRoot",false);
+        isADB = intent.getBooleanExtra("isADB",false);
+        if(isRoot == false && isADB == false){
             Toast.makeText(this, "没有被授权,将无法正常使用该功能", Toast.LENGTH_SHORT).show();
         }
 
@@ -110,7 +110,6 @@ public class appopsActivity extends AppCompatActivity {
          * 如果uid为null，就走默认操作
          * 如果uid不为null，则走分身部分
          * */
-        Intent intent = getIntent();
         uid = intent.getStringExtra("uid");
         if(uid == null){
             uid=getMyUID();
@@ -127,7 +126,7 @@ public class appopsActivity extends AppCompatActivity {
         apopsasp2 = findViewById(R.id.apopsasp2);
         apopsasp1.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_permis));
         apopsasp2.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_opt));
-        checkTools(this);
+        checkTools(this,isADB);
         clickedBt();
     }
 
@@ -199,7 +198,6 @@ public class appopsActivity extends AppCompatActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 nowItemIndex=i;
-                nowItemView=view;
                 createLVMenu();
                 return false;
             }
@@ -442,6 +440,9 @@ public class appopsActivity extends AppCompatActivity {
         appopsCmdStr acs = new appopsCmdStr();
         StringBuilder sb = new StringBuilder();
         String filesDir =getMyHomeFilesPath(this);
+        if(isADB){
+            filesDir=this.getExternalCacheDir().toString();
+        }
         String barfile = filesDir+"/"+script_name;
         //安装apks文件
         String apkscmdstr = "sh "+barfile+" inapks $pp";
@@ -450,14 +451,23 @@ public class appopsActivity extends AppCompatActivity {
             if(checkboxs.get(i)){
                 PKGINFO pkginfo = pkginfos.get(i);
                 String apkpath = pkginfo.getApkpath();
-                sb.append("\""+apkpath+"\" ");
+                if(Build.VERSION.SDK_INT==Build.VERSION_CODES.KITKAT){
+                    sb.append("\"/mnt/sdcard/0/"+apkpath.replaceAll(Environment.getExternalStorageDirectory().toString(),"")+"\" ");
+                }else{
+                    sb.append("\""+apkpath+"\" ");
+                }
+
                 hit++;
             }
         }
         if(hit ==0){
             PKGINFO pkginfo = pkginfos.get(nowItemIndex);
             String apkpath = pkginfo.getApkpath();
-            sb.append("\""+apkpath+"\" ");
+            if(Build.VERSION.SDK_INT==Build.VERSION_CODES.KITKAT){
+                sb.append("\"/mnt/sdcard/0/"+apkpath.replaceAll(Environment.getExternalStorageDirectory().toString(),"")+"\" ");
+            }else{
+                sb.append("\""+apkpath+"\" ");
+            }
         }
         String cmdstr = "";
         switch (install_mode){
@@ -474,7 +484,7 @@ public class appopsActivity extends AppCompatActivity {
                 cmdstr = acs.getInstallLocalPkgOnExistsCMD(uid, "$pp");
                 break;
         }
-        sb.append(");for pp in ${aaa[@]};do if [[ `echo $pp |grep \".apks\"` != \"\" ]];then "+apkscmdstr+";else "+cmdstr+" fi;done;");
+        sb.append(");for pp in ${aaa[@]};do if [[ `echo $pp |grep \".apks\"` != \"\" ]];then "+apkscmdstr+";else "+cmdstr+"; fi;done;");
         showCMDInfoMSG(appopsActivity.this,true,sb.toString(),isRoot,"正在安装应用,请稍后(可能会出现无响应，请耐心等待)....","安装应用结束.");
     }
 
@@ -771,6 +781,9 @@ public class appopsActivity extends AppCompatActivity {
 
     private void addPKGINFO(PackageManager pm,Uri uri , String storage){
         String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
+        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
+            filePath=uri.getPath();
+        }
         String nameType = getPathByLastNameType(filePath);
         if(nameType.equals("apk")){
             PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
@@ -792,13 +805,13 @@ public class appopsActivity extends AppCompatActivity {
         if(requestCode == 0){
             clearList(pkginfos,checkboxs);
             PackageManager pm = getPackageManager();
-            if(data.getClipData() != null) {//有选择多个文件
+            if(data != null && data.getClipData() != null) {//有选择多个文件
                 int count = data.getClipData().getItemCount();
                 for(int i =0;i<count;i++){
                     Uri uri = data.getClipData().getItemAt(i).getUri();
                     addPKGINFO(pm,uri,storage);
                 }
-            } else if(data.getData() != null) {//只有一个文件咯
+            } else if(data != null && data.getData() != null) {//只有一个文件咯
                 Uri uri = data.getData();
                 addPKGINFO(pm,uri,storage);
             }
@@ -811,17 +824,21 @@ public class appopsActivity extends AppCompatActivity {
                 Uri uri = data.getData();
                 String filePath = storage + "/" +uri.getPath().replaceAll("/tree/primary:","");
                 String filesDir =getMyHomeFilesPath(that);
+                if(isADB){
+                    filesDir=that.getExternalCacheDir().toString();
+                }
+                if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
+                    filePath="/mnt/sdcard/0/"+uri.getPath().replaceAll(Environment.getExternalStorageDirectory().toString(),"");
+                    filePath=new File(filePath).getParent();
+                    filesDir="/mnt/sdcard/0/"+filesDir.replaceAll(Environment.getExternalStorageDirectory().toString(),"");
+                }
                 String barfile = filesDir+"/"+script_name;
-                String cmdstr = "";
-                if(isRoot){
-                    cmdstr = "sh "+barfile+" inapkonpath " + filePath;
-                }else if(isRoot == false && checkShizukuPermission(6)){
-                    String tmpPath = "/data/local/tmp/aa.apk";
-                    cmdstr = " for p in $(find "+filePath+" -name \"*.apk\") ;do cp $p "+tmpPath+"; pm install "+tmpPath+"; rm -rf "+tmpPath+"; done; exit 0;";
+                if(isRoot || isADB){
+                    String cmdstr = "sh "+barfile+" inapkonpath " + filePath;
+                    showCMDInfoMSG(that,true,cmdstr,isRoot,"正在安装"+filePath+"路径下的应用,请稍后(可能会出现无响应，请耐心等待)....","安装"+filePath+"路径下的应用结束.");
                 }else{
                     showInfoMsg(that,"错误","该功能需要adb或者root权限才能使用!!!!");
                 }
-                showCMDInfoMSG(that,true,cmdstr,isRoot,"正在安装"+filePath+"路径下的应用,请稍后(可能会出现无响应，请耐心等待)....","安装"+filePath+"路径下的应用结束.");
             }
         }
     }

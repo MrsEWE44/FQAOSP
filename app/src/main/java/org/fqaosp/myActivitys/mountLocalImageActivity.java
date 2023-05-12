@@ -2,15 +2,16 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -61,7 +62,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
     private String[] sizetype = {"byte", "KB", "MB", "GB"};
     private String[] sizetypeCMD = {"", "K", "M", "G"};
     private Integer filetype2Index=0,sizetypeCMDIndex=0,filetypeIndex=0;
-    private boolean isRoot = false;
+    private boolean isRoot = false,isADB=false;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -69,7 +70,9 @@ public class mountLocalImageActivity extends AppCompatActivity {
         setContentView(R.layout.mount_local_img_activity);
         fuckActivity.getIns().add(this);
         setTitle("U盘模式");
-        isRoot=isSuEnable();
+        Intent intent = getIntent();
+        isRoot = intent.getBooleanExtra("isRoot",false);
+        isADB = intent.getBooleanExtra("isADB",false);
         if(isRoot){
             initBt();
             permissionRequest.getExternalStorageManager(mountLocalImageActivity.this);
@@ -111,7 +114,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
         mliab2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog show = showMyDialog(context,"正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
+                ProgressDialog show = showMyDialog(context,"正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
                 Handler handler = new Handler(){
                     @Override
                     public void handleMessage(@NonNull Message msg) {
@@ -235,6 +238,9 @@ public class mountLocalImageActivity extends AppCompatActivity {
         list.clear();
         checkboxs.clear();
         String s = Environment.getExternalStorageDirectory().toString();
+        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
+            s="/mnt/sdcard/0";
+        }
         CMD cmd = new CMD("find "+s+"/ -name '*.img' -o -name '*.iso'");
         for (String s1 : cmd.getResult().split("\n")) {
             list.add(s1);

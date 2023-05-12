@@ -5,10 +5,7 @@ import android.util.Log;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-
-import rikka.shizuku.Shizuku;
-import rikka.shizuku.ShizukuRemoteProcess;
+import java.io.Serializable;
 
 /**
  *
@@ -16,7 +13,9 @@ import rikka.shizuku.ShizukuRemoteProcess;
  *
  * */
 
-public class CMD {
+public class CMD implements Serializable {
+
+    private  static final long serialVersionUID =8365470672561029830L;
 
     private StringBuilder sb = new StringBuilder();
     private Integer resultCode=-1;
@@ -50,28 +49,9 @@ public class CMD {
         }
     }
 
-
     //默认以root身份运行命令
     public CMD(String cmd){
         this(cmd,true);
-    }
-
-    //对接shizuku命令
-    public CMD(String cmds[]){
-        try{
-            Log.d("cmdstr", Arrays.toString(cmds));
-            ShizukuRemoteProcess shizukuRemoteProcess = Shizuku.newProcess(cmds, null, null);
-            resultCode=shizukuRemoteProcess.waitFor();
-            BufferedReader br = new BufferedReader(new InputStreamReader(shizukuRemoteProcess.getInputStream()));
-            String line = null;
-            while((line = br.readLine()) != null){
-                sb.append(line+"\n");
-            }
-            shizukuRemoteProcess.destroy();
-            br.close();
-        }catch (Exception e){
-            sb.append(e.toString());
-        }
     }
 
     //获取执行完命令后的状态码
@@ -84,5 +64,8 @@ public class CMD {
         return sb.toString();
     }
 
+    public String toString(){
+        return resultCode+" -- "+sb.toString();
+    }
 
 }

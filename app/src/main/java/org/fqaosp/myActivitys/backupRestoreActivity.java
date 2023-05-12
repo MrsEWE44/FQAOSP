@@ -3,7 +3,6 @@ package org.fqaosp.myActivitys;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.multiFunc.checkTools;
-import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
@@ -14,7 +13,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
-import android.os.Build;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -82,7 +81,7 @@ public class backupRestoreActivity extends AppCompatActivity {
     private Boolean switchBool1,switchBool2,switchBool3,isBackup;
     private String scriptName="fqtools.sh";
 
-    private boolean isRoot = false;
+    private boolean isRoot = false,isADB=false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -90,10 +89,12 @@ public class backupRestoreActivity extends AppCompatActivity {
         setContentView(R.layout.backup_restore_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("备份与恢复");
-        isRoot=isSuEnable();
+        Intent intent = getIntent();
+        isRoot = intent.getBooleanExtra("isRoot",false);
+        isADB = intent.getBooleanExtra("isADB",false);
         if(isRoot){
             initViews();
-            checkTools(this);
+            checkTools(this,isADB);
         }else{
             showInfoMsg(this,"提示","本功能需要root才能正常使用");
         }
@@ -109,7 +110,6 @@ public class backupRestoreActivity extends AppCompatActivity {
         slist.add("恢复");
         FILESHARINGVIEWPAGERAdapter adapter = new FILESHARINGVIEWPAGERAdapter(views, slist);
         brmavp.setAdapter(adapter);
-        initOnListen();
         initBackupView();
         initRestoreView();
 
@@ -161,7 +161,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                         Toast.makeText(backupRestoreActivity.this, "请切换回恢复模式", Toast.LENGTH_SHORT).show();
                     }
                 }else{
-                    showImportToolsDialog(backupRestoreActivity.this,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用");
+                    showImportToolsDialog(backupRestoreActivity.this,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用",isRoot,isADB);
                 }
             }
         });
@@ -239,7 +239,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                     }
 
                 }else{
-                    showImportToolsDialog(backupRestoreActivity.this,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用");
+                    showImportToolsDialog(backupRestoreActivity.this,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用",isRoot,isADB);
                 }
             }
         });
@@ -350,18 +350,6 @@ public class backupRestoreActivity extends AppCompatActivity {
         switchBool3=false;
     }
 
-    private void initOnListen() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            brmavp.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-                @Override
-                public void onScrollChange(View view, int i, int i1, int i2, int i3) {
-                    viewPageIndex = brmavp.getCurrentItem();
-                }
-            });
-        }
-
-    }
-
     private void listLocalBackupFiles(){
         file_end=fileEnd2[fileEnd_index];
         permissionRequest.getExternalStorageManager(backupRestoreActivity.this);
@@ -391,8 +379,6 @@ public class backupRestoreActivity extends AppCompatActivity {
                             checkboxs.add(false);
                         }
                     }
-                }else{
-                    Toast.makeText(a, "看样子还没有备份过", Toast.LENGTH_SHORT).show();
                 }
                 sendHandlerMSG(handler,0);
             }
@@ -452,6 +438,7 @@ public class backupRestoreActivity extends AppCompatActivity {
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
         menu.clear();
+        viewPageIndex=brmavp.getCurrentItem();
         switch (viewPageIndex) {
             case 0:
                 menu.add(Menu.NONE,0,0,"显示所有应用");
@@ -481,6 +468,7 @@ public class backupRestoreActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
         clearlist();
+        viewPageIndex=brmavp.getCurrentItem();
         switch (viewPageIndex) {
             case 0:
                 isBackup=true;

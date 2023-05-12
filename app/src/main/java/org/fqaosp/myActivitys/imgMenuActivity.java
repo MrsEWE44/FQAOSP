@@ -1,10 +1,8 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
-import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.getCMD;
-import static org.fqaosp.utils.multiFunc.isSuEnable;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
 
@@ -12,11 +10,13 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -56,7 +56,7 @@ public class imgMenuActivity extends AppCompatActivity {
     private ArrayList<Boolean> flashCheckboxs2 = new ArrayList<>();
     private Boolean switchBool1,switchBool2,switchBool3;
     private Context context;
-    private boolean isRoot = false;
+    private boolean isRoot = false,isADB=false;
     private String bootdev="/dev/block/bootdevice";
     private String mapperdev="/dev/block/mapper";
 
@@ -67,7 +67,9 @@ public class imgMenuActivity extends AppCompatActivity {
         setContentView(R.layout.apk_decompile_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("分区管理");
-        isRoot=isSuEnable();
+        Intent intent = getIntent();
+        isRoot = intent.getBooleanExtra("isRoot",false);
+        isADB = intent.getBooleanExtra("isADB",false);
         if(isRoot){
             initViews();
         }else{
@@ -86,7 +88,6 @@ public class imgMenuActivity extends AppCompatActivity {
         slist.add("分区刷入");
         FILESHARINGVIEWPAGERAdapter adapter = new FILESHARINGVIEWPAGERAdapter(views, slist);
         admavp.setAdapter(adapter);
-        initOnListen();
         initDumpImgView();
         initFlashImgView();
     }
@@ -197,46 +198,37 @@ public class imgMenuActivity extends AppCompatActivity {
         b2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ProgressDialog show = showMyDialog(context,"正在提取分区,请稍后(可能会出现无响应，请耐心等待)....");
-                Handler handler = dismissDialogHandler(0,show);
-                String myStorageHomePath = getMyStorageHomePath(context);
-                String outDir=myStorageHomePath+"/cache/dumpimg";
+                String myStorageHomeCachePath = context.getExternalCacheDir().toString();
+                String outDir=myStorageHomeCachePath+"/dumpimg";
+                if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
+                    outDir="/mnt/sdcard/0/"+outDir.replaceAll(Environment.getExternalStorageDirectory().toString(),"");
+                }
                 File file = new File(outDir);
                 if(!file.exists()){
                     file.mkdirs();
                 }
                 StringBuilder sb = new StringBuilder();
                 sb.append("aaaa=(");
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        for (int i = 0; i < dumpCheckboxs.size(); i++) {
-                            String s  =dumpList.get(i);
-                            if(switchBool3 && !dumpCheckboxs.get(i)){
-                                sb.append("\""+s+"\" ");
-                            }
-
-                            if(switchBool2 && dumpCheckboxs.get(i)){
-                                sb.append("\""+s+"\" ");
-                            }
-
-                            if(switchBool1){
-                                sb.append("\""+s+"\" ");
-                            }
-                        }
-                        String outCmd="of="+outDir+"/${pp}.img";
-                        String mpper=mapperdev+"/${pp}";
-                        String booter=bootdev+"/by-name/${pp}";
-                        String cmdstr = "if [ -b "+mpper+" ];then dd if="+mpper+" "+outCmd+";else dd if="+booter+" "+outCmd+";fi";
-                        sb.append(");for pp in ${aaaa[@]};do "+cmdstr+";done;");
-                        CMD cmd = getCMD(context, sb.toString(), true);
-                        sendHandlerMSG(handler,0);
-                        showInfoMsg(context,"提示","已执行完毕: \r\n提取后的文件存放在 : "+outDir+"\r\n\r\n"+cmd.getResultCode()+" -- " + cmd.getResult());
+                for (int i = 0; i < dumpCheckboxs.size(); i++) {
+                    String s  =dumpList.get(i);
+                    if(switchBool3 && !dumpCheckboxs.get(i)){
+                        sb.append("\""+s+"\" ");
                     }
-                }).start();
 
+                    if(switchBool2 && dumpCheckboxs.get(i)){
+                        sb.append("\""+s+"\" ");
+                    }
 
+                    if(switchBool1){
+                        sb.append("\""+s+"\" ");
+                    }
+                }
+                String outCmd="of="+outDir+"/${pp}.img";
+                String mpper=mapperdev+"/${pp}";
+                String booter=bootdev+"/by-name/${pp}";
+                String cmdstr = "if [ -b "+mpper+" ];then dd if="+mpper+" "+outCmd+";else dd if="+booter+" "+outCmd+";fi";
+                sb.append(");for pp in ${aaaa[@]};do "+cmdstr+";done;");
+                showCMDInfoMSG(context,false,sb.toString(),true,"正在提取分区,请稍后(可能会出现无响应，请耐心等待)...","提取完成,文件存放在 : "+outDir);
             }
         });
 
@@ -297,20 +289,10 @@ public class imgMenuActivity extends AppCompatActivity {
         switchBool3=false;
     }
 
-    private void initOnListen() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            admavp.setOnScrollChangeListener(new View.OnScrollChangeListener() {
-                @Override
-                public void onScrollChange(View view, int i, int i1, int i2, int i3) {
-                    viewPageIndex = admavp.getCurrentItem();
-                }
-            });
-        }
-    }
-
     @Override
     public boolean onMenuOpened(int featureId, Menu menu) {
         menu.clear();
+        viewPageIndex=admavp.getCurrentItem();
         switch (viewPageIndex) {
             case 0:
                 menu.add(Menu.NONE,0,0,"显示本机分区");
@@ -336,6 +318,7 @@ public class imgMenuActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
+        viewPageIndex=admavp.getCurrentItem();
         switch (viewPageIndex) {
             case 0:
                 switch (itemId){
@@ -401,8 +384,12 @@ public class imgMenuActivity extends AppCompatActivity {
             @Override
             public void run() {
                 String s = Environment.getExternalStorageDirectory().toString();
+                if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
+                    s="/mnt/sdcard/0";
+                }
                 CMD cmd = new CMD("find "+s+"/ -name '*.img' -o -name '*.iso'");
                 for (String s1 : cmd.getResult().split("\n")) {
+                    Log.d("imgname",s1);
                     flashList1.add(s1);
                     flashCheckboxs1.add(false);
                 }
@@ -412,6 +399,7 @@ public class imgMenuActivity extends AppCompatActivity {
     }
 
     private void listLocalPartitionName() {
+        viewPageIndex=admavp.getCurrentItem();
         if(viewPageIndex == 0){
             clearDumplist();
         }else{
