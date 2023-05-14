@@ -122,9 +122,6 @@ public class multiFunc {
         if(isADB){
             filesDir=context.getExternalCacheDir().toString();
         }
-        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
-            filesDir="/mnt/sdcard/0/"+filesDir.replaceAll(Environment.getExternalStorageDirectory().toString(),"");
-        }
         String scriptName = "fqtools.sh";
         String barfile = filesDir+"/"+scriptName;
         String busyFile = filesDir+"/busybox";
@@ -247,10 +244,6 @@ public class multiFunc {
         String ss = context.getExternalCacheDir().toString();
         String tmpFile = ss + "/temp.sh";
         Boolean aBoolean = writeDataToPath(cmdstr, tmpFile, false);
-        if(Build.VERSION.SDK_INT==Build.VERSION_CODES.KITKAT){
-            ss = "/mnt/sdcard/0/"+context.getExternalCacheDir().toString().replaceAll(Environment.getExternalStorageDirectory().toString(),"");
-            tmpFile = ss+"/temp.sh";
-        }
         if(aBoolean){
             if(isRoot){
                 return new CMD("sh "+tmpFile);

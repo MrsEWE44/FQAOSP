@@ -5,6 +5,7 @@ import static org.fqaosp.utils.fileTools.execFileSelect;
 import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.selectFile;
+import static org.fqaosp.utils.fileTools.writeDataToPath;
 import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
@@ -128,8 +129,12 @@ public class importToolsActivity extends Activity {
             String scriptName="startADBServiceByFQAOSP.sh";
             String makeFQTOOLSScriptFile = filesPath+"/"+scriptName;
             File makeFQTOOLSScriptF = new File(makeFQTOOLSScriptFile);
+            makeFQTOOLSScriptF.delete();
             if(!makeFQTOOLSScriptF.exists()){
-                extactAssetsFile(context,scriptName,makeFQTOOLSScriptFile);
+                String cmdstr ="killall FQAOSPADB\n" +
+                        "exec app_process -Djava.class.path=\""+context.getApplicationInfo().sourceDir+"\" /system/bin --nice-name=FQAOSPADB org.fqaosp.service.startADBService >>/dev/null 2>&1 &\n" +
+                        "echo \"run fqtools ok\"";
+                writeDataToPath(cmdstr,makeFQTOOLSScriptFile,false);
             }
             String outPath = s+"/Download/FQTOOLS";
             String fqtools = filesPath+"/"+scriptName;

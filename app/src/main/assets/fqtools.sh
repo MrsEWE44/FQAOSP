@@ -27,14 +27,14 @@ fi
 install_apks(){
 	apks_path=$1
 	if [ -f "$apks_path" ];then
-		rm -rf $apks_tmp_dir_path
-		mkdir -p $apks_tmp_dir_path
+		$busybox_my rm -rf $apks_tmp_dir_path
+		$busybox_my mkdir -p $apks_tmp_dir_path
 		$busybox_my unzip -d $apks_tmp_dir_path $apks_path
 		cd $apks_tmp_dir_path/splits/
 		install_split_apks
-		rm -rf $apks_tmp_dir_path && exit 0;
+		$busybox_my rm -rf $apks_tmp_dir_path && exit 0;
 	else
-		echo "$apks_path not exists"
+		$busybox_my echo "$apks_path not exists"
 		help_msg
 		exit 1
 	fi
@@ -44,13 +44,13 @@ install_apk_on_path(){
 	apk_dir_path=$1
 	if [ -d "$apk_dir_path" ];then
 		cd $apk_dir_path/
-		apk_files=$(find -name "*.apk" -o -name "*.apks"|$busybox_my uniq)
+		apk_files=$($busybox_my find -name "*.apk" -o -name "*.apks"|$busybox_my uniq)
 		for apkd in $apk_files
     do
-      if [[ `echo $apkd |grep ".apks"` != "" ]];then
+      if [[ `echo $apkd |$busybox_my grep ".apks"` != "" ]];then
         install_apks "./$apkd"
       else
-        cp $apkd $data_local_tmp/base.apk && chmod 777 $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
+        cp $apkd $data_local_tmp/base.apk && chmod 777 $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && $busybox_my rm -rf $data_local_tmp/base.apk
       fi
     done
 	else
@@ -84,7 +84,7 @@ backup_app(){
 	pkgname=$1
 	backup_mode=$2
 	backup_type=$3
-	apk_file_path=$(pm path $pkgname | head -n 1 |cut -d ':'  -f2 |cut -d '/' -f4)
+	apk_file_path=$(pm path $pkgname |$busybox_my head -n 1 |$busybox_my cut -d ':'  -f2 |$busybox_my cut -d '/' -f4)
 	out_dir_path="$backup_app_home/$pkgname"
 	tar_parm=""
 	fffend=""
@@ -230,15 +230,15 @@ restory_app(){
           else
           	  $busybox_my tar xf "file.${r_fffend}" -C file/
           fi
-					cd file && cd `find -name "base.apk" |xargs dirname` 
-					apks_sum=$(find -name "*.apk" |wc -l)
+					cd file && cd `$busybox_my find -name "base.apk" | $busybox_my xargs dirname`
+					apks_sum=$($busybox_my find -name "*.apk" | $busybox_my wc -l)
 					if [ $apks_sum -gt 1 ];then
 						install_split_apks
 					else
-						cp base.apk $data_local_tmp/ && chmod 777 $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
+						cp base.apk $data_local_tmp/ && chmod 777 $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && $busybox_my rm -rf $data_local_tmp/base.apk
 					fi
 					if [ "$(getprop ro.build.version.sdk)" == "19" ];then
-					  in_app_uid=$(cat /data/system/packages.xml |grep "$pkgname"|cut -d' ' -f14|cut -d'"' -f2)
+					  in_app_uid=$(dumpsys package "$pkgname"|$busybox_my grep userId |$busybox_my cut -d'=' -f2|$busybox_my cut -d' ' -f1)
 					else
 					  in_app_uid=$(pm list packages -U $pkgname |cut -d ':' -f 3)
 					fi
@@ -290,7 +290,7 @@ restory_app(){
             fi
 					fi
 					cd ../
-					rm -rf $pkgname && exit 0;
+					rm -rf $pkgname
 				else
 					echo "$pkgname restory error! not found file and data $r_fffend"
 					help_msg
@@ -309,7 +309,7 @@ restory_app(){
 				cd $pkgname
 				if [ -f "data.${r_fffend}" ];then
 					if [ "$(getprop ro.build.version.sdk)" == "19" ];then
-          		in_app_uid=$(cat /data/system/packages.xml |grep "$pkgname"|cut -d' ' -f14|cut -d'"' -f2)
+          		in_app_uid=$(dumpsys package "$pkgname"|$busybox_my grep userId |$busybox_my cut -d'=' -f2|$busybox_my cut -d' ' -f1)
           else
       			  in_app_uid=$(pm list packages -U $pkgname |cut -d ':' -f 3)
       		fi
@@ -361,7 +361,7 @@ restory_app(){
             fi
           fi
 					cd ../
-					rm -rf $pkgname && exit 0;
+					rm -rf $pkgname
 				else
 					echo "$pkgname restory error! not found file and data $r_fffend"
 					help_msg
@@ -378,21 +378,21 @@ restory_app(){
         fi
 				cd $pkgname
 				if [ -f "file.${r_fffend}" ];then
-				  mkdir file
+				  $busybox_my mkdir file
           if [ "$backup_type" == "tbr" ];then
               $brotli_my -d "file.${r_fffend}" && $busybox_my tar xf "file.tar" -C file/
           else
               $busybox_my tar xf "file.${r_fffend}" -C file/
           fi
-					cd file && cd `find -name "base.apk" |xargs dirname` 
-					apks_sum=$(find -name "*.apk" |wc -l)
+					cd file && cd `find -name "base.apk" |$busybox_my xargs dirname`
+					apks_sum=$($busybox_my find -name "*.apk" |$busybox_my wc -l)
 					if [ $apks_sum -gt 1 ];then
 						install_split_apks
 					else
 						cp base.apk $data_local_tmp/ && chmod 777 $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
 					fi
 					cd ../
-					rm -rf $pkgname && exit 0;
+					rm -rf $pkgname
 				else
 					echo "$pkgname restory error! not found file and data $r_fffend"
 					help_msg

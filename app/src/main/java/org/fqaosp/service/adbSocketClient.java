@@ -21,8 +21,7 @@ public class adbSocketClient {
             public void run() {
                 Socket socket = new Socket();
                 try {
-                    socket.connect(new InetSocketAddress("127.0.0.1", PORT), 50000);
-                    socket.setSoTimeout(50000);
+                    socket.connect(new InetSocketAddress("127.0.0.1", PORT));
                     printWriter = new PrintWriter(socket.getOutputStream(), true);
                     // 发送指令
                     printWriter.println(cmdstr);

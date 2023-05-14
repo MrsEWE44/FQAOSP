@@ -451,23 +451,14 @@ public class appopsActivity extends AppCompatActivity {
             if(checkboxs.get(i)){
                 PKGINFO pkginfo = pkginfos.get(i);
                 String apkpath = pkginfo.getApkpath();
-                if(Build.VERSION.SDK_INT==Build.VERSION_CODES.KITKAT){
-                    sb.append("\"/mnt/sdcard/0/"+apkpath.replaceAll(Environment.getExternalStorageDirectory().toString(),"")+"\" ");
-                }else{
-                    sb.append("\""+apkpath+"\" ");
-                }
-
+                sb.append("\""+apkpath+"\" ");
                 hit++;
             }
         }
         if(hit ==0){
             PKGINFO pkginfo = pkginfos.get(nowItemIndex);
             String apkpath = pkginfo.getApkpath();
-            if(Build.VERSION.SDK_INT==Build.VERSION_CODES.KITKAT){
-                sb.append("\"/mnt/sdcard/0/"+apkpath.replaceAll(Environment.getExternalStorageDirectory().toString(),"")+"\" ");
-            }else{
-                sb.append("\""+apkpath+"\" ");
-            }
+            sb.append("\""+apkpath+"\" ");
         }
         String cmdstr = "";
         switch (install_mode){
@@ -827,10 +818,8 @@ public class appopsActivity extends AppCompatActivity {
                 if(isADB){
                     filesDir=that.getExternalCacheDir().toString();
                 }
-                if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
-                    filePath="/mnt/sdcard/0/"+uri.getPath().replaceAll(Environment.getExternalStorageDirectory().toString(),"");
-                    filePath=new File(filePath).getParent();
-                    filesDir="/mnt/sdcard/0/"+filesDir.replaceAll(Environment.getExternalStorageDirectory().toString(),"");
+                if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT_WATCH){
+                    filePath = new File(uri.getPath()).getParent();
                 }
                 String barfile = filesDir+"/"+script_name;
                 if(isRoot || isADB){

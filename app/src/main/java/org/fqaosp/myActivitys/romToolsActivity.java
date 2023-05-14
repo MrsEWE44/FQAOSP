@@ -210,9 +210,6 @@ public class romToolsActivity extends AppCompatActivity {
 
     private void btClicked(Context context,View v,int mode){
         String storage = context.getExternalCacheDir().toString();
-        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
-            storage="/mnt/sdcard/0/"+storage.replaceAll(Environment.getExternalStorageDirectory().toString(),"");
-        }
         String outDir = storage+"/"+(mode ==0 ?"romunpack":"romrepack");
         ProgressDialog show = showMyDialog(context,"正在"+(mode ==0?"解":"打")+"包ROM,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = dismissDialogHandler(0,show);
