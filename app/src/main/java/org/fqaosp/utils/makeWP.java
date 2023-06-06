@@ -89,7 +89,7 @@ public class makeWP {
     }
 
     public String getChangePkgOnDisableByUIDCMD(String uid,String pkgname){
-        return "pm clear --user "+ uid + " "+pkgname+" && pm disable-user --user "+uid + " " + pkgname;
+        return "pm disable-user --user "+uid + " " + pkgname;
     }
 
     public String getDisablePkgByUIDCMD(String uid){
