@@ -21,7 +21,6 @@ public class fuckActivity {
          return ins;
      }
 
-
      //添加一个activity实现
      public void add(Activity activity){
          list.add(activity);

@@ -96,9 +96,8 @@
             android:orientation="horizontal">
 
             <LinearLayout
-                android:layout_width="fill_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:orientation="horizontal">
 
                 <TextView
@@ -115,9 +114,8 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="fill_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
                 android:orientation="horizontal">
 
                 <TextView
@@ -126,15 +124,34 @@
                     android:text="压缩模式"></TextView>
 
                 <Spinner
-                    android:layout_width="fill_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:id="@+id/rasp2"
                     ></Spinner>
 
             </LinearLayout>
 
         </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="用户id"></TextView>
+
+            <Spinner
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:id="@+id/rasp3"
+                ></Spinner>
+
+        </LinearLayout>
+
 
         <LinearLayout
             android:layout_width="fill_parent"

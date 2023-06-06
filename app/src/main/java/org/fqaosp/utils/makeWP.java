@@ -34,7 +34,7 @@ public class makeWP {
     private int initsize = 0;
 
     public String getInitCMD(){
-        return "setprop persist.sys.max_profiles "+getInitsize()+" && setprop fw.max_users "+getInitsize();
+        return "setprop persist.sys.max_profiles "+getInitsize()+" && setprop fw.max_users "+getInitsize() + " && setprop fw.show_multiuserui 1";
     }
 
     //初始化工作资料空间最大可创建数量为1024

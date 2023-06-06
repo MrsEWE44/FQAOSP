@@ -2,22 +2,31 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
+import static org.fqaosp.utils.fileTools.getSDPath;
 import static org.fqaosp.utils.multiFunc.checkTools;
+import static org.fqaosp.utils.multiFunc.getMyUID;
+import static org.fqaosp.utils.multiFunc.getPKGByUID;
+import static org.fqaosp.utils.multiFunc.getUID;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
+import static org.fqaosp.utils.multiFunc.showLowMemDialog;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
+import static org.fqaosp.utils.multiFunc.showProcessBarDialogByCMD;
+import static org.fqaosp.utils.multiFunc.showUsers;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PersistableBundle;
+import android.os.UserHandle;
+import android.os.UserManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,10 +47,9 @@ import androidx.viewpager.widget.ViewPager;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
-import org.fqaosp.adapter.PKGINFOAdapter;
-import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.utils.fuckActivity;
+import org.fqaosp.utils.makeWP;
 import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.permissionRequest;
 
@@ -63,6 +71,7 @@ import java.util.ArrayList;
 public class backupRestoreActivity extends AppCompatActivity {
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private ArrayList<String> list = new ArrayList<>();
+    private ArrayList<String> userList = null;
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
 
     private String file_end="";
@@ -70,7 +79,9 @@ public class backupRestoreActivity extends AppCompatActivity {
     private String [] mode2={"full","data","apk"};
     private String [] fileEnd={"tgz","tbz","txz","tbr"};
     private String [] fileEnd2={".tar.gz",".tar.bz2",".tar.xz",".tar.br"};
-    private int mode_index=0,fileEnd_index=0;
+    private int mode_index=0,fileEnd_index=0,uid_index=0;
+
+    private String uid = null;
 
     private ViewPager brmavp;
     private View backupView, restoreView;
@@ -79,9 +90,11 @@ public class backupRestoreActivity extends AppCompatActivity {
     private ListView backupLv1,restoreLv1;
     private Integer viewPageIndex = 0;
     private Boolean switchBool1,switchBool2,switchBool3,isBackup;
-    private String scriptName="fqtools.sh";
+
+    private Context context;
 
     private boolean isRoot = false,isADB=false;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -89,15 +102,18 @@ public class backupRestoreActivity extends AppCompatActivity {
         setContentView(R.layout.backup_restore_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("备份与恢复");
+        context=this;
         Intent intent = getIntent();
         isRoot = intent.getBooleanExtra("isRoot",false);
         isADB = intent.getBooleanExtra("isADB",false);
         if(isRoot){
+            userList = getLocalExistsUsers();
             initViews();
-            checkTools(this,isADB);
+            checkTools(context,isADB);
         }else{
-            showInfoMsg(this,"提示","本功能需要root才能正常使用");
+            showInfoMsg(context,"提示","本功能需要root才能正常使用");
         }
+        showLowMemDialog(context);
     }
 
     private void initViews(){
@@ -125,44 +141,17 @@ public class backupRestoreActivity extends AppCompatActivity {
         Switch brasb3 =restoreView.findViewById(R.id.rasb3);
         Spinner brasp = restoreView.findViewById(R.id.rasp);
         Spinner brasp2 = restoreView.findViewById(R.id.rasp2);
+        Spinner brasp3 = restoreView.findViewById(R.id.rasp3);
         restoreLv1 = restoreView.findViewById(R.id.ralv1);
         initBool();
         setSwitchChecked(brasb1,brasb2,brasb3);
-        initSpinnerBt(brasp,brasp2);
+        initSpinnerBt(brasp,brasp2,brasp3);
         clickedSwitchBt(brasb1,brasb2,brasb3);
 
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(checkRestoryTools()){
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("aaa=(");
-                    String filesDir =getMyHomeFilesPath(backupRestoreActivity.this);
-                    String barfile = filesDir+"/"+scriptName;
-                    String cmdstr = "sh "+barfile+" restory $pp " + mode2[mode_index] + " " + fileEnd[fileEnd_index];
-                    if(isBackup == false){
-                        for (int i = 0; i < checkboxs.size(); i++) {
-                            String s = getPathByLastName(list.get(i));
-                            if(switchBool3 && !checkboxs.get(i)){
-                                sb.append("\""+getRestoryFileName(s)+"\" ");
-                            }
-
-                            if(switchBool2 && checkboxs.get(i)){
-                                sb.append("\""+getRestoryFileName(s)+"\" ");
-                            }
-
-                            if(switchBool1){
-                                sb.append("\""+getRestoryFileName(s)+"\" ");
-                            }
-                        }
-                        sb.append(");for pp in ${aaa[@]};do "+cmdstr+" ;done;");
-                        showCMDInfoMSG(backupRestoreActivity.this,false,sb.toString(),isRoot,"正在恢复应用,请稍后(可能会出现无响应，请耐心等待)....","恢复应用结束.");
-                    }else{
-                        Toast.makeText(backupRestoreActivity.this, "请切换回恢复模式", Toast.LENGTH_SHORT).show();
-                    }
-                }else{
-                    showImportToolsDialog(backupRestoreActivity.this,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用",isRoot,isADB);
-                }
+                restory(context,checkboxs,list,mode2[mode_index],fileEnd[fileEnd_index],fileEnd2[fileEnd_index],fileEnd_index,new boolean[]{isRoot,isADB,isBackup,switchBool1,switchBool2,switchBool3});
             }
         });
 
@@ -184,7 +173,7 @@ public class backupRestoreActivity extends AppCompatActivity {
             }
         });
 
-        clickedSpinnerBt(brasp,brasp2);
+        clickedSpinnerBt(brasp,brasp2,brasp3);
     }
 
     private void initBackupView() {
@@ -197,50 +186,16 @@ public class backupRestoreActivity extends AppCompatActivity {
         Switch brasb3 =backupView.findViewById(R.id.basb3);
         Spinner brasp = backupView.findViewById(R.id.basp);
         Spinner brasp2 = backupView.findViewById(R.id.basp2);
+        Spinner brasp3 = backupView.findViewById(R.id.basp3);
         backupLv1 = backupView.findViewById(R.id.balv1);
         initBool();
         setSwitchChecked(brasb1,brasb2,brasb3);
-        initSpinnerBt(brasp,brasp2);
+        initSpinnerBt(brasp,brasp2,brasp3);
         clickedSwitchBt(brasb1,brasb2,brasb3);
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(checkBackupTools()){
-                    StringBuilder sb = new StringBuilder();
-                    sb.append("aaa=(");
-                    String filesDir =getMyHomeFilesPath(backupRestoreActivity.this);
-                    String barfile = filesDir+"/"+scriptName;
-                    String cmdstr = "sh "+barfile+" backup $pp " + mode2[mode_index] + " " + fileEnd[fileEnd_index];
-                    if(isBackup){
-                        //未勾选
-                        for (int i = 0; i < checkboxs.size(); i++) {
-                            PKGINFO pkginfo = pkginfos.get(i);
-                            if(switchBool3 && !checkboxs.get(i)){
-                                if(!pkginfo.getPkgname().equals(getPackageName())){
-                                    sb.append("\""+pkginfo.getPkgname()+"\" ");
-                                }
-                            }
-                            if(switchBool2 && checkboxs.get(i)){
-                                if(!pkginfo.getPkgname().equals(getPackageName())){
-                                    sb.append("\""+pkginfo.getPkgname()+"\" ");
-                                }
-                            }
-                            if(switchBool1){
-                                if(!pkginfo.getPkgname().equals(getPackageName())){
-                                    sb.append("\""+pkginfo.getPkgname()+"\" ");
-                                }
-                            }
-                        }
-                        sb.append(");for pp in ${aaa[@]};do "+cmdstr+" ;done;");
-                        showCMDInfoMSG(backupRestoreActivity.this,false,sb.toString(),isRoot,"正在备份应用,请稍后(可能会出现无响应，请耐心等待)....","备份应用结束.");
-
-                    }else{
-                        Toast.makeText(backupRestoreActivity.this, "请切换回备份模式", Toast.LENGTH_SHORT).show();
-                    }
-
-                }else{
-                    showImportToolsDialog(backupRestoreActivity.this,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用",isRoot,isADB);
-                }
+                backup(context,pkginfos,checkboxs,mode2[mode_index],fileEnd[fileEnd_index],fileEnd_index,new boolean[]{isRoot,isADB,isBackup,switchBool1,switchBool2,switchBool3});
             }
         });
 
@@ -263,7 +218,7 @@ public class backupRestoreActivity extends AppCompatActivity {
             }
         });
 
-        clickedSpinnerBt(brasp,brasp2);
+        clickedSpinnerBt(brasp,brasp2,brasp3);
 
     }
 
@@ -271,13 +226,23 @@ public class backupRestoreActivity extends AppCompatActivity {
         ClipboardManager cpm = (ClipboardManager) backupRestoreActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
         cpm.setText(str);
         Toast.makeText(backupRestoreActivity.this, "已复制", Toast.LENGTH_SHORT).show();
-
     }
 
-    private  void initSpinnerBt(Spinner brasp,Spinner brasp2){
-        brasp.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,mode));
-        brasp2.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1,fileEnd));
+    private  void initSpinnerBt(Spinner brasp,Spinner brasp2,Spinner brasp3){
+        brasp.setAdapter(new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1,mode));
+        brasp2.setAdapter(new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1,fileEnd));
+        brasp3.setAdapter(new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1,userList));
+    }
 
+    private ArrayList<String> getLocalExistsUsers(){
+        UserManager um = (UserManager) context.getSystemService(Context.USER_SERVICE);
+        ArrayList<String> userList = new ArrayList<>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            for (UserHandle userHandle : um.getUserProfiles()) {
+                userList.add(getUID(userHandle.toString()));
+            }
+        }
+        return userList;
     }
 
     private void clickedSpinnerBt(Spinner brasp ,int mode){
@@ -286,8 +251,12 @@ public class backupRestoreActivity extends AppCompatActivity {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 if(mode ==0){
                     mode_index=i;
-                }else{
+                }
+                if(mode == 1){
                     fileEnd_index=i;
+                }
+                if(mode == 2){
+                    uid_index=i;
                 }
             }
 
@@ -298,9 +267,10 @@ public class backupRestoreActivity extends AppCompatActivity {
         });
     }
 
-    private void clickedSpinnerBt(Spinner brasp,Spinner brasp2){
+    private void clickedSpinnerBt(Spinner brasp,Spinner brasp2,Spinner brasp3){
         clickedSpinnerBt(brasp,0);
         clickedSpinnerBt(brasp2,1);
+        clickedSpinnerBt(brasp3,2);
     }
 
     private void clickedSwitchBt(Switch brasb1,Switch brasb2,Switch brasb3){
@@ -352,11 +322,11 @@ public class backupRestoreActivity extends AppCompatActivity {
 
     private void listLocalBackupFiles(){
         file_end=fileEnd2[fileEnd_index];
-        permissionRequest.getExternalStorageManager(backupRestoreActivity.this);
-        String s = Environment.getExternalStorageDirectory().toString();
+        permissionRequest.getExternalStorageManager(context);
+        String s = getSDPath(context);
         String localBackupDir= s+"/backup_app";
         File file = new File(localBackupDir);
-        ProgressDialog show = showMyDialog(backupRestoreActivity.this,"正在扫描本地备份文件,请稍后(可能会出现无响应，请耐心等待)....");
+        ProgressDialog show = showMyDialog(context,"正在扫描本地备份文件,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
@@ -391,47 +361,11 @@ public class backupRestoreActivity extends AppCompatActivity {
         checkboxs.clear();
     }
 
-    private boolean checkUsrTool(){
-        String filesDir =getMyHomeFilesPath(this);
-        String usr=filesDir+"/usr";
-        File file = new File(usr);
-        return file.exists();
-    }
-
-    private boolean checkBackupTools(){
-        if(checkUsrTool()){
-            return true;
-        }else if(checkUsrTool() == false && fileEnd_index < 2){
-            return true;
-        }
-        return false;
-    }
-
-    private boolean checkRestoryTools(){
-        if(checkUsrTool()){
-            return true;
-        }else if(checkUsrTool() == false && fileEnd_index < 3){
-            return true;
-        }
-        return false;
-    }
-
-    private String getRestoryFileName(String filename){
-        file_end=fileEnd2[fileEnd_index];
-        String pkgname = filename.replaceAll(file_end,"");
-        if(!pkgname.equals(getPackageName())){
-            return pkgname;
-        }
-        return null;
-    }
-
     private void showPKGS(ListView listView){
         if(isBackup){
-            PKGINFOAdapter pkginfoAdapter = new PKGINFOAdapter(pkginfos, backupRestoreActivity.this, checkboxs);
-            listView.setAdapter(pkginfoAdapter);
+            multiFunc.showPKGS(context,listView,pkginfos,checkboxs);
         }else{
-            USERAdapter userAdapter = new USERAdapter(list, backupRestoreActivity.this, checkboxs);
-            listView.setAdapter(userAdapter);
+            showUsers(context,listView,list,checkboxs);
         }
     }
 
@@ -467,30 +401,52 @@ public class backupRestoreActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
+        makeWP mw = new makeWP();
         clearlist();
+        uid = userList!=null && userList.size()>0?userList.get(uid_index):"0";
         viewPageIndex=brmavp.getCurrentItem();
         switch (viewPageIndex) {
             case 0:
                 isBackup=true;
                 switch (itemId){
                     case 0:
-                        multiFunc.queryEnablePKGS(this,pkginfos,checkboxs,0);
+                        if(uid.equals(getMyUID())){
+                            multiFunc.queryEnablePKGS(this,pkginfos,checkboxs,0);
+                        }else{
+                            getPKGByUID(context,mw.getPkgByUIDCMD(uid),pkginfos,null,checkboxs,isRoot);
+                        }
                         showPKGS(backupLv1);
                         break;
                     case 1:
-                        multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
+                        if(uid.equals(getMyUID())){
+                            multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
+                        }else{
+                            getPKGByUID(context,mw.getPkgByUIDCMD(uid),pkginfos,null,checkboxs,isRoot);
+                        }
                         showPKGS(backupLv1);
                         break;
                     case 2:
-                        multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
+                        if(uid.equals(getMyUID())){
+                            multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
+                        }else{
+                            getPKGByUID(context,mw.getUserPkgByUIDCMD(uid),pkginfos,null,checkboxs,isRoot);
+                        }
                         showPKGS(backupLv1);
                         break;
                     case 3:
-                        multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
+                        if(uid.equals(getMyUID())){
+                            multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
+                        }else{
+                            getPKGByUID(context,mw.getUserPkgByUIDCMD(uid),pkginfos,null,checkboxs,isRoot);
+                        }
                         showPKGS(backupLv1);
                         break;
                     case 4:
-                        multiFunc.queryDisablePKGS(this,pkginfos,checkboxs,0);
+                        if(uid.equals(getMyUID())){
+                            multiFunc.queryDisablePKGS(this,pkginfos,checkboxs,0);
+                        }else{
+                            getPKGByUID(context,mw.getDisablePkgByUIDCMD(uid),pkginfos,null,checkboxs,isRoot);
+                        }
                         showPKGS(backupLv1);
                         break;
                     case 5:
@@ -538,5 +494,113 @@ public class backupRestoreActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState, @NonNull PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(null);
+    }
+
+    private void backup(Context context, ArrayList<PKGINFO> pkginfos, ArrayList<Boolean> checkboxs, String mode2, String fileEnd,int file_end_index , boolean[] b ){
+        if(checkBackupTools(file_end_index)){
+            ArrayList<PKGINFO> ppplist = new ArrayList<>();
+            if(b[2]){
+                //未勾选
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    PKGINFO pkginfo = pkginfos.get(i);
+                    if(b[5] && !checkboxs.get(i)){
+                        if(!pkginfo.getPkgname().equals(getPackageName())){
+                            ppplist.add(pkginfo);
+                        }
+                    }
+                    if(b[4] && checkboxs.get(i)){
+                        if(!pkginfo.getPkgname().equals(getPackageName())){
+                            ppplist.add(pkginfo);
+                        }
+                    }
+                    if(b[3]){
+                        if(!pkginfo.getPkgname().equals(getPackageName())){
+                            ppplist.add(pkginfo);
+                        }
+                    }
+                }
+
+                showProcessBarDialogByCMD(context,ppplist,"正在备份用户 [ "+uid+" ] 的应用中...","当前正在备份的应用: ",6,
+                        null ,null,b[0],uid==null?"0":uid,null,null,
+                        null, new String[]{mode2, fileEnd});
+
+            }else{
+                Toast.makeText(context, "请切换回备份模式", Toast.LENGTH_SHORT).show();
+            }
+
+        }else{
+            showImportToolsDialog(context,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用",b[0],b[1]);
+        }
+    }
+
+    private void restory(Context context, ArrayList<Boolean> checkboxs,ArrayList<String> list,String mode2, String fileEnd,String fileEnd2,int file_end_index,boolean...b){
+        if(checkRestoryTools(file_end_index)){
+            ArrayList<PKGINFO> plist = new ArrayList<>();
+            if(b[2] == false){
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    String s = getPathByLastName(list.get(i));
+                    if(b[5] && !checkboxs.get(i)){
+                        plist.add(new PKGINFO(getRestoryFileName(s,fileEnd2),null,null,null,null,null,new File(list.get(i)).length()));
+                    }
+
+                    if(b[4] && checkboxs.get(i)){
+                        plist.add(new PKGINFO(getRestoryFileName(s,fileEnd2),null,null,null,null,null,new File(list.get(i)).length()));
+                    }
+
+                    if(b[3]){
+                        plist.add(new PKGINFO(getRestoryFileName(s,fileEnd2),null,null,null,null,null,new File(list.get(i)).length()));
+                    }
+                }
+
+                showProcessBarDialogByCMD(context,plist,"正在恢复用户 [ " +uid+" ] 的应用中...","当前正在恢复的应用: ",7,
+                        null ,null,b[0],uid,null,null,
+                        null, new String[]{mode2 ,fileEnd});
+
+            }else{
+                Toast.makeText(context, "请切换回恢复模式", Toast.LENGTH_SHORT).show();
+            }
+        }else{
+            showImportToolsDialog(context,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用",b[0],b[1]);
+        }
+    }
+
+    private boolean checkUsrTool(){
+        String filesDir =getMyHomeFilesPath(this);
+        String usr=filesDir+"/usr";
+        File file = new File(usr);
+        return file.exists();
+    }
+
+    private boolean checkBackupTools(int fileEnd_index){
+        if(checkUsrTool()){
+            return true;
+        }else if(checkUsrTool() == false && fileEnd_index < 2){
+            return true;
+        }
+        return false;
+    }
+
+    private boolean checkRestoryTools(int fileEnd_index){
+        if(checkUsrTool()){
+            return true;
+        }else if(checkUsrTool() == false && fileEnd_index < 3){
+            return true;
+        }
+        return false;
+    }
+
+    private String getRestoryFileName(String filename,String file_end){
+        String pkgname = filename.replaceAll(file_end,"");
+        if(!pkgname.equals(getPackageName())){
+            return pkgname;
+        }
+        return null;
+    }
+
+
 
 }

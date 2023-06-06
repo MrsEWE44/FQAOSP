@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * 文件操作类
@@ -224,6 +226,48 @@ public class fileTools {
             }
         }
         return dd2;
+    }
+
+    // 目标SD路径：/storage/emulated/0
+    public static String getSDPath(Context context){
+        String sdPath = "";
+        boolean isSDExist = Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED); //判断SD卡是否存在
+        if (isSDExist) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                File externalFileRootDir = context.getExternalFilesDir("");
+                do {
+                    externalFileRootDir = Objects.requireNonNull(externalFileRootDir).getParentFile();
+                } while (Objects.requireNonNull(externalFileRootDir).getAbsolutePath().contains("/Android"));
+                sdPath = Objects.requireNonNull(externalFileRootDir).getAbsolutePath();
+            } else {
+                sdPath = Environment.getExternalStorageDirectory().getAbsolutePath();
+            }
+        } else {
+            sdPath = Environment.getRootDirectory().toString();//获取跟目录
+        }
+        return sdPath;
+    }
+
+    public static void getAllFileByEndName(String filePath, String file_end_name,List<File> files){
+
+        //获取指定目录下的所有文件或者目录的File数组
+        File[] fileArray = new File(filePath).listFiles();
+        //遍历该File数组，得到每一个File对象
+        if(fileArray != null){
+            for (File file :fileArray){
+                //判断file对象是否为目录
+                if (file.isDirectory()){
+                    //是：递归调用
+                    getAllFileByEndName(file.getAbsolutePath(),file_end_name,files);
+                }else{
+                    //否：获取绝对路径输出在控制台
+                    String filepath = file.getAbsolutePath();
+                    if(filepath.indexOf(file_end_name) != -1){
+                        files.add(file);
+                    }
+                }
+            }
+        }
     }
 
 }

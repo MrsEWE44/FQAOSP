@@ -2,15 +2,15 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
-import static org.fqaosp.utils.fileTools.writeDataToPath;
 import static org.fqaosp.utils.multiFunc.checkTools;
-import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
+import static org.fqaosp.utils.multiFunc.showLowMemDialog;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
+import static org.fqaosp.utils.multiFunc.showProcessBarDialogByCMD;
+import static org.fqaosp.utils.multiFunc.showUsers;
 
-import android.app.ActivityManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -35,7 +35,7 @@ import androidx.viewpager.widget.ViewPager;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
-import org.fqaosp.adapter.USERAdapter;
+import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 
@@ -62,12 +62,15 @@ public class romToolsActivity extends AppCompatActivity {
     private String rom_imgs2_ver[] = {"5.0","5.1","6.x","7.x+"};
     private boolean isRoot=false,isADB=false;
 
+    private Context context ;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.rom_tools_activity);
         fuckActivity.getIns().add(this);
         setTitle("ROM工具");
+        context=this;
         Intent intent = getIntent();
         isRoot = intent.getBooleanExtra("isRoot",false);
         isADB = intent.getBooleanExtra("isADB",false);
@@ -81,10 +84,7 @@ public class romToolsActivity extends AppCompatActivity {
             if(!fqtoolsusrdir.exists()){
                 showImportToolsDialog(this,"fqtools核心无法获取，请退出重试或者重新安装app","fqtools工具包没有找到,功能使用将受到限制或者异常,要继续使用吗？",isRoot,isADB);
             }
-            ActivityManager activityManager = (ActivityManager) getSystemService(this.ACTIVITY_SERVICE);
-            if(activityManager.isLowRamDevice()){
-                showInfoMsg(this,"警告","当前设备配置较低,运行此页面功能会出现问题!");
-            }
+            showLowMemDialog(context);
             initViews();
         }
     }
@@ -142,7 +142,7 @@ public class romToolsActivity extends AppCompatActivity {
                 @Override
                 public void handleMessage(@NonNull Message msg) {
                     if(msg.what==0){
-                        showRomImgs(rralv1);
+                        showUsers(context,rralv1,list,checkboxs);
                         show.dismiss();
                     }
                 }
@@ -187,7 +187,7 @@ public class romToolsActivity extends AppCompatActivity {
                 @Override
                 public void handleMessage(@NonNull Message msg) {
                     if(msg.what==0){
-                        showRomImgs(rualv1);
+                        showUsers(context,rualv1,list,checkboxs);
                         show.dismiss();
                     }
                 }
@@ -203,48 +203,23 @@ public class romToolsActivity extends AppCompatActivity {
         });
 
         ruab2.setOnClickListener((v)->{
-            btClicked(this,v,0);
+            btClicked(context,v,0);
         });
 
     }
 
     private void btClicked(Context context,View v,int mode){
-        String storage = context.getExternalCacheDir().toString();
-        String outDir = storage+"/"+(mode ==0 ?"romunpack":"romrepack");
-        ProgressDialog show = showMyDialog(context,"正在"+(mode ==0?"解":"打")+"包ROM,请稍后(可能会出现无响应，请耐心等待)....");
-        Handler handler = dismissDialogHandler(0,show);
-        StringBuilder sb = new StringBuilder();
-        StringBuilder sb2 = new StringBuilder();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        String path = list.get(i);
-                        String outdir = outDir+"/"+System.currentTimeMillis();
-                        String filesDir = getMyHomeFilesPath(context);
-                        File file = new File(outdir);
-                        if(!file.exists()){
-                            file.mkdirs();
-                        }
-                        String cmdstr = "cd "+filesDir+" && sh fqtools.sh unpackrom "+getRomType() + " " +path + " " + outdir + " " + getRomPartType();
-                        String cmdstr2 = "cd "+filesDir+" && sh fqtools.sh repackrom "+path+ " " + outdir + " "  +getRomType() + " " + (rom_img_index2_ver+1);
-
-                        sb.append((mode==0? cmdstr:cmdstr2)+";");
-                        sb2.append(path+" -----> "+outdir+".\r\n");
-                    }
-                }
-                CMD cmd = new CMD(sb.toString(),false);
-                sendHandlerMSG(handler,0);
-                if(cmd.getResultCode()==0){
-                    showInfoMsg(context,"提示","\r\n"+(mode==0?"解":"打")+"包成功,文件存放在 "+sb2.toString());
-                }else{
-                    String ff=outDir+"/"+System.currentTimeMillis()+".log";
-                    writeDataToPath(cmd.getResultCode()+" -- " +cmd.getResult(),ff,false);
-                    showInfoMsg(context,"错误",(mode==0?"解":"打")+"包失败,日志存放在 >>  "+ff);
-                }
+        ArrayList<PKGINFO> pplist = new ArrayList<>();
+        for (int i = 0; i < checkboxs.size(); i++) {
+            if(checkboxs.get(i)){
+                String s = list.get(i);
+                pplist.add(new PKGINFO(s,s,s,null,null,null,null));
             }
-        }).start();
+        }
+
+        showProcessBarDialogByCMD(context,pplist,"正在"+(mode ==0?"解":"打")+"包ROM","当前正在"+(mode ==0?"解":"打")+"包ROM: ",9,
+                null ,false,false,"0",mode,null,
+                null, new String[]{getRomType() ,mode==0?getRomPartType():String.valueOf((rom_img_index2_ver+1))});
     }
 
     private String getRomType(){
@@ -306,11 +281,6 @@ public class romToolsActivity extends AppCompatActivity {
             list.add(s1);
             checkboxs.add(false);
         }
-    }
-
-    private void showRomImgs(ListView listView){
-        USERAdapter userAdapter = new USERAdapter(list, romToolsActivity.this, checkboxs);
-        listView.setAdapter(userAdapter);
     }
 
     public boolean onCreateOptionsMenu(Menu menu) {

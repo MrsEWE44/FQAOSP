@@ -8,21 +8,21 @@ package org.fqaosp.myActivitys;
  *
  * */
 
-import static org.fqaosp.utils.fileTools.copyFile;
 import static org.fqaosp.utils.fileTools.execDirSelect;
 import static org.fqaosp.utils.fileTools.execFileSelect;
-import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
+import static org.fqaosp.utils.fileTools.getAllFileByEndName;
 import static org.fqaosp.utils.fileTools.getPathByLastName;
 import static org.fqaosp.utils.fileTools.getPathByLastNameType;
-import static org.fqaosp.utils.multiFunc.checkBoxs;
+import static org.fqaosp.utils.fileTools.getSDPath;
 import static org.fqaosp.utils.multiFunc.checkTools;
 import static org.fqaosp.utils.multiFunc.clearList;
 import static org.fqaosp.utils.multiFunc.getMyUID;
-import static org.fqaosp.utils.multiFunc.getRunTraverseCMDStr;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
+import static org.fqaosp.utils.multiFunc.showPKGS;
+import static org.fqaosp.utils.multiFunc.showProcessBarDialogByCMD;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -34,9 +34,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
@@ -58,10 +56,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import org.fqaosp.R;
-import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
-import org.fqaosp.utils.CMD;
-import org.fqaosp.utils.appopsCmdStr;
 import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeWP;
@@ -93,12 +88,17 @@ public class appopsActivity extends AppCompatActivity {
     private String script_name = "fqtools.sh";
     private int apops_permis_index,apops_opt_index,mode=0;
 
+    private Context con;
+    private Activity activity;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.appops_activity);
         fuckActivity.getIns().add(this);
         setTitle("应用管理");
+        con=this;
+        activity=this;
         Intent intent = getIntent();
         isRoot = intent.getBooleanExtra("isRoot",false);
         isADB = intent.getBooleanExtra("isADB",false);
@@ -131,9 +131,6 @@ public class appopsActivity extends AppCompatActivity {
     }
 
     private void clickedBt(){
-        Context con = this;
-        Activity activity = this;
-
         apopsasp1.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
@@ -173,7 +170,7 @@ public class appopsActivity extends AppCompatActivity {
         appopsab2.setOnClickListener((v)->{
             String searchStr = apopsaet1.getText().toString();
             pkginfos = multiFunc.indexOfPKGS(activity,searchStr,pkginfos,checkboxs,0);
-            showPKGS(lv1);
+            showPKGS(con,lv1,pkginfos,checkboxs);
         });
 
 
@@ -205,193 +202,28 @@ public class appopsActivity extends AppCompatActivity {
 
         //应用appops权限更改
         apopsab6.setOnClickListener((v)->{
-            showCMDInfoMSG(con,false,getRunTraverseCMDStr(pkginfos,checkboxs,spliceCMDStr()),isRoot,"正在应用更改,请稍后(可能会出现无响应，请耐心等待)....","应用更改结束.");
+            showProcessBarDialogByCMD(con,addPkginfos(),"正在应用更改中...","当前应用更改的应用: ",2,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
         });
 
     }
 
-    //拼接命令参数字符串
-    private String spliceCMDStr(){
-        StringBuilder sb = new StringBuilder();
-        String cmdHead = "appops set --uid $pp ";
-        String cmdWrite = "appops write-settings ";
-        String modestr="";
-
-        if(mode == 0){
-            switch (apops_opt_index){
-                case 0:
-                    modestr = "default";
-                    break;
-                case 1:
-                    modestr = "ignore";
-                    break;
-                case 2:
-                    modestr = "allow";
-                    break;
-                case 3:
-                    modestr = "foreground";
-                    break;
+    private ArrayList<PKGINFO> addPkginfos(){
+        ArrayList<PKGINFO> list = new ArrayList<>();
+        int hit=0;
+        for (int i = 0; i < checkboxs.size(); i++) {
+            if(checkboxs.get(i) && !pkginfos.get(i).getPkgname().equals(getPackageName())){
+                list.add(pkginfos.get(i));
+                hit++;
             }
         }
-        if(mode ==1){
-            switch (apops_opt_index){
-                case 0:
-                    modestr = "true";
-                    break;
-                case 1:
-                    modestr = "false";
-                    break;
+        if(hit == 0){
+            for (PKGINFO pkginfo : pkginfos) {
+                if(!pkginfo.getPkgname().equals(getPackageName())){
+                    list.add(pkginfo);
+                }
             }
         }
-        if(mode ==2){
-            switch (apops_opt_index){
-                case 0:
-                    modestr = "active";
-                    break;
-                case 1:
-                    modestr = "working_set";
-                    break;
-                case 2:
-                    modestr = "frequent";
-                    break;
-                case 3:
-                    modestr = "rare";
-                    break;
-                case 4:
-                    modestr = "restricted";
-                    break;
-            }
-        }
-
-        switch (apops_permis_index){
-            case 0 :
-                sb.append(cmdHead+" READ_PHONE_STATE "+modestr+";");
-                sb.append(cmdHead+" READ_CONTACTS "+modestr+";");
-                sb.append(cmdHead+" WRITE_CONTACTS "+modestr+";");
-                sb.append(cmdHead+" READ_CALL_LOG "+modestr+";");
-                sb.append(cmdHead+" WRITE_CALL_LOG "+modestr+";");
-                sb.append(cmdHead+" CALL_PHONE "+modestr+";");
-                sb.append(cmdHead+" READ_SMS "+modestr+";");
-                sb.append(cmdHead+" WRITE_SMS "+modestr+";");
-                sb.append(cmdHead+" SEND_SMS "+modestr+";");
-                sb.append(cmdHead+" RECEIVE_SMS "+modestr+";");
-                sb.append(cmdHead+" RECEIVE_EMERGECY_SMS "+modestr+";");
-                sb.append(cmdHead+" RECEIVE_MMS "+modestr+";");
-                sb.append(cmdHead+" RECEIVE_WAP_PUSH "+modestr+";");
-                sb.append(cmdHead+" READ_ICC_SMS "+modestr+";");
-                sb.append(cmdHead+" WRITE_ICC_SMS "+modestr+";");
-                sb.append(cmdHead+" PROCESS_OUTGOING_CALLS "+modestr+";");
-                sb.append(cmdHead+" READ_CELL_BROADCASTS "+modestr+";");
-                sb.append(cmdHead+" android:add_voicemail "+modestr+";");
-                sb.append(cmdHead+" android:answer_phone_calls "+modestr+";");
-                sb.append(cmdHead+" android:call_phone "+modestr+";");
-                sb.append(cmdHead+" android:read_call_log "+modestr+";");
-                sb.append(cmdHead+" android:read_contacts "+modestr+";");
-                sb.append(cmdHead+" android:read_cell_broadcasts "+modestr+";");
-                sb.append(cmdHead+" android:read_phone_numbers "+modestr+";");
-                sb.append(cmdHead+" android:read_phone_state "+modestr+";");
-                sb.append(cmdHead+" android:read_sms "+modestr+";");
-                sb.append(cmdHead+" android:receive_mms "+modestr+";");
-                sb.append(cmdHead+" android:receive_sms "+modestr+";");
-                sb.append(cmdHead+" android:receive_wap_push "+modestr+";");
-                sb.append(cmdHead+" android:send_sms "+modestr+";");
-                sb.append(cmdHead+" android:write_call_log "+modestr+";");
-                sb.append(cmdHead+" android:write_contacts "+modestr+";");
-                sb.append(cmdHead+" android:process_outgoing_calls "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.CALL_LOG "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.CONTACTS "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.PHONE "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.SMS "+modestr+";");
-                break;
-            case 1:
-                sb.append(cmdHead+" READ_EXTERNAL_STORAGE "+modestr+";");
-                sb.append(cmdHead+" WRITE_EXTERNAL_STORAGE "+modestr+";");
-                sb.append(cmdHead+" ACCESS_MEDIA_LOCATION "+modestr+";");
-                sb.append(cmdHead+" LEGACY_STORAGE "+modestr+";");
-                sb.append(cmdHead+" WRITE_MEDIA_AUDIO "+modestr+";");
-                sb.append(cmdHead+" READ_MEDIA_AUDIO "+modestr+";");
-                sb.append(cmdHead+" WRITE_MEDIA_VIDEO "+modestr+";");
-                sb.append(cmdHead+" READ_MEDIA_VIDEO "+modestr+";");
-                sb.append(cmdHead+" READ_MEDIA_IMAGES "+modestr+";");
-                sb.append(cmdHead+" WRITE_MEDIA_IMAGES "+modestr+";");
-                sb.append(cmdHead+" MANAGE_EXTERNAL_STORAGE "+modestr+";");
-                sb.append(cmdHead+" android:picture_in_picture "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.READ_MEDIA_AURAL "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.READ_MEDIA_VISUAL "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.READ_MEDIA_VISUAL "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.STORAGE "+modestr+";");
-                break;
-            case 2:
-                sb.append(cmdHead+" READ_CLIPBOARD "+modestr+";");
-                sb.append(cmdHead+" WRITE_CLIPBOARD "+modestr+";");
-                break;
-            case 3:
-                sb.append(cmdHead+" RUN_ANY_IN_BACKGROUND "+modestr+";");
-                break;
-            case 4:
-                sb.append(cmdHead+" RUN_IN_BACKGROUND "+modestr+";");
-                break;
-            case 5:
-                sb.append(cmdHead+" CAMERA "+modestr+";");
-                sb.append(cmdHead+" android:camera "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.CAMERA "+modestr+";");
-                break;
-            case 6:
-                sb.append(cmdHead+" RECORD_AUDIO "+modestr+";");
-                sb.append(cmdHead+" android:record_audio "+modestr+";");
-                sb.append(cmdHead+" TAKE_AUDIO_FOCUS "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.MICROPHONE "+modestr+";");
-                break;
-            case 7:
-                sb.append(cmdHead+" COARSE_LOCATION "+modestr+";");
-                sb.append(cmdHead+" FINE_LOCATION "+modestr+";");
-                sb.append(cmdHead+" android:coarse_location "+modestr+";");
-                sb.append(cmdHead+" android:fine_location "+modestr+";");
-                sb.append(cmdHead+" android:mock_location "+modestr+";");
-                sb.append(cmdHead+" android:monitor_location_high_power "+modestr+";");
-                sb.append(cmdHead+" android:monitor_location "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.LOCATION "+modestr+";");
-                break;
-            case 8:
-                sb.append(cmdHead+" READ_CALENDAR "+modestr+";");
-                sb.append(cmdHead+" WRITE_CALENDAR "+modestr+";");
-                sb.append(cmdHead+" android:write_calendar "+modestr+";");
-                sb.append(cmdHead+" android:read_calendar "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.CALENDAR "+modestr+";");
-                break;
-            case 9:
-                sb.append(cmdHead+" WIFI_SCAN "+modestr+";");
-                sb.append(cmdHead+" android:use_sip "+modestr+";");
-                sb.append(cmdHead+" BLUETOOTH_SCAN "+modestr+";");
-                sb.append(cmdHead+" BLUETOOTH_ADVERTISE "+modestr+";");
-                sb.append(cmdHead+" BLUETOOTH_CONNECT "+modestr+";");
-                sb.append(cmdHead+" BLUETOOTH_ADMIN "+modestr+";");
-                sb.append(cmdHead+" BLUETOOTH "+modestr+";");
-                sb.append(cmdHead+" NEARBY_DEVICES "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.NEARBY_DEVICES "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.SENSORS "+modestr+";");
-                break;
-            case 10:
-                sb.append(cmdHead+" android.permission-group.NOTIFICATIONS "+modestr+";");
-                sb.append(cmdHead+" ACCESS_NOTIFICATIONS "+modestr+";");
-                sb.append(cmdHead+" POST_NOTIFICATION "+modestr+";");
-                sb.append(cmdHead+" android.permission.POST_NOTIFICATIONS "+modestr+";");
-                break;
-            case 11:
-                sb.append("am set-inactive $pp "+modestr);
-                break;
-            case 12:
-                sb.append("am set-standby-bucket $pp " + modestr );
-                break;
-            case 13:
-                appopsCmdStr acs = new appopsCmdStr();
-                sb.append(modestr.equals("true")?acs.enableAppByAPPUIDCMD("$pp"):acs.disableAppByAPPUIDCMD("$pp"));
-                break;
-        }
-        if(apops_permis_index < 11){
-            sb.append(cmdWrite);
-        }
-        return sb.toString();
+        return list;
     }
 
     //跳转到系统自带的应用详情界面
@@ -436,108 +268,22 @@ public class appopsActivity extends AppCompatActivity {
 
     //安装本地文件
     private void installLocalPKG(int install_mode){
-        int hit=0;
-        appopsCmdStr acs = new appopsCmdStr();
-        StringBuilder sb = new StringBuilder();
-        String filesDir =getMyHomeFilesPath(this);
-        if(isADB){
-            filesDir=this.getExternalCacheDir().toString();
-        }
-        String barfile = filesDir+"/"+script_name;
-        //安装apks文件
-        String apkscmdstr = "sh "+barfile+" inapks $pp";
-        sb.append("aaa=(");
-        for (int i = 0; i < checkboxs.size(); i++) {
-            if(checkboxs.get(i)){
-                PKGINFO pkginfo = pkginfos.get(i);
-                String apkpath = pkginfo.getApkpath();
-                sb.append("\""+apkpath+"\" ");
-                hit++;
-            }
-        }
-        if(hit ==0){
-            PKGINFO pkginfo = pkginfos.get(nowItemIndex);
-            String apkpath = pkginfo.getApkpath();
-            sb.append("\""+apkpath+"\" ");
-        }
-        String cmdstr = "";
-        switch (install_mode){
-            case 0:
-                cmdstr = acs.getInstallLocalPkgCMD(uid, "$pp");
-                break;
-            case 1:
-                cmdstr = acs.getInstallLocalPkgOnDowngradeCMD(uid, "$pp");
-                break;
-            case 2:
-                cmdstr = acs.getInstallLocalPkgOnDebugCMD(uid, "$pp");
-                break;
-            case 3:
-                cmdstr = acs.getInstallLocalPkgOnExistsCMD(uid, "$pp");
-                break;
-        }
-        sb.append(");for pp in ${aaa[@]};do if [[ `echo $pp |grep \".apks\"` != \"\" ]];then "+apkscmdstr+";else "+cmdstr+"; fi;done;");
-        showCMDInfoMSG(appopsActivity.this,true,sb.toString(),isRoot,"正在安装应用,请稍后(可能会出现无响应，请耐心等待)....","安装应用结束.");
+        showProcessBarDialogByCMD(con,addPkginfos(),"正在安装本地应用中...","当前正在安装: ",3,install_mode ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
     }
 
     //卸载应用
     private void uninstallPKG(){
-        makeWP makewp = new makeWP();
-        String cmdstr = makewp.getUninstallPkgByUIDCMD(uid, "$pp");
-        showCMDInfoMSG(appopsActivity.this,true,getRunTraverseCMDStr(pkginfos,checkboxs,cmdstr),isRoot,"正在卸载应用,请稍后(可能会出现无响应，请耐心等待)....","卸载应用结束.");
+        showProcessBarDialogByCMD(con,addPkginfos(),"正在卸载应用...","当前正在卸载: ",1,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
     }
 
     //修改应用状态,禁用或者启用
     private void changePKGState(){
-        makeWP makewp = new makeWP();
-        String cmdstr = isDisable?makewp.getChangePkgOnEnableByUIDCMD(uid, "$pp"):makewp.getChangePkgOnDisableByUIDCMD(uid,"$pp");
-        showCMDInfoMSG(appopsActivity.this,true,getRunTraverseCMDStr(pkginfos,checkboxs,cmdstr),isRoot,"正在"+(isDisable?"启动":"禁用")+"应用,请稍后(可能会出现无响应，请耐心等待)....",(isDisable?"启动":"禁用")+"应用结束.");
+        showProcessBarDialogByCMD(con,addPkginfos(),"正在修改应用状态中...","当前正在更改的应用: ",0,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
     }
 
     //提取apk文件
     private void extractPKGFileToLocal(){
-        ProgressDialog show = showMyDialog(appopsActivity.this,"正在提取应用,请稍后(可能会出现无响应，请耐心等待)....");
-        File cacheDir = this.getExternalCacheDir();
-        String myStorageHomePath = cacheDir.toString()+"/apks";
-        Handler handler = new Handler(){
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                super.handleMessage(msg);
-                if(msg.what == 0){
-                    show.dismiss();
-                    showInfoMsg(appopsActivity.this,"提示","文件保存在: "+myStorageHomePath);
-                }
-            }
-        };
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-
-                File file = new File(myStorageHomePath);
-                if(!file.exists()){
-                    //创建/sdcard/Android/data/包名/cache文件夹,可以不需要申请存储权限实现
-                    cacheDir.mkdirs();
-                    boolean mkdirs = file.mkdirs();
-                }
-                int hit=0;
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if(checkboxs.get(i)){
-                        PKGINFO pkginfo = pkginfos.get(i);
-                        String apkpath = pkginfo.getApkpath();
-                        String outpath = myStorageHomePath+"/"+pkginfo.getPkgname()+".apk";
-                        copyFile(apkpath,outpath);
-                        hit++;
-                    }
-                }
-                if(hit == 0){
-                    PKGINFO pkginfo = pkginfos.get(nowItemIndex);
-                    String apkpath = pkginfo.getApkpath();
-                    String outpath = myStorageHomePath+"/"+pkginfo.getPkgname()+".apk";
-                    copyFile(apkpath,outpath);
-                }
-                sendHandlerMSG(handler,0);
-            }
-        }).start();
-
+        showProcessBarDialogByCMD(con,addPkginfos(),"正在提取应用中...","当前正在提取的应用: ",11,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
     }
 
     //导出包名列表到本地
@@ -621,11 +367,6 @@ public class appopsActivity extends AppCompatActivity {
         return super.onContextItemSelected(item);
     }
 
-    private void showPKGS(ListView listView){
-        PKGINFOAdapter pkginfoAdapter = new PKGINFOAdapter(pkginfos, appopsActivity.this, checkboxs);
-        listView.setAdapter(pkginfoAdapter);
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE,0,0,"显示所有应用");
@@ -641,12 +382,12 @@ public class appopsActivity extends AppCompatActivity {
     }
 
     private void getPKGByUID(String cmdstr){
-        ProgressDialog show = showMyDialog(appopsActivity.this,"正在检索用户 "+uid+" 下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
+        ProgressDialog show = showMyDialog(con,"正在检索用户 "+uid+" 下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
-                    showPKGS(lv1);
+                    showPKGS(con,lv1,pkginfos,checkboxs);
                     show.dismiss();
                 }
             }
@@ -656,27 +397,13 @@ public class appopsActivity extends AppCompatActivity {
             public void run() {
                 pkginfos.clear();
                 checkboxs.clear();
-                CMD cmd = new CMD(cmdstr);
-                String result = cmd.getResult();
-                String[] split = result.split("\n");
-                if(split != null){
-                    for (String s : cmd.getResult().split("\n")) {
-                        PackageManager pm = getPackageManager();
-                        PackageInfo packageInfo = null;
-                        try {
-                            packageInfo = pm.getPackageInfo(s, 0);
-                            checkBoxs(pkginfos, checkboxs, packageInfo, pm);
-                        } catch (PackageManager.NameNotFoundException e) {
-                            e.printStackTrace();
-                        }
+                multiFunc.getPKGByUID(con,cmdstr,pkginfos,null,checkboxs,isRoot);
+                Collections.sort(pkginfos, new Comparator<PKGINFO>() {
+                    @Override
+                    public int compare(PKGINFO pkginfo, PKGINFO t1) {
+                        return pkginfo.getAppname().compareTo(t1.getAppname());
                     }
-                    Collections.sort(pkginfos, new Comparator<PKGINFO>() {
-                        @Override
-                        public int compare(PKGINFO pkginfo, PKGINFO t1) {
-                            return pkginfo.getAppname().compareTo(t1.getAppname());
-                        }
-                    });
-                }
+                });
                 sendHandlerMSG(handler,0);
             }
         }).start();
@@ -702,7 +429,7 @@ public class appopsActivity extends AppCompatActivity {
             case 0:
                 if(uid == null || uid.equals(getMyUID())){
                     multiFunc.queryEnablePKGS(this,pkginfos,checkboxs,0);
-                    showPKGS(lv1);
+                    showPKGS(con,lv1,pkginfos,checkboxs);
                 }else{
                     getPKGByUID(wp.getPkgByUIDCMD(uid));
                 }
@@ -710,7 +437,7 @@ public class appopsActivity extends AppCompatActivity {
             case 1:
                 if(uid == null || uid.equals(getMyUID())){
                     multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
-                    showPKGS(lv1);
+                    showPKGS(con,lv1,pkginfos,checkboxs);
                 }else{
                     getPKGByUID(wp.getPkgByUIDCMD(uid));
                 }
@@ -719,7 +446,7 @@ public class appopsActivity extends AppCompatActivity {
             case 2:
                 if(uid == null|| uid.equals(getMyUID())){
                     multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
-                    showPKGS(lv1);
+                    showPKGS(con,lv1,pkginfos,checkboxs);
                 }else{
                     getPKGByUID(wp.getUserPkgByUIDCMD(uid));
                 }
@@ -728,7 +455,7 @@ public class appopsActivity extends AppCompatActivity {
             case 3:
                 if(uid == null|| uid.equals(getMyUID())){
                     multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
-                    showPKGS(lv1);
+                    showPKGS(con,lv1,pkginfos,checkboxs);
                 }else{
                     getPKGByUID(wp.getUserPkgByUIDCMD(uid));
                 }
@@ -737,7 +464,7 @@ public class appopsActivity extends AppCompatActivity {
                 isDisable=true;
                 if(uid == null || uid.equals(getMyUID())){
                     multiFunc.queryDisablePKGS(this,pkginfos,checkboxs,0);
-                    showPKGS(lv1);
+                    showPKGS(con,lv1,pkginfos,checkboxs);
                 }else{
                     getPKGByUID(wp.getDisablePkgByUIDCMD(uid));
                 }
@@ -771,15 +498,19 @@ public class appopsActivity extends AppCompatActivity {
     }
 
     private void addPKGINFO(PackageManager pm,Uri uri , String storage){
-        String filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
-        if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
+        String path = uri.getPath();
+        String filePath = null;
+        if(path.indexOf("document/primary") != -1){
+            filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
+        }else{
             filePath=uri.getPath();
         }
+
         String nameType = getPathByLastNameType(filePath);
         if(nameType.equals("apk")){
             PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
             ApplicationInfo applicationInfo = packageInfo.applicationInfo;
-            pkginfos.add(new PKGINFO(applicationInfo.packageName, applicationInfo.loadLabel(pm).toString(), filePath,applicationInfo.uid+"",packageInfo.versionName, applicationInfo.loadIcon(pm),new File(filePath).length())) ;
+            pkginfos.add(new PKGINFO(applicationInfo.packageName, pm.getApplicationLabel(applicationInfo).toString(), filePath,applicationInfo.uid+"",packageInfo.versionName, pm.getApplicationIcon(applicationInfo),new File(filePath).length())) ;
             checkboxs.add(false);
         }else if(nameType.equals("apks")){
             Drawable d = ContextCompat.getDrawable(appopsActivity.this,R.drawable.ic_launcher_foreground);
@@ -791,8 +522,7 @@ public class appopsActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        String storage = Environment.getExternalStorageDirectory().toString();
-        Context that = this;
+        String storage = getSDPath(con);
         if(requestCode == 0){
             clearList(pkginfos,checkboxs);
             PackageManager pm = getPackageManager();
@@ -806,27 +536,42 @@ public class appopsActivity extends AppCompatActivity {
                 Uri uri = data.getData();
                 addPKGINFO(pm,uri,storage);
             }
-            showPKGS(lv1);
+            showPKGS(con,lv1,pkginfos,checkboxs);
         }
 
         //安装文件夹里面所有apk文件
         if(requestCode == 43){
             if(data.getData() != null) {//只有一个文件咯
                 Uri uri = data.getData();
-                String filePath = storage + "/" +uri.getPath().replaceAll("/tree/primary:","");
-                String filesDir =getMyHomeFilesPath(that);
-                if(isADB){
-                    filesDir=that.getExternalCacheDir().toString();
-                }
-                if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT_WATCH){
-                    filePath = new File(uri.getPath()).getParent();
-                }
-                String barfile = filesDir+"/"+script_name;
-                if(isRoot || isADB){
-                    String cmdstr = "sh "+barfile+" inapkonpath " + filePath;
-                    showCMDInfoMSG(that,true,cmdstr,isRoot,"正在安装"+filePath+"路径下的应用,请稍后(可能会出现无响应，请耐心等待)....","安装"+filePath+"路径下的应用结束.");
+                String path = uri.getPath();
+                String filePath=null;
+                if(path.indexOf("tree/primary") != -1){
+                    filePath = storage + "/" +path.replaceAll("/tree/primary:","");
+                }else if(path.indexOf("document/primary") != -1){
+                    filePath = storage + "/" +path.replaceAll("/document/primary:","");
+                    filePath = new File(filePath).getParent();
                 }else{
-                    showInfoMsg(that,"错误","该功能需要adb或者root权限才能使用!!!!");
+                    filePath = new File(path).getParent();
+                }
+                if(isRoot || isADB){
+                    clearList(pkginfos,checkboxs);
+                    try {
+                        PackageManager pm = getPackageManager();
+                        ArrayList<File> files = new ArrayList<>();
+                        getAllFileByEndName(filePath,".apk",files);
+                        for (File listFile : files) {
+                            addPKGINFO(pm,Uri.fromFile(listFile),storage);
+                        }
+                        showPKGS(con,lv1,pkginfos,checkboxs);
+                        showProcessBarDialogByCMD(con,pkginfos,"正在安装 [ "+filePath+" ] 文件夹里面的内容...","当前正在安装: ",4,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
+                    }catch (Exception e){
+                        String filesDir = getExternalCacheDir().getAbsolutePath();
+                        String barfile = filesDir+"/"+script_name;
+                        String cmdstr = "sh "+barfile+" inapkonpath " + filePath;
+                        showCMDInfoMSG(con,true,cmdstr,isRoot,"正在安装"+filePath+"路径下的应用,请稍后(可能会出现无响应，请耐心等待)....","安装"+filePath+"路径下的应用结束.");
+                    }
+                }else{
+                    showInfoMsg(con,"错误","该功能需要adb或者root权限才能使用!!!!");
                 }
             }
         }

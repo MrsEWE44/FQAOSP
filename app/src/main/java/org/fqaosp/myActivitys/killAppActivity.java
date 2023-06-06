@@ -4,9 +4,10 @@ import static org.fqaosp.utils.fileTools.extactAssetsFile;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
 import static org.fqaosp.utils.multiFunc.getCMD;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
+import static org.fqaosp.utils.multiFunc.showPKGS;
+import static org.fqaosp.utils.multiFunc.showProcessBarDialogByCMD;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -32,7 +33,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
-import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.sql.killAppDB;
 import org.fqaosp.utils.CMD;
@@ -58,12 +58,15 @@ public class killAppActivity extends AppCompatActivity {
     private killAppDB killAppdb = new killAppDB(killAppActivity.this, "killApp.db", null, 1);
     private boolean isRoot=false,isADB=false;
 
+    private Context context;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.kill_app_activity);
         fuckActivity.getIns().add(this);
         setTitle("后台管理");
+        context=this;
         Intent intent = getIntent();
         isRoot = intent.getBooleanExtra("isRoot",false);
         isADB = intent.getBooleanExtra("isADB",false);
@@ -133,25 +136,25 @@ public class killAppActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
-                StringBuilder sb = new StringBuilder();
-                sb.append("aaa=(");
+                ArrayList<PKGINFO> list = new ArrayList<>();
                 for (int i = 0; i < checkboxs.size(); i++) {
                     PKGINFO pkginfo = pkginfos.get(i);
                     if(kaasb3Bool && !checkboxs.get(i)){
                         if(!pkginfo.getPkgname().equals(getPackageName())){
-                            sb.append("\""+pkginfo.getPkgname()+"\" ");
+                            list.add(pkginfo);
                         }
                     }
 
                     if(kaasb2Bool && checkboxs.get(i)){
                         if(!pkginfo.getPkgname().equals(getPackageName())){
-                            sb.append("\""+pkginfo.getPkgname()+"\" ");
+                            list.add(pkginfo);
                         }
                     }
 
                     if(kaasb1Bool){
-                        sb.append("\""+pkginfo.getPkgname()+"\" ");
+                        if(!pkginfo.getPkgname().equals(getPackageName())){
+                            list.add(pkginfo);
+                        }
                     }
                 }
 
@@ -159,27 +162,29 @@ public class killAppActivity extends AppCompatActivity {
                     if(killAppdb.count() == 0){
                         for (PKGINFO pkginfo : pkginfos) {
                             if(!pkginfo.getPkgname().equals(getPackageName())){
-                                sb.append("\""+pkginfo.getPkgname()+"\" ");
+                                list.add(pkginfo);
                             }
                         }
                     }else{
                         HashMap<String, Integer> select = killAppdb.select(null, 0);
                         for (Map.Entry<String, Integer> entry : select.entrySet()) {
-                            sb.append("\""+entry.getKey()+"\" ");
+                            PKGINFO pkginfo = new PKGINFO(entry.getKey(), null, null, null, null, null, null);
+                            list.add(pkginfo);
                         }
                     }
                 }
-                sb.append(");for pp in ${aaa[@]};do am force-stop $pp ;done;");
-                showCMDInfoMSG(killAppActivity.this,false,sb.toString(),isRoot,"正在清理后台进程,请稍后(可能会出现无响应，请耐心等待)....","清理后台结束.");
+                showProcessBarDialogByCMD(context,list,"终止后台进程中...","正在终止: ",5,null ,null,isRoot,"0",null,null,null);
+
             }
         });
+
 
         kaasearchb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String searchStr = kaaet1.getText().toString();
                 pkginfos = multiFunc.indexOfPKGS(killAppActivity.this,searchStr,pkginfos,checkboxs,0);
-                showPKGS(lv1);
+                showPKGS(context,lv1,pkginfos,checkboxs);
             }
         });
 
@@ -199,12 +204,12 @@ public class killAppActivity extends AppCompatActivity {
 
     //获取在后台运行的程序
     private void getRunning(int ss){
-        ProgressDialog show = showMyDialog(killAppActivity.this,"正在获取后台应用,请稍后(可能会出现无响应，请耐心等待)....");
+        ProgressDialog show = showMyDialog(context,"正在获取后台应用,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
-                    showPKGS(lv1);
+                    showPKGS(context,lv1,pkginfos,checkboxs);
                     show.dismiss();
                 }
             }
@@ -259,10 +264,10 @@ public class killAppActivity extends AppCompatActivity {
         }
         String cmdstr="chmod 755 "+busyboxFile +" && "+busyboxFile+" ps";
         if(isADB){
-            CMD cmd = getCMD(this, "cp " + busyboxFile + " "+datab+" && chmod 777 "+datab, false);
+            CMD cmd = getCMD( "cp " + busyboxFile + " "+datab+" && chmod 777 "+datab, false);
             cmdstr="chmod 777 "+datab+" && "+datab+" ps";
         }
-        CMD cmd = getCMD(context,cmdstr,isRoot);
+        CMD cmd = getCMD(cmdstr,isRoot);
         if(cmd.getResultCode() == 0){
             String[] split = cmd.getResult().split("\n");
             for (int i = 0; i < pkginfos.size(); i++) {
@@ -278,7 +283,7 @@ public class killAppActivity extends AppCompatActivity {
                             pid=pid.replaceAll("\\s+","");
                             if(!pid.isEmpty()){
                                 String proc_pid_status_cmd="cat /proc/"+pid+"/status |grep 'VmRSS' | "+(isADB?datab:busyboxFile)+" awk '{print $2}'";
-                                CMD cmd1 = getCMD(context,proc_pid_status_cmd,isRoot);
+                                CMD cmd1 = getCMD(proc_pid_status_cmd,isRoot);
                                 if(cmd1.getResultCode() == 0){
                                     pkginfos.get(i).setFilesize((Long.parseLong(cmd1.getResult().trim())*1024));
                                 }
@@ -288,12 +293,6 @@ public class killAppActivity extends AppCompatActivity {
                 }
             }
         }
-    }
-
-
-    private void showPKGS(ListView listView){
-        PKGINFOAdapter pkginfoAdapter = new PKGINFOAdapter(pkginfos, killAppActivity.this, checkboxs);
-        listView.setAdapter(pkginfoAdapter);
     }
 
     @Override
@@ -311,11 +310,11 @@ public class killAppActivity extends AppCompatActivity {
         switch (itemId){
             case 0 :
                 getRunning(2);
-                showPKGS(lv1);
+                showPKGS(context,lv1,pkginfos,checkboxs);
                 break;
             case 1:
                 getRunning(1);
-                showPKGS(lv1);
+                showPKGS(context,lv1,pkginfos,checkboxs);
                 break;
             case 2:
                 showInfoMsg(this,"帮助信息","该页面是用于后台进程终止，需要root授权。\r\n" +

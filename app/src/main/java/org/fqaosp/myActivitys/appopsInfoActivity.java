@@ -10,12 +10,12 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
+import static org.fqaosp.utils.multiFunc.showProcessBarDialogByCMD;
 
 import android.app.Activity;
 import android.app.AppOpsManager;
-import android.app.ProgressDialog;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.content.pm.ApplicationInfo;
@@ -44,6 +44,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.APPOPSINFOAdapter;
+import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 
@@ -199,7 +200,7 @@ public class appopsInfoActivity extends AppCompatActivity {
         mode=2;
         clearList();
         if(packageInfo.requestedPermissions != null){
-           AppOpsManager opsManager = (AppOpsManager) getSystemService(this.APP_OPS_SERVICE);
+           AppOpsManager opsManager = (AppOpsManager) getSystemService(Context.APP_OPS_SERVICE);
             for (String permission : packageInfo.requestedPermissions) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     String permissionToOp = AppOpsManager.permissionToOp(permission);
@@ -207,13 +208,13 @@ public class appopsInfoActivity extends AppCompatActivity {
                         list.add(permission);
                         checkboxs.add(false);
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                            if((opsManager.unsafeCheckOpNoThrow(permissionToOp, packageInfo.applicationInfo.uid,packageInfo.packageName) == AppOpsManager.MODE_ALLOWED)){
+                            if((opsManager.unsafeCheckOpNoThrow(permissionToOp, android.os.Process.myUid(),packageInfo.packageName) == AppOpsManager.MODE_ALLOWED)){
                                 switbs.add(true);
                             }else{
                                 switbs.add(false);
                             }
                         }else{
-                            if((opsManager.checkOpNoThrow(permissionToOp,packageInfo.applicationInfo.uid,packageInfo.packageName) == AppOpsManager.MODE_ALLOWED)){
+                            if((opsManager.checkOpNoThrow(permissionToOp,android.os.Process.myUid(),packageInfo.packageName) == AppOpsManager.MODE_ALLOWED)){
                                 switbs.add(true);
                             }else{
                                 switbs.add(false);
@@ -333,62 +334,50 @@ public class appopsInfoActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ProgressDialog show = showMyDialog(that, "正在操作中,请稍后(可能会出现无响应，请耐心等待)....");
-                Handler handler = new Handler() {
-                    @Override
-                    public void handleMessage(@NonNull Message msg) {
-                        if (msg.what == 0) {
-                            checkMode();
-                            showListView(lv1);
-                            show.dismiss();
-                        }
+                ArrayList <PKGINFO> pplist =new ArrayList<>();
+                //应用更改
+                for (int i = 0; i < checkboxs.size(); i++) {
+                    if(apasb1Bool && checkboxs.get(i)){
+                        pplist.add(new PKGINFO(pkgname,list.get(i),list.get(i),null,switbs.get(i)?"false":"true",null,null));
                     }
-                };
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        //应用更改
-                        for (int i = 0; i < checkboxs.size(); i++) {
-                            if(apasb1Bool && checkboxs.get(i)){
-                                multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
-                            }
-                            if(apasb2Bool && !checkboxs.get(i)){
-                                multiFunc.runAppopsBySwtich(!switbs.get(i),mode,appopsInfoActivity.this,pkgname,list.get(i),uid);
-                            }
-
-                        }
-                        sendHandlerMSG(handler,0);
+                    if(apasb2Bool && !checkboxs.get(i)){
+                        pplist.add(new PKGINFO(pkgname,list.get(i),list.get(i),null,switbs.get(i)?"false":"true",null,null));
                     }
-                }).start();
+                }
+                showProcessBarDialogByCMD(appopsInfoActivity.this,pplist,"正在修改组件状态中...","当前正在修改的组件名称: ",10,null ,null,isRoot,uid,mode,null,null);
             }
         });
 
         apasearchbt1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                new Thread(new Runnable() {
+
+                Handler handler = new Handler(){
                     @Override
-                    public void run() {
-                        String searchStr = apaet1.getText().toString();
-                        ArrayList<String> strings = new ArrayList<>();
-                        ArrayList<Boolean> switbs2 = new ArrayList<>();
-                        if(list.size() <1 || searchStr.isEmpty()){
-                            checkMode();
+                    public void handleMessage(@NonNull Message msg) {
+                        if(msg.what == 0){
+                            showListView(lv1);
                         }
-                        checkboxs.clear();
-                        for (int i = 0; i < list.size(); i++) {
-                            String s=list.get(i);
-                            if(multiFunc.isIndexOfStr(s,searchStr)){
-                                strings.add(s);
-                                switbs2.add(switbs.get(i));
-                                checkboxs.add(false);
-                            }
-                        }
-                        list=strings;
-                        switbs=switbs2;
-                        showListView(lv1);
                     }
-                }).start();
+                };
+                String searchStr = apaet1.getText().toString();
+                ArrayList<String> strings = new ArrayList<>();
+                ArrayList<Boolean> switbs2 = new ArrayList<>();
+                if(list.size() <1 || searchStr.isEmpty()){
+                    checkMode();
+                }
+                checkboxs.clear();
+                for (int i = 0; i < list.size(); i++) {
+                    String s=list.get(i);
+                    if(multiFunc.isIndexOfStr(s,searchStr)){
+                        strings.add(s);
+                        switbs2.add(switbs.get(i));
+                        checkboxs.add(false);
+                    }
+                }
+                list=strings;
+                switbs=switbs2;
+                sendHandlerMSG(handler,0);
             }
         });
 

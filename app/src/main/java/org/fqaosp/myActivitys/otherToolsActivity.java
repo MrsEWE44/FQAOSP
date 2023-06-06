@@ -151,7 +151,7 @@ public class otherToolsActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         String cmdstr = "device_config put activity_manager_native_boot use_freezer true";
-                        CMD cmd = getCMD(context,cmdstr,isRoot);
+                        CMD cmd = getCMD(cmdstr,isRoot);
                         Message msg = new Message();
                         msg.obj=cmd.getResultCode()+" -----> "+cmd.getResult();
                         msg.what=0;
@@ -338,7 +338,7 @@ public class otherToolsActivity extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                CMD cmd = getCMD(context,cmdstr,isRoot);
+                CMD cmd = getCMD(cmdstr,isRoot);
                 sendHandlerMSG(handler,0,cmd.getResultCode()+" -----> "+cmd.getResult());
             }
         }).start();

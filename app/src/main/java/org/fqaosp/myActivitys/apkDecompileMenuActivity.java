@@ -2,27 +2,28 @@ package org.fqaosp.myActivitys;
 
 import static org.fqaosp.utils.fileTools.execFileSelect;
 import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
 import static org.fqaosp.utils.fileTools.selectFile;
 import static org.fqaosp.utils.multiFunc.checkTools;
-import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.jump;
 import static org.fqaosp.utils.multiFunc.queryUserPKGS;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
+import static org.fqaosp.utils.multiFunc.showLowMemDialog;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
+import static org.fqaosp.utils.multiFunc.showPKGS;
+import static org.fqaosp.utils.multiFunc.showProcessBarDialogByCMD;
+import static org.fqaosp.utils.multiFunc.showUsers;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Message;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,10 +39,7 @@ import androidx.viewpager.widget.ViewPager;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
-import org.fqaosp.adapter.PKGINFOAdapter;
-import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
-import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.permissionRequest;
@@ -63,28 +61,31 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
     private ArrayList<PKGINFO> pkginfos = new ArrayList<>();
     private boolean isRoot,isADB;
 
+    private Context context;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.apk_decompile_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("软件反编译");
+        context=this;
         Intent intent = getIntent();
         isRoot = intent.getBooleanExtra("isRoot",false);
         isADB = intent.getBooleanExtra("isADB",false);
         if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
             showInfoMsg(this,"警告","安卓4.x设备暂不支持该功能");
         }else{
-            extractAssetsFiles();
+            extractAssetsFiles(context,isRoot,isADB);
             initViews();
         }
-
+        showLowMemDialog(context);
     }
 
-    private void extractAssetsFiles() {
+    private void extractAssetsFiles(Context context , boolean isRoot , boolean isADB) {
         try {
-            checkTools(this,isADB);
-            String filesDir = getMyHomeFilesPath(apkDecompileMenuActivity.this);
+            checkTools(context,isADB);
+            String filesDir = getMyHomeFilesPath(context);
             String jdkDir = filesDir + "/usr/opt/openjdk";
             String apktoolFile = filesDir + "/usr/apktool.jar";
             File file1 = new File(filesDir);
@@ -94,15 +95,15 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                 file1.mkdirs();
             }
             if (!jdkD.exists() ) {
-                showInfoMsg(this,"错误","未找到jdk，请重新导入工具包后再执行此项");
-                jump(apkDecompileMenuActivity.this, importToolsActivity.class,isRoot,isADB);
+                showInfoMsg(context,"错误","未找到jdk，请重新导入工具包后再执行此项");
+                jump(context, importToolsActivity.class,isRoot,isADB);
             }
             if (!apkToolF.exists()) {
-                showInfoMsg(this,"错误","未找到apktool.jar，请重新导入工具包后再执行此项");
-                jump(apkDecompileMenuActivity.this, importToolsActivity.class,isRoot,isADB);
+                showInfoMsg(context,"错误","未找到apktool.jar，请重新导入工具包后再执行此项");
+                jump(context, importToolsActivity.class,isRoot,isADB);
             }
         } catch (Exception e) {
-            showInfoMsg(this,"错误",e.toString());
+            showInfoMsg(context,"错误",e.toString());
         }
     }
 
@@ -122,7 +123,6 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
 
     //初始化反编译界面与功能
     private void initDecompileView() {
-        Context context = this;
         Button b1 = deView.findViewById(R.id.adab1);
         Button b2 = deView.findViewById(R.id.adab2);
         Button b3 = deView.findViewById(R.id.adab3);
@@ -138,7 +138,6 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
 
     //初始化回编译界面与功能
     private void initRecompileView() {
-        Context context = this;
         Button b1 = reView.findViewById(R.id.arab1);
         Button b2 = reView.findViewById(R.id.arab2);
         Button b3 = reView.findViewById(R.id.arab3);
@@ -151,61 +150,22 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
 
     //按钮点击事件
     private void btClick(Context context , View view ,Activity activity , int mode){
-        ProgressDialog show = showMyDialog(context,  "请稍后，正在"+(mode == 0 ? "回" : "反")+"编译中...(可能会出现无响应，请耐心等待)....");
-        Handler handler = dismissDialogHandler(0, show);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                String filesDir = getMyHomeFilesPath(context);
-                String myStorageHomePath = getMyStorageHomePath(activity);
-                String cmd = null;
-                String msg1=null,msg2=null;
-                StringBuilder sb = new StringBuilder();
-                StringBuilder sb2 = new StringBuilder();
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if (checkboxs.get(i)) {
-                        if(mode ==0){
-                            String filePath = list.get(i);
-                            String outname = new File(filePath).getName();
-                            String outDir = myStorageHomePath + "/cache/recompile";
-                            File file = new File(outDir);
-                            if (!file.exists()) {
-                                file.mkdirs();
-                            }
-                            String outFile = outDir + "/" + outname + ".apk";
-                            sb2.append(outFile+",");
-                            cmd = "cd " + filesDir + " && sh fqtools.sh apktool reapk "+ filePath+ " "  + outFile ;
-                            sb.append(cmd+"\n");
-                        }
-                        if(mode == 1){
-                            String filePath = pkginfos.size() > 0 ? pkginfos.get(i).getApkpath() : list.get(i);
-                            PackageManager packageManager = getPackageManager();
-                            PackageInfo archiveInfo = packageManager.getPackageArchiveInfo(filePath, 0);
-                            String pkgname = archiveInfo.packageName;
-                            String outDir = myStorageHomePath + "/cache/decompile/" + pkgname;
-                            sb2.append(outDir+",");
-                            cmd = "cd " + filesDir + " && sh fqtools.sh apktool deapk " + filePath+ " "  + outDir ;
-                            sb.append(cmd+"\n");
-                        }
-                    }
-                }
-                if(mode == 0){
-                    msg1="回编译成功!\r\n文件输出在: "+sb2.toString();
-                    msg2="回编译失败";
+        ArrayList<PKGINFO> pplist = new ArrayList<>();
+        for (int i = 0; i < checkboxs.size(); i++) {
+            if (checkboxs.get(i)) {
+                String s = list.size() ==0?"":list.get(i);
+                if(mode ==0){
+                    pplist.add(new PKGINFO(s,s,s,null,null,null,null));
                 }
                 if(mode == 1){
-                    msg1="反编译成功!\r\n反编译后的文件夹存放在: "+sb2.toString();
-                    msg2="反编译失败";
+                    pplist.add(pkginfos.size() > 0 ? pkginfos.get(i) : new PKGINFO(s,s,s,null,null,null,null));
                 }
-                CMD cmd1 = new CMD(sb.toString(),false);
-                if(cmd1.getResultCode() == 0){
-                    showInfoMsg(apkDecompileMenuActivity.this,"提示",msg1);
-                }else {
-                    showInfoMsg(apkDecompileMenuActivity.this, "错误", msg2 + " : " + cmd1.getResultCode() + " -- " + cmd1.getResult());
-                }
-                sendHandlerMSG(handler, 0);
             }
-        }).start();
+        }
+
+        showProcessBarDialogByCMD(context,pplist,"正在"+(mode == 0 ? "回" : "反")+"编译中","当前正在"+(mode == 0 ? "回" : "反")+"编译: ",8,
+                null ,null,isRoot,"0",mode,null,
+                null);
     }
 
     private void clearList() {
@@ -229,25 +189,6 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
 
     private void getUserPKGS() {
         queryUserPKGS(this, pkginfos, checkboxs, 0);
-    }
-
-    private void showPKGS(ListView listView) {
-        PKGINFOAdapter pkginfoAdapter = new PKGINFOAdapter(pkginfos, apkDecompileMenuActivity.this, checkboxs);
-        listView.setAdapter(pkginfoAdapter);
-    }
-
-    private void showSelectApkToolPath(ListView listView) {
-        if (list.size() > 0 && checkboxs.size() > 0) {
-            USERAdapter userAdapter = new USERAdapter(list, apkDecompileMenuActivity.this, checkboxs);
-            listView.setAdapter(userAdapter);
-        }
-    }
-
-    private void showSelectApkPath(ListView listView) {
-        if (list.size() > 0 && checkboxs.size() > 0) {
-            USERAdapter userAdapter = new USERAdapter(list, apkDecompileMenuActivity.this, checkboxs);
-            listView.setAdapter(userAdapter);
-        }
     }
 
     @Override
@@ -286,19 +227,19 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                 switch (itemId) {
                     case 0:
                         getEnablePKGS();
-                        showPKGS(delv);
+                        showPKGS(context,delv,pkginfos,checkboxs);
                         break;
                     case 1:
                         getPKGS();
-                        showPKGS(delv);
+                        showPKGS(context,delv,pkginfos,checkboxs);
                         break;
                     case 2:
                         getUserPKGS();
-                        showPKGS(delv);
+                        showPKGS(context,delv,pkginfos,checkboxs);
                         break;
                     case 3:
                         getUserEnablePKGS();
-                        showPKGS(delv);
+                        showPKGS(context,delv,pkginfos,checkboxs);
                         break;
                     case 4:
                         showInfoMsg(this, "帮助信息", "该页面是用于apk反编译操作的，需要安装jdk与fqtools，采用传统apktool进行反编译操作,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
@@ -358,11 +299,11 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
             }
 
             if(viewPageIndex == 0) {
-                showSelectApkPath(delv);
+                showUsers(context,delv,list,checkboxs);
             }
 
             if(viewPageIndex == 1) {
-                showSelectApkToolPath(relv);
+                showUsers(context,relv,list,checkboxs);
             }
 
         }
@@ -371,7 +312,6 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
 
     @Override
     public void onClick(View view) {
-        Context context =this;
         Activity activity = this;
         switch (view.getId()){
             case R.id.adab1:
@@ -388,22 +328,29 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                 break;
             case R.id.adab2:
                 getUserEnablePKGS();
-                showPKGS(delv);
+                showPKGS(context,delv,pkginfos,checkboxs);
                 break;
             case R.id.adab4:
                 String searchStr = adaet1.getText().toString();
                 pkginfos = multiFunc.indexOfPKGS(activity, searchStr, pkginfos, checkboxs, 0);
-                showPKGS(delv);
+                showPKGS(context,delv,pkginfos,checkboxs);
                 break;
             case R.id.arab2:
                 ProgressDialog show = showMyDialog(context,"正在扫描默认路径内容,请稍后(可能会出现无响应，请耐心等待)....");
-                Handler handler = dismissDialogHandler(0,show);
+                Handler handler = new Handler(){
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        if(msg.what == 0){
+                            show.dismiss();
+                            showUsers(context,relv,list,checkboxs);
+                        }
+                    }
+                };
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         clearList();
-                        String myStorageHomePath = getMyStorageHomePath(activity);
-                        String defaultDecompileDir = myStorageHomePath + "/cache/decompile";
+                        String defaultDecompileDir = context.getExternalCacheDir().toString() + "/cache/decompile";
                         File file1 = new File(defaultDecompileDir);
                         if (file1.exists()) {
                             File[] files = file1.listFiles();
@@ -412,7 +359,6 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                                     list.add(file.toString());
                                     checkboxs.add(false);
                                 }
-                                showSelectApkToolPath(relv);
                             } else {
                                 Toast.makeText(context, "默认路径没有反编译后的内容", Toast.LENGTH_SHORT).show();
                             }

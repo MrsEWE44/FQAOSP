@@ -1,15 +1,18 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.checkBoxsHashMap;
-import static org.fqaosp.utils.multiFunc.checkCMDResult;
-import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
 import static org.fqaosp.utils.multiFunc.getCMD;
+import static org.fqaosp.utils.multiFunc.getProcessBarDialogHandler;
 import static org.fqaosp.utils.multiFunc.getUID;
 import static org.fqaosp.utils.multiFunc.isADB;
 import static org.fqaosp.utils.multiFunc.isSuEnable;
+import static org.fqaosp.utils.multiFunc.preventDismissDialog;
 import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
+import static org.fqaosp.utils.multiFunc.sendHandlerMsg;
+import static org.fqaosp.utils.multiFunc.sendProcessBarHandlerSum;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
+import static org.fqaosp.utils.multiFunc.showLowMemDialog;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
+import static org.fqaosp.utils.multiFunc.showPKGS;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -19,15 +22,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.LauncherActivityInfo;
 import android.content.pm.LauncherApps;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.UserHandle;
 import android.os.UserManager;
-import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -35,17 +36,18 @@ import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.viewpager.widget.ViewPager;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
-import org.fqaosp.adapter.PKGINFOAdapter;
-import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
@@ -76,19 +78,24 @@ public class workProfileMenuActivity extends AppCompatActivity {
     private makeWP wp = new makeWP();
     private boolean isRoot = false;
 
+    private Context context;
+    private Activity activity;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.work_profile_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("分身部分");
+        context=this;
+        activity=this;
         isRoot=isSuEnable();
         if((isRoot || isADB()) && Build.VERSION.SDK_INT > Build.VERSION_CODES.KITKAT){
             initViews();
         }else{
             showInfoMsg(this,"提示","本功能需要root或者shizuku授权才能正常使用,不支持安卓4.x设备.");
         }
-
+        showLowMemDialog(context);
     }
 
     private void initViews() {
@@ -117,8 +124,6 @@ public class workProfileMenuActivity extends AppCompatActivity {
     private void initwpf() {
         checkboxs.clear();
         pkginfos.clear();
-        Context context = this;
-        Activity activity = this;
         Button b1 = wpf.findViewById(R.id.wpb1);
         Button b2 = wpf.findViewById(R.id.wpb2);
         wpfLv = wpf.findViewById(R.id.wplv1);
@@ -136,54 +141,10 @@ public class workProfileMenuActivity extends AppCompatActivity {
                 //获取需要多开的用户数量
                 Integer num = (null==s||s.isEmpty())?1:Integer.valueOf(s);
                 if(num < wp.getInitsize() && num > 0){
-                    ProgressDialog show = showMyDialog(context, "正在创建分身空间,请稍后(可能会出现无响应，请耐心等待)....");
-                    Handler handler = dismissDialogHandler(0, show);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            UserManager um = (UserManager) getSystemService(Context.USER_SERVICE);
-                            ArrayList<String> userList = getExistsUsers(um);
-                            StringBuilder sb = new StringBuilder();
-                            sb.append(wp.getInitCMD()+"\n");
-                            sb.append("i=0;while((i<"+num+"));do ((i++)); "+wp.getCreateWPCMD()+";done");
-                            //初始化初始用户数量
-                            CMD cmd = getCMD(context,sb.toString(),isRoot);
-                            if(cmd.getResultCode()==0){
-                                StringBuilder sb1 = new StringBuilder();
-                                StringBuilder sb2 = new StringBuilder();
-                                sb1.append("aaa=(");
-                                for (int i = 0; i < checkboxs.size(); i++) {
-                                    if(checkboxs.get(i)){
-                                        sb1.append("\""+pkginfos.get(i).getPkgname()+"\" ");
-                                    }
-                                }
-                                sb1.append(");for pp in ${aaa[@]};do ");
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                    for (UserHandle userHandle : um.getUserProfiles()) {
-                                        String uid = getUID(userHandle.toString());
-                                        //如果用户不在之前获取的列表里面，那么就开始同步选中的应用程序到新建的用户空间下
-                                        if(haveUser(userList,uid)){
-                                            sb1.append(wp.getInstallPkgCMD(uid, "$pp")+";");
-                                            sb2.append(wp.getStartWPCMD(uid)+";");
-                                            hidePKGS(userHandle);
-                                        }
-                                    }
-                                }
-                                sb1.append("done;");
-                                sb1.insert(0,sb2.toString());
-                                CMD cmd2 = getCMD(context ,sb1.toString(),isRoot);
-                                if(cmd2.getResultCode() != 0){
-                                    showInfoMsg(context,"cmd2错误",cmd2.getResult());
-                                }
-//                                Log.d("cmd222",cmd2.getResultCode()+" -- " + cmd2.getResult());
-                            }
-                            editText1.setText("");
-                            sendHandlerMSG(handler, 0);
-                            if(cmd.getResultCode()!=0){
-                                showInfoMsg(context,"cmd错误",cmd.getResult());
-                            }
-                        }
-                    }).start();
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(wp.getInitCMD()+"\n");
+                    sb.append("i=0;while((i<"+num+"));do ((i++)); "+wp.getCreateWPCMD()+";done");
+                    showProcessDialogCMDByWP(context,addPKGS(0,false),checkboxsByUser,wpfmUserList,sb.toString(),"正在创建分身空间","当前正在安装: ",0,0,isRoot);
                 }else{
                     showInfoMsg(context,"警告","请输入 " + wp.getInitsize() + " 以内并且大于0的数值");
                 }
@@ -206,16 +167,40 @@ public class workProfileMenuActivity extends AppCompatActivity {
         });
     }
 
+    private ArrayList<PKGINFO> addPKGS(int wpmode,Boolean isDel){
+        ArrayList<PKGINFO> pplist = new ArrayList<>();
+        if(wpmode == 2 || wpmode == 3){
+            if(isDel){
+                getUsers();
+                for (String s : wpfmUserList) {
+                    pplist.add(new PKGINFO(s,s,s,null,null,null,null));
+                }
+            }else{
+                for (int i = 0; i < checkboxsByUser.size(); i++) {
+                    if (checkboxsByUser.get(i)) {
+                        String s = wpfmUserList.get(i);
+                        pplist.add(new PKGINFO(s,s,s,null,null,null,null));
+                    }
+                }
+            }
+        }else{
+            for (int i = 0; i < checkboxs.size(); i++) {
+                if(checkboxs.get(i)){
+                    pplist.add(pkginfos.get(i));
+                }
+            }
+        }
+        return pplist;
+    }
+
     private void searchStr(EditText editText2,Activity activity,ListView lv){
         String searchStr = editText2.getText().toString();
         pkginfos = multiFunc.indexOfPKGS(activity, searchStr, pkginfos, checkboxs, 0);
-        showPKGS(lv);
+        showPKGS(context,lv,pkginfos,checkboxs);
     }
 
     //分身管理
     private void initwpfm() {
-        Context context = this;
-        Activity activity = this;
         Button b1 = wpfm.findViewById(R.id.wpmanageab1);
         Button b2 = wpfm.findViewById(R.id.wpmanageab2);
         Button b3 = wpfm.findViewById(R.id.wpmanageab3);
@@ -247,50 +232,11 @@ public class workProfileMenuActivity extends AppCompatActivity {
     }
 
     private void wpBtClicked(Context context,View view,int mode){
-        AlertDialog show = showMyDialog(context, "正在"+(mode==0?"安装":"删除")+"应用,请稍后(可能会出现无响应，请耐心等待)....");
-        Handler handler = new Handler() {
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                if (msg.what == 0) {
-                    getPKGByUID(1);
-                    show.dismiss();
-                }
-            }
-        };
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                StringBuilder sb = new StringBuilder();
-                sb.append("aaaa=(");
-                for (int i = 0; i < checkboxs.size(); i++) {
-                    if (checkboxs.get(i)) {
-                        sb.append("\""+pkginfos.get(i).getPkgname()+"\" ");
-                    }
-                }
-                sb.append(");for pp in ${aaaa[@]};do ");
-                for (int i1 = 0; i1 < checkboxsByUser.size(); i1++) {
-                    if (checkboxsByUser.get(i1)) {
-                        if(mode ==0){
-                            sb.append(wp.getInstallPkgCMD(wpfmUserList.get(i1), "$pp")+";");
-                        }
-                        if(mode ==1){
-                            sb.append(wp.getUninstallPkgByUIDCMD(wpfmUserList.get(i1), "$pp")+";");
-                        }
-                    }
-                }
-                sb.append("done;");
-                CMD cmd = getCMD(context, sb.toString(), isRoot);
-                sendHandlerMSG(handler,0);
-                if(cmd.getResultCode() != 0){
-                    showInfoMsg(context,"错误",cmd.getResult());
-                }
-            }
-        }).start();
+        showProcessDialogCMDByWP(context,addPKGS(1,false),checkboxsByUser,wpfmUserList,"","正在"+(mode==0?"安装":"删除")+"应用....","当前正在"+(mode==0?"安装":"删除")+": ",1,mode,isRoot);
     }
 
     //分身删除
     private void initwpfr() {
-        Context context = this;
         Button b1 = wpfr.findViewById(R.id.wprab1);
         Button b2 = wpfr.findViewById(R.id.wprab2);
         wpfrLv = wpfr.findViewById(R.id.wpralv1);
@@ -303,79 +249,13 @@ public class workProfileMenuActivity extends AppCompatActivity {
     }
 
     private void wpfrBtClicked(Context context,View view,boolean delall){
-        ProgressDialog show = showMyDialog(context, "正在删除已经选中的分身用户,请稍后(可能会出现无响应，请耐心等待)....");
-        Handler handler = new Handler() {
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                if (msg.what == 0) {
-                    getUsers();
-                    showUsers(wpfrLv);
-                    show.dismiss();
-                }
-            }
-        };
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                StringBuilder sb = new StringBuilder();
-                sb.append("aaaa=(");
-                if(delall){
-                    for (String s : wpfmUserList) {
-                        sb.append("\""+s+"\" ");
-                    }
-                }else{
-                    for (int i = 0; i < checkboxsByUser.size(); i++) {
-                        if (checkboxsByUser.get(i)) {
-                            sb.append("\""+wpfmUserList.get(i)+"\" ");
-                        }
-                    }
-                }
-                sb.append(");for pp in ${aaaa[@]};do pm remove-user $pp;done;");
-                CMD cmd = getCMD(context, sb.toString(), isRoot);
-                sendHandlerMSG(handler, 0);
-                checkCMDResult(context,cmd,"删除成功","删除失败");
-            }
-        }).start();
+        showProcessDialogCMDByWP(context,addPKGS(2,delall),checkboxsByUser,wpfmUserList,"","正在删除已经选中的分身用户","当前正在删除用户: ",2,0,isRoot);
     }
 
-    private void hidePKGS(UserHandle userHandle){
-        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP){
-            StringBuilder sb = new StringBuilder();
-            LauncherApps launcherApps = (LauncherApps) getSystemService(Context.LAUNCHER_APPS_SERVICE);
-            List<LauncherActivityInfo> activityList = launcherApps.getActivityList(null, userHandle);
-            sb.append("aaa=(");
-            for (LauncherActivityInfo launcherActivityInfo : activityList) {
-                sb.append("\""+launcherActivityInfo.getApplicationInfo().packageName+"\" ");
-            }
-            sb.append(");for aa in ${aaa[@]};do pm hide --user "+getUID(userHandle.toString())+" $aa ;done;");
-            CMD cmd = getCMD(this, sb.toString(), isRoot);
-//        Log.d("hidecmd",cmd.getResultCode()+" -- " + cmd.getResult());
-        }
-    }
-
-    private ArrayList<String> getExistsUsers(UserManager um){
-        ArrayList<String> userList = new ArrayList<>();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            for (UserHandle userHandle : um.getUserProfiles()) {
-                userList.add(getUID(userHandle.toString()));
-            }
-        }
-        return userList;
-    }
-
-    private boolean haveUser(ArrayList<String> users, String uid){
-        for (String id : users) {
-            if(id.equals(uid)){
-                return false;
-            }
-        }
-        return true;
-    }
 
     private String getMaxUserNum(){
         String cmdstr = "pm get-max-users|cut -d':' -f2";
-        CMD cmd = getCMD(this, cmdstr, isRoot);
+        CMD cmd = getCMD( cmdstr, isRoot);
         return cmd.getResult();
     }
 
@@ -398,16 +278,6 @@ public class workProfileMenuActivity extends AppCompatActivity {
         multiFunc.queryUserPKGS(this, pkginfos, checkboxs, 0);
     }
 
-    private void showPKGS(ListView listView) {
-        PKGINFOAdapter pkginfoAdapter = new PKGINFOAdapter(pkginfos, workProfileMenuActivity.this, checkboxs);
-        listView.setAdapter(pkginfoAdapter);
-    }
-
-    private void showUsers(ListView listView) {
-        USERAdapter userAdapter = new USERAdapter(wpfmUserList, workProfileMenuActivity.this, checkboxsByUser);
-        listView.setAdapter(userAdapter);
-    }
-
     private void getUsers() {
         clearUser();
         //查询用户
@@ -416,32 +286,7 @@ public class workProfileMenuActivity extends AppCompatActivity {
 
     //启动已经创建好的分身用户
     private void startupUsers(){
-        Context context = this;
-        ProgressDialog show = showMyDialog(context, "正在启动应用分身,请稍后(可能会出现无响应，请耐心等待)....");
-        Handler handler = dismissDialogHandler(0,show);
-        Handler handler2 = new Handler();
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                getUsers();
-                StringBuilder sb = new StringBuilder();
-                sb.append("aaaa=(");
-                for (String s : wpfmUserList) {
-                    sb.append("\""+s+"\" ");
-                }
-                sb.append(");for pp in ${aaaa[@]};do am start-user $pp;done;");
-                CMD cmd = getCMD(context, sb.toString(), isRoot);
-                sendHandlerMSG(handler,0);
-                handler2.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        checkCMDResult(context,cmd,"启动完成","启动失败");
-                    }
-                });
-
-            }
-        }).start();
-
+        showProcessDialogCMDByWP(context,addPKGS(3,true),checkboxsByUser,wpfmUserList,"","正在启动分身用户","当前正在启动用户ID: ",3,0,isRoot);
     }
 
     //获取用户空间里安装的应用
@@ -449,16 +294,15 @@ public class workProfileMenuActivity extends AppCompatActivity {
         pkginfos.clear();
         checkboxs.clear();
         pkginfoHashMap.clear();
-        makeWP wp = new makeWP();
         if (wpfmUserList.size() == 0) {
             getUsers();
         }
-        ProgressDialog show = showMyDialog(workProfileMenuActivity.this, "正在检索用户下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
+        ProgressDialog show = showMyDialog(context, "正在检索用户下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler() {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if (msg.what == 0) {
-                    showPKGS(wpfmLv2);
+                    showPKGS(context,wpfmLv2,pkginfos,checkboxs);
                     show.dismiss();
                 }
             }
@@ -472,21 +316,7 @@ public class workProfileMenuActivity extends AppCompatActivity {
                     if (state == 1) {
                         cmdstr = wp.getUserPkgByUIDCMD(uid);
                     }
-                    CMD cmd = new CMD(cmdstr);
-                    String result = cmd.getResult();
-                    String[] split = result.split("\n");
-                    if (null != split) {
-                        for (String s : cmd.getResult().split("\n")) {
-                            PackageManager pm = getPackageManager();
-                            PackageInfo packageInfo = null;
-                            try {
-                                packageInfo = pm.getPackageInfo(s, 0);
-                                checkBoxsHashMap(pkginfoHashMap, checkboxs, packageInfo, pm);
-                            } catch (PackageManager.NameNotFoundException e) {
-                                Log.e(workProfileMenuActivity.class.getName(),e.toString());
-                            }
-                        }
-                    }
+                    multiFunc.getPKGByUID(context,cmdstr,pkginfos,pkginfoHashMap,checkboxs,isRoot);
                 }
                 pkginfos.clear();
                 checkboxs.clear();
@@ -555,19 +385,19 @@ public class workProfileMenuActivity extends AppCompatActivity {
                 switch (itemId) {
                     case 0:
                         getEnablePKGS();
-                        showPKGS(wpfLv);
+                        showPKGS(context,wpfLv,pkginfos,checkboxs);
                         break;
                     case 1:
                         getPKGS();
-                        showPKGS(wpfLv);
+                        showPKGS(context,wpfLv,pkginfos,checkboxs);
                         break;
                     case 2:
                         getUserPKGS();
-                        showPKGS(wpfLv);
+                        showPKGS(context,wpfLv,pkginfos,checkboxs);
                         break;
                     case 3:
                         getUserEnablePKGS();
-                        showPKGS(wpfLv);
+                        showPKGS(context,wpfLv,pkginfos,checkboxs);
                         break;
                     case 4:
                         showInfoMsg(this, "帮助信息", "该页面是用于应用分身的，需要root授权。\r\n" +
@@ -586,19 +416,19 @@ public class workProfileMenuActivity extends AppCompatActivity {
                 switch (itemId) {
                     case 0:
                         getEnablePKGS();
-                        showPKGS(wpfmLv2);
+                        showPKGS(context,wpfmLv2,pkginfos,checkboxs);
                         break;
                     case 1:
                         getPKGS();
-                        showPKGS(wpfmLv2);
+                        showPKGS(context,wpfmLv2,pkginfos,checkboxs);
                         break;
                     case 2:
                         getUserPKGS();
-                        showPKGS(wpfmLv2);
+                        showPKGS(context,wpfmLv2,pkginfos,checkboxs);
                         break;
                     case 3:
                         getUserEnablePKGS();
-                        showPKGS(wpfmLv2);
+                        showPKGS(context,wpfmLv2,pkginfos,checkboxs);
                         break;
                     case 4:
                         getPKGByUID(0);
@@ -608,7 +438,7 @@ public class workProfileMenuActivity extends AppCompatActivity {
                         break;
                     case 6:
                         getUsers();
-                        showUsers(wpfmLv);
+                        multiFunc.showUsers(context,wpfmLv,wpfmUserList,checkboxsByUser);
                         break;
                     case 7:
                         startupUsers();
@@ -634,7 +464,7 @@ public class workProfileMenuActivity extends AppCompatActivity {
                 switch (itemId) {
                     case 0:
                         getUsers();
-                        showUsers(wpfrLv);
+                        multiFunc.showUsers(context,wpfrLv,wpfmUserList,checkboxsByUser);
                         break;
                     case 1:
                         showInfoMsg(this, "帮助信息", "该页面是用于删除分身的，需要root授权。\r\n" +
@@ -652,6 +482,141 @@ public class workProfileMenuActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
+
+    private void showProcessDialogCMDByWP(Context context , ArrayList<PKGINFO> pplist,ArrayList<Boolean> checkboxsByUser,ArrayList<String> wpfmUserList, String sb, String title, String text, Integer wpmode, Integer wpmode2, Boolean isRoot){
+        makeWP wp = new makeWP();
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(title);
+        View vvv = LayoutInflater.from(context).inflate(R.layout.download_process_bar, null);
+        ProgressBar mProgressBar = (ProgressBar) vvv.findViewById(R.id.dpbpb);
+        TextView dpbtv1 = vvv.findViewById(R.id.dpbtv1);
+        TextView dpbtv2 = vvv.findViewById(R.id.dpbtv2);
+        TextView dpbtv3 = vvv.findViewById(R.id.dpbtv3);
+        builder.setView(vvv);
+        dpbtv2.setText("1");
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+        preventDismissDialog(alertDialog);
+        Handler mUpdateProgressHandler = getProcessBarDialogHandler(context,mProgressBar,alertDialog,dpbtv1,dpbtv2,dpbtv3,text);
+
+        new Thread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void run() {
+                int size = pplist.size();
+                if(wpmode == 0){
+                    UserManager um = (UserManager) context.getSystemService(Context.USER_SERVICE);
+                    ArrayList<String> userList = getExistsUsers(um);
+                    //初始化初始用户数量
+                    CMD cmd = getCMD(sb,isRoot);
+                    if(cmd.getResultCode()==0){
+                        sendHandlerMsg(mUpdateProgressHandler,4,"现在正在安装应用到分身空间里面");
+                        sendHandlerMsg(mUpdateProgressHandler,5,size+"");
+                        for (UserHandle userHandle : um.getUserProfiles()) {
+                            String uid = getUID(userHandle.toString());
+                            //如果用户不在之前获取的列表里面，那么就开始同步选中的应用程序到新建的用户空间下
+                            if(haveUser(userList,uid)){
+                                hidePKGS(userHandle,isRoot);
+                            }
+                        }
+
+                        for (int i = 0; i < pplist.size(); i++) {
+                            PKGINFO pkginfo = pplist.get(i);
+                            sendProcessBarHandlerSum(mUpdateProgressHandler,i,size,pkginfo);
+                            for (UserHandle userHandle : um.getUserProfiles()) {
+                                String uid = getUID(userHandle.toString());
+                                //如果用户不在之前获取的列表里面，那么就开始同步选中的应用程序到新建的用户空间下
+                                if(haveUser(userList,uid)){
+                                    String cmdstr = wp.getInstallPkgCMD(uid, pkginfo.getPkgname())+" && "+wp.getStartWPCMD(uid);
+                                    CMD getcmd = getCMD(cmdstr, isRoot);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if(wpmode == 1){
+                    sendHandlerMsg(mUpdateProgressHandler,5,size+"");
+                    for (int i = 0; i < pplist.size(); i++) {
+                        PKGINFO pkginfo = pplist.get(i);
+                        sendProcessBarHandlerSum(mUpdateProgressHandler,i,size,pkginfo);
+                        for (int i1 = 0; i1 < checkboxsByUser.size(); i1++) {
+                            if (checkboxsByUser.get(i1)) {
+                                String cmdstr = null;
+                                if(wpmode2 ==0){
+                                    cmdstr = wp.getInstallPkgCMD(wpfmUserList.get(i1), pkginfo.getPkgname());
+                                }
+                                if(wpmode2 ==1){
+                                    cmdstr = wp.getUninstallPkgByUIDCMD(wpfmUserList.get(i1), pkginfo.getPkgname());
+                                }
+                                CMD getcmd = getCMD(cmdstr, isRoot);
+                            }
+                        }
+                    }
+
+                }
+
+                if(wpmode == 2){
+                    sendHandlerMsg(mUpdateProgressHandler,5,size+"");
+                    for (int i = 0; i < pplist.size(); i++) {
+                        PKGINFO pkginfo = pplist.get(i);
+                        sendProcessBarHandlerSum(mUpdateProgressHandler,i,size,pkginfo);
+                        String cmdstr = "pm remove-user "+pkginfo.getPkgname();
+                        CMD getcmd = getCMD(cmdstr, isRoot);
+                    }
+                }
+
+                if(wpmode == 3){
+                    sendHandlerMsg(mUpdateProgressHandler,5,size+"");
+                    for (int i = 0; i < pplist.size(); i++) {
+                        PKGINFO pkginfo = pplist.get(i);
+                        sendProcessBarHandlerSum(mUpdateProgressHandler,i,size,pkginfo);
+                        String cmdstr = "am start-user "+pkginfo.getPkgname();
+                        CMD getcmd = getCMD(cmdstr, isRoot);
+                    }
+                }
+
+
+                mUpdateProgressHandler.sendEmptyMessage(1);
+            }
+        }).start();
+    }
+
+
+    private void hidePKGS(UserHandle userHandle,Boolean isRoot){
+        if(Build.VERSION.SDK_INT > Build.VERSION_CODES.LOLLIPOP){
+            StringBuilder sb = new StringBuilder();
+            LauncherApps launcherApps = (LauncherApps) getSystemService(Context.LAUNCHER_APPS_SERVICE);
+            List<LauncherActivityInfo> activityList = launcherApps.getActivityList(null, userHandle);
+            sb.append("aaa=(");
+            for (LauncherActivityInfo launcherActivityInfo : activityList) {
+                sb.append("\""+launcherActivityInfo.getApplicationInfo().packageName+"\" ");
+            }
+            sb.append(");for aa in ${aaa[@]};do pm hide --user "+getUID(userHandle.toString())+" $aa ;done;");
+            CMD cmd = getCMD( sb.toString(), isRoot);
+        }
+    }
+
+    private ArrayList<String> getExistsUsers(UserManager um){
+        ArrayList<String> userList = new ArrayList<>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            for (UserHandle userHandle : um.getUserProfiles()) {
+                userList.add(getUID(userHandle.toString()));
+            }
+        }
+        return userList;
+    }
+
+    private boolean haveUser(ArrayList<String> users, String uid){
+        for (String id : users) {
+            if(id.equals(uid)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+
 
 
 }

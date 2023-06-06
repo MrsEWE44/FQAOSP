@@ -5,6 +5,7 @@ import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
 import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
 import static org.fqaosp.utils.multiFunc.showInfoMsg;
 import static org.fqaosp.utils.multiFunc.showMyDialog;
+import static org.fqaosp.utils.multiFunc.showUsers;
 
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -32,7 +33,6 @@ import androidx.viewpager.widget.ViewPager;
 
 import org.fqaosp.R;
 import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
-import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.multiFunc;
@@ -110,10 +110,10 @@ public class imgMenuActivity extends AppCompatActivity {
                 String searchStr = editText.getText().toString();
                 if(switchBool1){
                     flashList2= multiFunc.indexOfLIST(flashList2,flashCheckboxs2,searchStr);
-                    showIMGS(flashLv2,flashList2,flashCheckboxs2);
+                    showUsers(context,flashLv2,flashList2,flashCheckboxs2);
                 }else{
                     flashList1= multiFunc.indexOfLIST(flashList1,flashCheckboxs1,searchStr);
-                    showIMGS(flashLv1,flashList1,flashCheckboxs1);
+                    showUsers(context,flashLv1,flashList1,flashCheckboxs1);
                 }
             }
         });
@@ -157,7 +157,7 @@ public class imgMenuActivity extends AppCompatActivity {
                                 String booter=bootdev+"/by-name/"+partname;
                                 String cmdhead="dd if="+localImgPath;
                                 String cmdstr = "if [ -b "+mpper+" ];then "+cmdhead+" of="+mpper+" ; elif [ -b "+booter +" ];then "+cmdhead+" of="+booter +"; else echo 'error !';fi";
-                                CMD cmd = getCMD(context, cmdstr, true);
+                                CMD cmd = getCMD(cmdstr, true);
                                 sendHandlerMSG(handler,0,"分区已刷入完毕: \r\n"+localImgPath+"  ------>>>>>   "+partname+"\r\n\r\n"+cmd.getResultCode()+" -- " + cmd.getResult());
                             }
                         }).start();
@@ -192,7 +192,7 @@ public class imgMenuActivity extends AppCompatActivity {
             public void onClick(View view) {
                 String searchStr = editText.getText().toString();
                 dumpList= multiFunc.indexOfLIST(dumpList,dumpCheckboxs,searchStr);
-                showIMGS(dumpLv1,dumpList,dumpCheckboxs);
+                showUsers(context,dumpLv1,dumpList,dumpCheckboxs);
             }
         });
         b2.setOnClickListener(new View.OnClickListener() {
@@ -232,11 +232,6 @@ public class imgMenuActivity extends AppCompatActivity {
             }
         });
 
-    }
-
-    private void showIMGS(ListView lv,ArrayList<String> list,ArrayList<Boolean> checkboxs) {
-        USERAdapter userAdapter = new USERAdapter(list, imgMenuActivity.this, checkboxs);
-        lv.setAdapter(userAdapter);
     }
 
     private void clickedSwitchBt(Switch brasb1,Switch brasb2,Switch brasb3){
@@ -375,7 +370,7 @@ public class imgMenuActivity extends AppCompatActivity {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
-                    showIMGS(flashLv1,flashList1,flashCheckboxs1);
+                    showUsers(context,flashLv1,flashList1,flashCheckboxs1);
                     show.dismiss();
                 }
             }
@@ -411,9 +406,9 @@ public class imgMenuActivity extends AppCompatActivity {
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
                     if(viewPageIndex == 0){
-                        showIMGS(dumpLv1,dumpList,dumpCheckboxs);
+                        showUsers(context,dumpLv1,dumpList,dumpCheckboxs);
                     }else{
-                        showIMGS(flashLv2,flashList2,flashCheckboxs2);
+                        showUsers(context,flashLv2,flashList2,flashCheckboxs2);
                     }
                     show.dismiss();
                 }

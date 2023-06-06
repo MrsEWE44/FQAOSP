@@ -84,6 +84,7 @@ backup_app(){
 	pkgname=$1
 	backup_mode=$2
 	backup_type=$3
+	uuidd=$4
 	apk_file_path=$(pm path $pkgname |$busybox_my head -n 1 |$busybox_my cut -d ':'  -f2 |$busybox_my cut -d '/' -f4)
 	out_dir_path="$backup_app_home/$pkgname"
 	tar_parm=""
@@ -118,7 +119,7 @@ backup_app(){
 	case $backup_mode in 
 		full)
 			cd /data/app && $busybox_my tar "$tar_parm" "$out_dir_path/file.${fffend}" $apk_file_path && $xz_cmdstr "$out_dir_path/file.${fffend}"
-			cd /data/data
+			cd /data/user/$uuidd
 			if [ -d $pkgname ];then
 				$busybox_my tar "$tar_parm" "$out_dir_path/data.${fffend}" $pkgname && $xz_cmdstr "$out_dir_path/data.${fffend}"
 			else
@@ -149,7 +150,7 @@ backup_app(){
 		
 		break;;
 		data)
-			cd /data/data
+			cd /data/user/$uuidd
 			if [ -d $pkgname ];then
 				$busybox_my tar "$tar_parm" "$out_dir_path/data.${fffend}" $pkgname && $xz_cmdstr "$out_dir_path/data.${fffend}"
 			else
@@ -195,6 +196,7 @@ restory_app(){
 	pkgname=$1
 	backup_mode=$2
 	backup_type=$3
+	uiddd=$4
 	r_fffend=""
 	cd $backup_app_home
 	case $backup_type in
@@ -235,15 +237,15 @@ restory_app(){
 					if [ $apks_sum -gt 1 ];then
 						install_split_apks
 					else
-						cp base.apk $data_local_tmp/ && chmod 777 $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && $busybox_my rm -rf $data_local_tmp/base.apk
+						cp base.apk $data_local_tmp/ && chmod 777 $data_local_tmp/base.apk && pm install --user $uiddd $data_local_tmp/base.apk && $busybox_my rm -rf $data_local_tmp/base.apk
 					fi
 					if [ "$(getprop ro.build.version.sdk)" == "19" ];then
 					  in_app_uid=$(dumpsys package "$pkgname"|$busybox_my grep userId |$busybox_my cut -d'=' -f2|$busybox_my cut -d' ' -f1)
 					else
-					  in_app_uid=$(pm list packages -U $pkgname |cut -d ':' -f 3)
+					  in_app_uid=$(pm list packages -U $pkgname --user $uiddd |cut -d ':' -f 3)
 					fi
 					cd "$backup_app_home/$pkgname"
-					pkg_data_dir="/data/data"
+					pkg_data_dir="/data/user/$uiddd"
 					pkg_dir_path="$pkg_data_dir/$pkgname"
 					uid_dir_path="/proc/1/cwd/data/data"
 					if [ -d $pkg_dir_path ];then
@@ -314,7 +316,7 @@ restory_app(){
       			  in_app_uid=$(pm list packages -U $pkgname |cut -d ':' -f 3)
       		fi
 					cd "$backup_app_home/$pkgname"
-					pkg_data_dir="/data/data"
+					pkg_data_dir="/data/user/$uiddd"
 					pkg_dir_path="$pkg_data_dir/$pkgname"
 					uid_dir_path="/proc/1/cwd/data/data"
 					if [ -d $pkg_dir_path ];then
@@ -389,7 +391,7 @@ restory_app(){
 					if [ $apks_sum -gt 1 ];then
 						install_split_apks
 					else
-						cp base.apk $data_local_tmp/ && chmod 777 $data_local_tmp/base.apk && pm install $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
+						cp base.apk $data_local_tmp/ && chmod 777 $data_local_tmp/base.apk && pm install --user $uiddd $data_local_tmp/base.apk && rm -rf $data_local_tmp/base.apk
 					fi
 					cd ../
 					rm -rf $pkgname
@@ -514,10 +516,10 @@ if [ -f $busybox_my ];then
 			install_apks $pkgname
 		break;;
 		backup)
-			backup_app $pkgname $backup_mode $backup_type
+			backup_app $pkgname $backup_mode $backup_type $parm5
 		break;;
 		restory)
-			restory_app $pkgname $backup_mode $backup_type
+			restory_app $pkgname $backup_mode $backup_type $parm5
 		break;;
 		inapkonpath)
 			install_apk_on_path $pkgname

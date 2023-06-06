@@ -11,6 +11,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import org.fqaosp.R;
+import org.fqaosp.utils.CMD;
 import org.fqaosp.utils.multiFunc;
 
 import java.util.ArrayList;
@@ -62,7 +63,7 @@ public class APPOPSINFOAdapter extends BaseAdapter {
                 switbs.set(i,b);
                 switchbbb.setChecked(switbs.get(i));
                 String pkgcate = list.get(i);
-                multiFunc.runAppopsBySwtich(b,mode,context,pkgname,pkgcate,uid);
+                CMD cmd = new CMD(multiFunc.getRunAppopsBySwtichCMD(b, mode, pkgname, pkgcate, uid));
             }
         });
         checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

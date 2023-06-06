@@ -1,5 +1,13 @@
 pluginManagement {
     repositories {
+        maven {
+            url 'https://maven.aliyun.com/repository/public/'
+        }
+        maven {
+            url 'https://maven.aliyun.com/repository/central'
+        }
+        mavenLocal()
+        mavenCentral()
         gradlePluginPortal()
         google()
         mavenCentral()
@@ -8,6 +16,14 @@ pluginManagement {
 dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
+        maven {
+            url 'https://maven.aliyun.com/repository/public/'
+        }
+        maven {
+            url 'https://maven.aliyun.com/repository/central'
+        }
+        mavenLocal()
+        mavenCentral()
         google()
         mavenCentral()
         maven { url "https://jitpack.io"}
