@@ -1,9 +1,5 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.fileTools.checkDocum;
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
 import static org.fqaosp.utils.permissionRequest.intoGrantDataOrObb;
 
 import android.app.Activity;
@@ -47,8 +43,10 @@ import org.fqaosp.R;
 import org.fqaosp.adapter.FILESEARCHAdapter;
 import org.fqaosp.adapter.FILESELECTAdapter;
 import org.fqaosp.entity.SearchFileInfo;
+import org.fqaosp.utils.dialogUtils;
 import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
+import org.fqaosp.utils.stringUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -70,6 +68,9 @@ public class fileSearchActivity extends AppCompatActivity {
     private String[] sizetype = {"byte", "KB", "MB", "GB", "TB"};
     private int spinner_index = 0, nowItemIndex = -1;
     public static String TAG = "fileSearchActivity";
+
+    private fileTools ft = new fileTools();
+    private dialogUtils du = new dialogUtils();
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -182,12 +183,12 @@ public class fileSearchActivity extends AppCompatActivity {
         Long timestamp = getTimestamp(time);
         Long timestamp2 = getTimestamp(time2);
         if (dirPath.indexOf("/Android/data") != -1) {
-            DocumentFile doucmentFile = fileTools.getDoucmentFileOnData(context, dirPath);
+            DocumentFile doucmentFile = ft.getDoucmentFileOnData(context, dirPath);
             dirPath = dirPath.replaceAll("/Android/data", "");
             addFlistTree(doucmentFile, null, dirPath.split("/"), 0, fileSizeToBytes, fileSizeToBytes1, timestamp, timestamp2, fileTYPE, searchText);
 
         } else if (dirPath.indexOf("/Android/obb") != -1) {
-            DocumentFile doucmentFile = fileTools.getDoucmentFileOnObb(context, dirPath);
+            DocumentFile doucmentFile = ft.getDoucmentFileOnObb(context, dirPath);
             dirPath = dirPath.replaceAll("/Android/obb", "");
             addFlistTree(doucmentFile, null, dirPath.split("/"), 0, fileSizeToBytes, fileSizeToBytes1, timestamp, timestamp2, fileTYPE, searchText);
         } else {
@@ -211,7 +212,7 @@ public class fileSearchActivity extends AppCompatActivity {
         fsabt1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ProgressDialog show = showMyDialog(that, "正在搜索匹配的文件,请稍后(可能会出现无响应，请耐心等待)....");
+                ProgressDialog show = du.showMyDialog(that, "正在搜索匹配的文件,请稍后(可能会出现无响应，请耐心等待)....");
                 Handler handler = new Handler() {
                     @Override
                     public void handleMessage(@NonNull Message msg) {
@@ -225,7 +226,7 @@ public class fileSearchActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         searchFile(that);
-                        sendHandlerMSG(handler, 0);
+                        du.sendHandlerMSG(handler, 0);
                     }
                 }).start();
             }
@@ -291,8 +292,8 @@ public class fileSearchActivity extends AppCompatActivity {
         String s = extstorage + "/Android/data";
         String s2 = extstorage + "/Android/obb";
         String s3 = extstorage + "/Android";
-        DocumentFile doucmentFile = fileTools.getDoucmentFileOnData(that, s);
-        DocumentFile doucmentFil2e = fileTools.getDoucmentFileOnObb(that, s2);
+        DocumentFile doucmentFile = ft.getDoucmentFileOnData(that, s);
+        DocumentFile doucmentFil2e = ft.getDoucmentFileOnObb(that, s2);
         File file = new File(s3);
         if (doucmentFile.isDirectory() && doucmentFil2e.isDirectory() && file.isDirectory()) {
             showSelectFile(extstorage, null, doucmentFile, doucmentFil2e, that);
@@ -336,7 +337,7 @@ public class fileSearchActivity extends AppCompatActivity {
         }
         String path = uri.getPath();
         String name = file == null ? dd.getName() : file.getName();
-        String nameType = fileTools.getPathByLastNameType(name);
+        String nameType = new stringUtils().getPathByLastNameType(name);
 //        Log.d(TAG,"input parm : [ " + filesize + " , " + filesize2 + " , " + time1 + " , " + time2 + " , " + ftype + " , " + sstr + " ] -- " + name + " -- indexname [ " + checkMap2StrCmp(name, sstr) + " ] -- size [ " + checkSizeCmp(length, filesize, filesize2)+ " ] -- type [ " + checkMap2StrCmp(nameType, ftype) + " ]");
 
         if (!sstr.isEmpty() && !ftype.isEmpty() && filesize > 0 && filesize2 > 0 && time1 > 0 && time2 > 0) {
@@ -557,8 +558,8 @@ public class fileSearchActivity extends AppCompatActivity {
                 DocumentFile dou = dd;
                 DocumentFile dou2 = obb;
                 String s = flist.get(i);
-                dou = checkDocum(dd, s);
-                dou2 = checkDocum(obb, s);
+                dou = ft.checkDocum(dd, s);
+                dou2 = ft.checkDocum(obb, s);
                 showSelectFile(extstorage, finalPath + "/" + flist.get(i), dou, dou2, context);
             }
         });
@@ -694,7 +695,7 @@ public class fileSearchActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId) {
             case 0:
-                showInfoMsg(a, "帮助信息", "该页面是用于文件搜索的，你可以搜索/Android/data或者obb或者/sdcard/里面的文件。\r\n" +
+                du.showInfoMsg(a, "帮助信息", "该页面是用于文件搜索的，你可以搜索/Android/data或者obb或者/sdcard/里面的文件。\r\n" +
                         "1.如果你需要搜索某个文件，可以直接在搜索框里面输入，然后点击搜索即可，默认是从内置存储目录开始搜索。\r\n" +
                         "2.如果你需要搜索某个类型的文件，可以在\"文件类型\" 一栏输入文件类型的后缀名即可，比如需要搜索\"zip\"压缩包，直接输入zip然后再点击搜索即可.\r\n" +
                         "3.如果你需要搜索某个大小范围内的文件，可以在\"小\"里面输入文件最小值,在\"大\"里面输入文件最大的值，右边有个单位选择，默认是byte(字节),可以选择最高pb，然后再点击搜索即可.\r\n" +

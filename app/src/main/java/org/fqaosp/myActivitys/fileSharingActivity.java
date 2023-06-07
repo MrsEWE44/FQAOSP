@@ -1,9 +1,5 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.fileTools.getSize;
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
 import static org.fqaosp.utils.permissionRequest.requestExternalStoragePermission;
 
 import android.app.Activity;
@@ -34,10 +30,10 @@ import androidx.viewpager.widget.ViewPager;
 import org.fqaosp.R;
 import org.fqaosp.adapter.FILESELECTAdapter;
 import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
-import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.utils.dialogUtils;
+import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
-import org.fqaosp.utils.multiFunc;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -67,6 +63,10 @@ public class fileSharingActivity extends AppCompatActivity {
     private EditText fsaet1, fsaet2;
     private Button fsab1;
     private boolean isRoot=false , isADB=false;
+
+    private fileTools ft = new fileTools();
+    private dialogUtils du = new dialogUtils();
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -99,7 +99,7 @@ public class fileSharingActivity extends AppCompatActivity {
             fsaet1.setText("当前未连接WiFi或开启热点");
             fsab1.setEnabled(false);
         } else {
-            ProgressDialog show = showMyDialog(this,  "正在加载内容,请稍后(可能会出现无响应，请耐心等待)....");
+            ProgressDialog show = du.showMyDialog(this,  "正在加载内容,请稍后(可能会出现无响应，请耐心等待)....");
 //            preventDismissDialog(show);
             Handler handler = new Handler() {
                 @Override
@@ -117,7 +117,7 @@ public class fileSharingActivity extends AppCompatActivity {
                     fsaet1.setText(ipAddress);
                     initFileView();
                     initAppView();
-                    sendHandlerMSG(handler, 0);
+                    du.sendHandlerMSG(handler, 0);
                 }
             }).start();
 
@@ -196,8 +196,7 @@ public class fileSharingActivity extends AppCompatActivity {
             }
         });
 
-        getUserPKGS();
-        showPKGS(fsalv);
+        du.queryPKGProcessDialog(this,this,fsalv,pkginfos,checkboxs,2,null,isRoot);
     }
 
     private void checkPeer(Activity that) {
@@ -269,16 +268,6 @@ public class fileSharingActivity extends AppCompatActivity {
 
     }
 
-    //获取对应的应用程序
-    private void getUserPKGS() {
-        multiFunc.queryUserPKGS(this, pkginfos, checkboxs, 0);
-    }
-
-    private void showPKGS(ListView listView) {
-        PKGINFOAdapter pkginfoAdapter = new PKGINFOAdapter(pkginfos, fileSharingActivity.this, checkboxs);
-        listView.setAdapter(pkginfoAdapter);
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE, 0, 0, "帮助");
@@ -292,7 +281,7 @@ public class fileSharingActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId) {
             case 0:
-                showInfoMsg(a, "帮助信息", "该页面是用于文件、应用网络共享的，当有人跟你同处在一个局域网的时候，就可以通过这个功能来分享文件给对方，该功能不需要root权限。\r\n" +
+                du.showInfoMsg(a, "帮助信息", "该页面是用于文件、应用网络共享的，当有人跟你同处在一个局域网的时候，就可以通过这个功能来分享文件给对方，该功能不需要root权限。\r\n" +
                         "1.如何选择文件？长按你想要分享的文件名称即可加入分享队列，分享队列是全局的，也就是说，你这里选择完文件，还可以继续选择添加已经安装的应用程序，然后统一分享出去。\r\n" +
                         "2.如何让别人访问我分享的内容？让其它人在浏览器输入你界面上那个ip地址跟端口，即可访问你分享的内容，只要在同一个局域网下，任何设备，只要支持网络连接都可以访问。\r\n" +
                         "3.如何分享？选择完需要分享的文件或者应用后，点击开始分享即可开始运行。不允许后台挂着，此程序杜绝后台残留，故而没有加入后台常驻。\r\n" +
@@ -505,7 +494,7 @@ public class fileSharingActivity extends AppCompatActivity {
                     if (file.isDirectory() || file.toString().equals("上一页")) {
                         sb.append("<div><table border=\"1\"><td><a href=\"" + "http://" + ipAndPort + "/fqaosp?file=" + i + "\" <h1>" + file.getName() + "</h1></a></td></table></div>");
                     } else {
-                        sb.append("<div><table border=\"1\"><td>" + file.getName() + "</td><td>" + getSize(file.length(), 0) + "</td><td><button onclick=\"bt(" + i + ")\">下载</button></td></table></div>");
+                        sb.append("<div><table border=\"1\"><td>" + file.getName() + "</td><td>" + ft.getSize(file.length(), 0) + "</td><td><button onclick=\"bt(" + i + ")\">下载</button></td></table></div>");
                     }
                 }
             }

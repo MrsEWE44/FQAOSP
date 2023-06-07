@@ -1,12 +1,6 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.getCMD;
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
-import static org.fqaosp.utils.multiFunc.showUsers;
-
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -34,8 +28,9 @@ import androidx.viewpager.widget.ViewPager;
 import org.fqaosp.R;
 import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
 import org.fqaosp.utils.CMD;
+import org.fqaosp.utils.dialogUtils;
 import org.fqaosp.utils.fuckActivity;
-import org.fqaosp.utils.multiFunc;
+import org.fqaosp.utils.shellUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -59,6 +54,9 @@ public class imgMenuActivity extends AppCompatActivity {
     private boolean isRoot = false,isADB=false;
     private String bootdev="/dev/block/bootdevice";
     private String mapperdev="/dev/block/mapper";
+    private Activity activity;
+
+    private dialogUtils du = new dialogUtils();
 
 
     @Override
@@ -67,18 +65,19 @@ public class imgMenuActivity extends AppCompatActivity {
         setContentView(R.layout.apk_decompile_menu_activity);
         fuckActivity.getIns().add(this);
         setTitle("分区管理");
+        context=this;
+        activity = this;
         Intent intent = getIntent();
         isRoot = intent.getBooleanExtra("isRoot",false);
         isADB = intent.getBooleanExtra("isADB",false);
         if(isRoot){
             initViews();
         }else{
-            showInfoMsg(this,"提示","本功能需要root才能正常使用");
+            du.showInfoMsg(this,"提示","本功能需要root才能正常使用");
         }
     }
 
     private void initViews() {
-        context=this;
         admavp = findViewById(R.id.admavp);
         dumpImgView = getLayoutInflater().inflate(R.layout.dump_img_activity, null);
         flashImgView = getLayoutInflater().inflate(R.layout.flash_img_activity, null);
@@ -107,13 +106,10 @@ public class imgMenuActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String searchStr = editText.getText().toString();
                 if(switchBool1){
-                    flashList2= multiFunc.indexOfLIST(flashList2,flashCheckboxs2,searchStr);
-                    showUsers(context,flashLv2,flashList2,flashCheckboxs2);
+                    du.showIndexOfPKGSDialog(context,activity,flashLv2,editText,null,flashList2,flashCheckboxs2);
                 }else{
-                    flashList1= multiFunc.indexOfLIST(flashList1,flashCheckboxs1,searchStr);
-                    showUsers(context,flashLv1,flashList1,flashCheckboxs1);
+                    du.showIndexOfPKGSDialog(context,activity,flashLv1,editText,null,flashList1,flashCheckboxs1);
                 }
             }
         });
@@ -127,13 +123,13 @@ public class imgMenuActivity extends AppCompatActivity {
                 ab.setNeutralButton("继续", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        ProgressDialog show = showMyDialog(context,"正在刷入,请稍后(可能会出现无响应，请耐心等待)....");
+                        ProgressDialog show = du.showMyDialog(context,"正在刷入,请稍后(可能会出现无响应，请耐心等待)....");
                         Handler handler = new Handler(){
                             @Override
                             public void handleMessage(@NonNull Message msg) {
                                 if(msg.what==0){
                                     show.dismiss();
-                                    showInfoMsg(context,"信息",msg.obj.toString());
+                                    du.showInfoMsg(context,"信息",msg.obj.toString());
                                 }
                             }
                         };
@@ -157,8 +153,8 @@ public class imgMenuActivity extends AppCompatActivity {
                                 String booter=bootdev+"/by-name/"+partname;
                                 String cmdhead="dd if="+localImgPath;
                                 String cmdstr = "if [ -b "+mpper+" ];then "+cmdhead+" of="+mpper+" ; elif [ -b "+booter +" ];then "+cmdhead+" of="+booter +"; else echo 'error !';fi";
-                                CMD cmd = getCMD(cmdstr, true);
-                                sendHandlerMSG(handler,0,"分区已刷入完毕: \r\n"+localImgPath+"  ------>>>>>   "+partname+"\r\n\r\n"+cmd.getResultCode()+" -- " + cmd.getResult());
+                                CMD cmd = new shellUtils().getCMD(cmdstr, true);
+                                du.sendHandlerMSG(handler,0,"分区已刷入完毕: \r\n"+localImgPath+"  ------>>>>>   "+partname+"\r\n\r\n"+cmd.getResultCode()+" -- " + cmd.getResult());
                             }
                         }).start();
                     }
@@ -190,9 +186,7 @@ public class imgMenuActivity extends AppCompatActivity {
         b1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String searchStr = editText.getText().toString();
-                dumpList= multiFunc.indexOfLIST(dumpList,dumpCheckboxs,searchStr);
-                showUsers(context,dumpLv1,dumpList,dumpCheckboxs);
+                du.showIndexOfPKGSDialog(context,activity,dumpLv1,editText,null,dumpList,dumpCheckboxs);
             }
         });
         b2.setOnClickListener(new View.OnClickListener() {
@@ -228,7 +222,7 @@ public class imgMenuActivity extends AppCompatActivity {
                 String booter=bootdev+"/by-name/${pp}";
                 String cmdstr = "if [ -b "+mpper+" ];then dd if="+mpper+" "+outCmd+";else dd if="+booter+" "+outCmd+";fi";
                 sb.append(");for pp in ${aaaa[@]};do "+cmdstr+";done;");
-                showCMDInfoMSG(context,false,sb.toString(),true,"正在提取分区,请稍后(可能会出现无响应，请耐心等待)...","提取完成,文件存放在 : "+outDir);
+                du.showCMDInfoMSG(context,false,sb.toString(),true,"正在提取分区,请稍后(可能会出现无响应，请耐心等待)...","提取完成,文件存放在 : "+outDir);
             }
         });
 
@@ -321,7 +315,7 @@ public class imgMenuActivity extends AppCompatActivity {
                         listLocalPartitionName();
                         break;
                     case 1:
-                        showInfoMsg(context,"帮助信息","该页面是用于提取系统分区文件的，可以提取by-name下所有分区文件，需要root权限授权。\r\n" +
+                        du.showInfoMsg(context,"帮助信息","该页面是用于提取系统分区文件的，可以提取by-name下所有分区文件，需要root权限授权。\r\n" +
                                 "1.点击显示本机分区，则会开始扫描/dev/block/by-name下的所有文件内容，过一会就会展示在界面。\r\n" +
                                 "2.当分区列表出现数据时，你可以勾选分区名称进行提取操作。提取的数据保存在/storage/emulated/0/Android/data/org.fqaosp/cache/dumpimg路径下。\r\n" +
                                 "3-1.全选，无论你是否有勾选列表的选项，都默认列表全部的内容，点击提取则会全部提取出来。\r\n"+
@@ -345,7 +339,7 @@ public class imgMenuActivity extends AppCompatActivity {
                         listLocalPartitionName();
                         break;
                     case 2:
-                        showInfoMsg(context,"帮助信息","该页面是用于将本地系统分区文件刷入对应分区的，默认将本地镜像文件刷入by-name下对应的分区名称，需要root权限授权。\r\n" +
+                        du.showInfoMsg(context,"帮助信息","该页面是用于将本地系统分区文件刷入对应分区的，默认将本地镜像文件刷入by-name下对应的分区名称，需要root权限授权。\r\n" +
                                 "1.点击扫描本地镜像文件，则会开始扫描本地的所有img或者iso文件。\r\n" +
                                 "2.点击显示本机分区，则会开始扫描/dev/block/by-name下的所有文件内容，过一会就会展示在右边界面。\r\n" +
                                 "3.刷入，当分区列表出现数据时，你可以勾选本地镜像文件跟分区名称进行刷入操作。只会刷入左边第一个勾选的本地文件，只会刷入右边第一个勾选的分区名称，要注意一下。\r\n" +
@@ -365,12 +359,12 @@ public class imgMenuActivity extends AppCompatActivity {
 
     private void listLocalImgName(){
         clearFlash1List();
-        ProgressDialog show = showMyDialog(context,"正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
+        ProgressDialog show = du.showMyDialog(context,"正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
-                    showUsers(context,flashLv1,flashList1,flashCheckboxs1);
+                    du.showUsers(context,flashLv1,flashList1,flashCheckboxs1);
                     show.dismiss();
                 }
             }
@@ -388,7 +382,7 @@ public class imgMenuActivity extends AppCompatActivity {
                     flashList1.add(s1);
                     flashCheckboxs1.add(false);
                 }
-                sendHandlerMSG(handler,0);
+                du.sendHandlerMSG(handler,0);
             }
         }).start();
     }
@@ -400,15 +394,15 @@ public class imgMenuActivity extends AppCompatActivity {
         }else{
             clearFlash2List();
         }
-        AlertDialog show = showMyDialog(context,"正在扫描本地分区系统,请稍后(可能会出现无响应，请耐心等待)....");
+        AlertDialog show = du.showMyDialog(context,"正在扫描本地分区系统,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
                     if(viewPageIndex == 0){
-                        showUsers(context,dumpLv1,dumpList,dumpCheckboxs);
+                        du.showUsers(context,dumpLv1,dumpList,dumpCheckboxs);
                     }else{
-                        showUsers(context,flashLv2,flashList2,flashCheckboxs2);
+                        du.showUsers(context,flashLv2,flashList2,flashCheckboxs2);
                     }
                     show.dismiss();
                 }
@@ -427,7 +421,7 @@ public class imgMenuActivity extends AppCompatActivity {
                         flashCheckboxs2.add(false);
                     }
                 }
-                sendHandlerMSG(handler,0);
+                du.sendHandlerMSG(handler,0);
             }
         }).start();
     }

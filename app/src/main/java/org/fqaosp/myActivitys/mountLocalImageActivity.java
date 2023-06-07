@@ -1,11 +1,5 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.fileTools.extactAssetsFile;
-import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
-
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -34,6 +28,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.utils.CMD;
+import org.fqaosp.utils.dialogUtils;
+import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeImgToPC;
 import org.fqaosp.utils.permissionRequest;
@@ -64,6 +60,8 @@ public class mountLocalImageActivity extends AppCompatActivity {
     private Integer filetype2Index=0,sizetypeCMDIndex=0,filetypeIndex=0;
     private boolean isRoot = false,isADB=false;
 
+    private dialogUtils du = new dialogUtils();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,7 +75,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
             initBt();
             permissionRequest.getExternalStorageManager(mountLocalImageActivity.this);
         }else{
-            showInfoMsg(this,"提示","本功能需要root才能正常使用");
+            du.showInfoMsg(this,"提示","本功能需要root才能正常使用");
         }
 
     }
@@ -114,7 +112,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
         mliab2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ProgressDialog show = showMyDialog(context,"正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
+                ProgressDialog show = du.showMyDialog(context,"正在扫描本地镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
                 Handler handler = new Handler(){
                     @Override
                     public void handleMessage(@NonNull Message msg) {
@@ -128,7 +126,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         getImgs();
-                        sendHandlerMSG(handler,0);
+                        du.sendHandlerMSG(handler,0);
                     }
                 }).start();
             }
@@ -144,11 +142,12 @@ public class mountLocalImageActivity extends AppCompatActivity {
     }
 
     private void checkBusybox(Context context){
-        String filesDir =getMyHomeFilesPath(context);
+        fileTools ft = new fileTools();
+        String filesDir =ft.getMyHomeFilesPath(context);
         String busyboxFile = filesDir+"/busybox";
         File busyF = new File(busyboxFile);
         if(!busyF.exists()){
-            extactAssetsFile(context,"busybox",busyboxFile);
+            ft.extactAssetsFile(context,"busybox",busyboxFile);
         }
     }
 
@@ -204,7 +203,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
         ab.setNegativeButton("确定", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                String filesDir =getMyHomeFilesPath(context);
+                String filesDir =new fileTools().getMyHomeFilesPath(context);
                 String busyboxFile = filesDir+"/busybox";
                 String fileName = mlicifaet1.getText().toString().trim();
                 String fileSize = mlicifaet2.getText().toString().trim();
@@ -277,7 +276,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
-                showInfoMsg(this,"帮助信息","该页面是用于挂载手机上的镜像文件，让电脑识别的，可以当U盘使用，可以给电脑安装系统，需要root权限授权。\r\n" +
+                du.showInfoMsg(this,"帮助信息","该页面是用于挂载手机上的镜像文件，让电脑识别的，可以当U盘使用，可以给电脑安装系统，需要root权限授权。\r\n" +
                         "1.挂载选中的镜像文件，勾选一个镜像文件，然后手机连接电脑，手机进入开发者模式，选择usb默认配置为存储，然后再点击挂载，然后电脑就会有反应，你就可以进行之后的操作了。\r\n" +
                         "2.扫描本地镜像文件，点击后，会申请root权限，通过find命令来查找当前设备里面的镜像文件(img/iso)。\r\n" +
                         "3.创建镜像文件,点击后，会弹出一个窗口，里面有几个必须要填的选项，填完后按“确定”即可生成对应镜像文件。生成后的镜像文件默认存放在内部存储根目录的/Download文件夹里面。\r\n" +

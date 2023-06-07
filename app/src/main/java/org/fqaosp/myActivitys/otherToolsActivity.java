@@ -1,12 +1,5 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.getCMD;
-import static org.fqaosp.utils.multiFunc.isADB;
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
-
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -36,8 +29,10 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
 import org.fqaosp.utils.CMD;
+import org.fqaosp.utils.dialogUtils;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.netUtils;
+import org.fqaosp.utils.shellUtils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -47,6 +42,8 @@ public class otherToolsActivity extends AppCompatActivity {
     private Button otabt1,otabt2,otabt3,otabt4,otabt5,otabt6;
     int otrrasp1_index=0,otrrasp2_index=0,otnsasp1_index=0;
     private boolean isRoot=false,isADB=false;
+    private dialogUtils du = new dialogUtils();
+    private shellUtils su = new shellUtils();
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,7 +71,7 @@ public class otherToolsActivity extends AppCompatActivity {
         Context context = this;
 
         otabt1.setOnClickListener((v)->{
-            ProgressDialog show = showMyDialog(context,"正在获取网络时间,请稍后(可能会出现无响应，请耐心等待)....");
+            ProgressDialog show = du.showMyDialog(context,"正在获取网络时间,请稍后(可能会出现无响应，请耐心等待)....");
             Handler handler = new Handler(){
                 @SuppressLint("HandlerLeak")
                 @Override
@@ -92,9 +89,9 @@ public class otherToolsActivity extends AppCompatActivity {
                         try {
                             String fulltime=year+"-"+formatStr(month)+"-"+formatStr(day)+" "+formatStr(hrs)+":"+formatStr(min)+":"+formatStr(sec);
                             CMD cmd = new CMD("setprop persist.sys.timezone Asia/Shanghai && date \"" + fulltime + "\";");
-                            showInfoMsg(context,"信息","执行完毕: \r\n"+cmd.getResultCode()+" -----> "+cmd.getResult()+" \r\n\r\n "+str);
+                            du.showInfoMsg(context,"信息","执行完毕: \r\n"+cmd.getResultCode()+" -----> "+cmd.getResult()+" \r\n\r\n "+str);
                         }catch (Exception e){
-                            showInfoMsg(context,"错误","执行出错: \r\n"+e.toString()+" \r\n\r\n "+str);
+                            du.showInfoMsg(context,"错误","执行出错: \r\n"+e.toString()+" \r\n\r\n "+str);
 
                         }
                     }
@@ -122,7 +119,7 @@ public class otherToolsActivity extends AppCompatActivity {
 
         otabt2.setOnClickListener((v)->{
             if(Build.VERSION.SDK_INT >=Build.VERSION_CODES.R){
-                ProgressDialog show = showMyDialog(context,"正在开启墓碑模式,请稍后(可能会出现无响应，请耐心等待)....");
+                ProgressDialog show = du.showMyDialog(context,"正在开启墓碑模式,请稍后(可能会出现无响应，请耐心等待)....");
                 Handler handler = new Handler(){
                     @Override
                     public void handleMessage(@NonNull Message msg) {
@@ -151,7 +148,7 @@ public class otherToolsActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         String cmdstr = "device_config put activity_manager_native_boot use_freezer true";
-                        CMD cmd = getCMD(cmdstr,isRoot);
+                        CMD cmd = su.getCMD(cmdstr,isRoot);
                         Message msg = new Message();
                         msg.obj=cmd.getResultCode()+" -----> "+cmd.getResult();
                         msg.what=0;
@@ -159,7 +156,7 @@ public class otherToolsActivity extends AppCompatActivity {
                     }
                 }).start();
             }else{
-                showInfoMsg(context,"错误","当前安卓版本不支持该功能,需要安卓11以上才行!");
+                du.showInfoMsg(context,"错误","当前安卓版本不支持该功能,需要安卓11以上才行!");
             }
         });
 
@@ -204,7 +201,7 @@ public class otherToolsActivity extends AppCompatActivity {
             if(sdkInt >=Build.VERSION_CODES.R){
                 cmdstr = "settings put global captive_portal_mode 0 && settings put global captive_portal_https_url https://www.google.cn/generate_204";
             }
-            showCMDInfoMSG(context,false,cmdstr,isRoot,"正在去掉信号栏X标记,请稍后(可能会出现无响应，请耐心等待)....","运行结束.");
+            du.showCMDInfoMSG(context,false,cmdstr,isRoot,"正在去掉信号栏X标记,请稍后(可能会出现无响应，请耐心等待)....","运行结束.");
 
         });
 
@@ -280,7 +277,7 @@ public class otherToolsActivity extends AppCompatActivity {
     private void checkBt(Button button , boolean needRoot , boolean needADB){
         if(isRoot|| (needRoot == false && needADB == false)){
             button.setBackgroundColor(Color.rgb(17,179,98));
-        }else if(needADB && isADB()){
+        }else if(needADB && su.isADB()){
             button.setBackgroundColor(Color.rgb(176,198,39));
         }else{
             button.setBackgroundColor(Color.rgb(223,90,90));
@@ -323,7 +320,7 @@ public class otherToolsActivity extends AppCompatActivity {
     }
 
     private void showPriCmdInfoMsg(Context context,DialogInterface dialogInterface ,String cmdstr, String msg){
-        ProgressDialog show = showMyDialog(context,msg);
+        ProgressDialog show = du.showMyDialog(context,msg);
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
@@ -331,15 +328,15 @@ public class otherToolsActivity extends AppCompatActivity {
                 if(msg.what == 0){
                     show.dismiss();
                     dialogInterface.cancel();
-                    showInfoMsg(context,"信息","已执行结束!\r\n\r\n"+msg.obj.toString());
+                    du.showInfoMsg(context,"信息","已执行结束!\r\n\r\n"+msg.obj.toString());
                 }
             }
         };
         new Thread(new Runnable() {
             @Override
             public void run() {
-                CMD cmd = getCMD(cmdstr,isRoot);
-                sendHandlerMSG(handler,0,cmd.getResultCode()+" -----> "+cmd.getResult());
+                CMD cmd = su.getCMD(cmdstr,isRoot);
+                du.sendHandlerMSG(handler,0,cmd.getResultCode()+" -----> "+cmd.getResult());
             }
         }).start();
     }
@@ -369,7 +366,7 @@ public class otherToolsActivity extends AppCompatActivity {
         int itemId = item.getItemId();
         switch (itemId){
             case 0:
-                showInfoMsg(this,"帮助信息","该页面是小工具的合集(部分功能需要重启设备才能生效)，有需要root或adb授权的功能,红色是必须root权限才能使用的,黄色则是可以通过adb权限使用。\r\n" +
+                du.showInfoMsg(this,"帮助信息","该页面是小工具的合集(部分功能需要重启设备才能生效)，有需要root或adb授权的功能,红色是必须root权限才能使用的,黄色则是可以通过adb权限使用。\r\n" +
                         "1.同步北京时间: 会联网获取当前北京时间,并且设置本地系统的时间为获取到的时间.\r\n" +
                         "2.开启墓碑模式: 会通过命令调用系统自带的墓碑模式(cached-apps-freezer),需要重启设备生效.\r\n" +
                         "3.调整刷新率: 会通过命令调用系统自带的刷新率参数进行设置,用户可以使用固定的几个选项来调整设备的刷新率.\r\n" +

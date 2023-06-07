@@ -1,6 +1,8 @@
 package org.fqaosp.utils;
 
+
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
@@ -8,6 +10,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
 import androidx.documentfile.provider.DocumentFile;
@@ -33,23 +36,49 @@ import java.util.Objects;
 
 public class fileTools {
 
-    private final static String TAG = "fileTools";
+    private String TAG = "fileTools";
+
+    public fileTools(){
+
+    }
 
 
-    //获取文件大小，带单位
-    public static String getSize(double size, int count) {
-        String size_type[] = {"b", "KB", "MB", "GB", "TB", "PB"};
-        if (size > 1024) {
-            double d_size = size / 1024;
-            count = count + 1;
-            return getSize(d_size, count);
+    public void checkTools(Context context,boolean isADB){
+        fileTools ft = new fileTools();
+        String filesDir = ft.getMyHomeFilesPath(context);
+        if(isADB){
+            filesDir=context.getExternalFilesDir(null).toString();
         }
-        String sizestr = String.format("%.2f", size) + size_type[count];
-        return sizestr;
+        String scriptName = "fqtools.sh";
+        String barfile = filesDir+"/"+scriptName;
+        String busyFile = filesDir+"/busybox";
+        String extractScriptFile = filesDir+"/extract.sh";
+        File busyfile = new File(busyFile);
+        File barFile = new File(barfile);
+        File extractScriptFilef = new File(extractScriptFile);
+        if(!busyfile.exists()){
+            if(Build.CPU_ABI.equals("arm64-v8a")){
+                ft.extactAssetsFile(context,"busybox",busyFile);
+            }else if(Build.CPU_ABI.equals("armeabi-v7a") || Build.CPU_ABI2.equals("armeabi")){
+                ft.extactAssetsFile(context,"busybox_arm",busyFile);
+            }
+        }
+        if(!barFile.exists()){
+            ft.extactAssetsFile(context,scriptName,barfile);
+        }
+
+        if(!extractScriptFilef.exists()) {
+            ft.extactAssetsFile(context, "extract.sh", extractScriptFile);
+        }
+
+        if(isADB){
+            CMD cmd = new shellUtils().getCMD("cp " + busyFile + " /data/local/tmp/", false);
+        }
+
     }
 
     //读取文件
-    public static String readFileToPath(String filePath) {
+    public String readFileToPath(String filePath) {
         StringBuilder stringBuilder = new StringBuilder();
         try {
             BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath));
@@ -65,7 +94,7 @@ public class fileTools {
     }
 
     //读取文件
-    public static Boolean writeDataToPath(String data, String filePath, Boolean isApp) {
+    public Boolean writeDataToPath(String data, String filePath, Boolean isApp) {
         try {
             FileWriter writer = null;
             if (isApp) {
@@ -83,7 +112,7 @@ public class fileTools {
     }
 
     //释放资源文件
-    public static void extactAssetsFile(Context context, String fileName, String toPath) {
+    public void extactAssetsFile(Context context, String fileName, String toPath) {
         AssetManager assets = context.getAssets();
         InputStream stream = null;
         try {
@@ -96,7 +125,7 @@ public class fileTools {
     }
 
     //根据路径获得document文件
-    public static DocumentFile getDoucmentFileOnData(Context context, String path) {
+    public DocumentFile getDoucmentFileOnData(Context context, String path) {
         if (path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);
         }
@@ -105,7 +134,7 @@ public class fileTools {
     }
 
     //根据路径获得document文件
-    public static DocumentFile getDoucmentFileOnObb(Context context, String path) {
+    public DocumentFile getDoucmentFileOnObb(Context context, String path) {
         if (path.endsWith("/")) {
             path = path.substring(0, path.length() - 1);
         }
@@ -114,7 +143,7 @@ public class fileTools {
     }
 
     //调用系统文件选择器选择一个文件夹
-    public static void execDirSelect(Context context, Activity activity, String msg) {
+    public void execDirSelect(Context context, Activity activity, String msg) {
         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
         if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
             execFileSelect(context,activity,msg,43);
@@ -124,11 +153,11 @@ public class fileTools {
         }
     }
 
-    public static void execFileSelect(Context context, Activity activity, String msg){
+    public void execFileSelect(Context context, Activity activity, String msg){
         execFileSelect(context,activity,msg,0);
     }
     //调用系统文件选择器
-    public static void execFileSelect(Context context, Activity activity, String msg,int code) {
+    public void execFileSelect(Context context, Activity activity, String msg,int code) {
         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
@@ -139,19 +168,19 @@ public class fileTools {
     }
 
     //获取在内部存储的自家路径
-    public static String getMyStorageHomePath(Context context) {
+    public String getMyStorageHomePath(Context context) {
         return context.getExternalFilesDir(null).getParent();
     }
 
     //获取自家data的files路径
-    public static String getMyHomeFilesPath(Context context) {
+    public String getMyHomeFilesPath(Context context) {
         return context.getFilesDir().toString();
     }
 
     //选择文件时，判断是否为理想类型
-    public static void selectFile(Context context, String storage, Uri uri, ArrayList<String> list, ArrayList<Boolean> checkboxs, String msg, String equalstr) {
+    public void selectFile(Context context, String storage, Uri uri, ArrayList<String> list, ArrayList<Boolean> checkboxs, String msg, String equalstr) {
         String filePath = storage + "/" + uri.getPath().replaceAll("/document/primary:", "");
-        String fileName = getPathByLastNameType(filePath);
+        String fileName = new stringUtils().getPathByLastNameType(filePath);
         if (fileName.equals(equalstr)) {
 //            filePath=filePath.substring(0,filePath.lastIndexOf("/"));
             list.add(filePath);
@@ -161,23 +190,13 @@ public class fileTools {
         }
     }
 
-    //获取文件结尾类型
-    public static String getPathByLastNameType(String filePath) {
-        return filePath.substring(filePath.lastIndexOf(".") + 1);
-    }
-
-    //获取路径文件名称
-    public static String getPathByLastName(String filePath) {
-        return filePath.substring(filePath.lastIndexOf("/") + 1);
-    }
-
     //复制文件
-    public static Boolean copyFile(InputStream is, String outfile) {
+    public Boolean copyFile(InputStream is, String outfile) {
         return copyFile(is, new File(outfile));
     }
 
     //复制文件
-    public static Boolean copyFile(InputStream is, File outFile) {
+    public Boolean copyFile(InputStream is, File outFile) {
         try {
             return copyFile(is, new FileOutputStream(outFile));
         } catch (FileNotFoundException e) {
@@ -187,7 +206,7 @@ public class fileTools {
     }
 
     //复制文件
-    public static Boolean copyFile(InputStream is, OutputStream os) {
+    public Boolean copyFile(InputStream is, OutputStream os) {
         try {
             byte[] buffer = new byte[1024];
             int length;
@@ -204,12 +223,12 @@ public class fileTools {
     }
 
     //复制文件
-    public static Boolean copyFile(String srcFile, String outFile) {
+    public Boolean copyFile(String srcFile, String outFile) {
         return copyFile(new File(srcFile), new File(outFile));
     }
 
     //复制文件
-    public static Boolean copyFile(File srcFile, File outFile) {
+    public Boolean copyFile(File srcFile, File outFile) {
         try {
             return copyFile(new FileInputStream(srcFile), outFile);
         } catch (FileNotFoundException e) {
@@ -219,7 +238,7 @@ public class fileTools {
     }
 
     //判断docum是否等于name,如果有等于的，就直接返回匹配项
-    public static DocumentFile checkDocum(DocumentFile dd2, String name) {
+    public DocumentFile checkDocum(DocumentFile dd2, String name) {
         for (DocumentFile documentFile : dd2.listFiles()) {
             if (documentFile.getName().equals(name)) {
                 return documentFile;
@@ -229,7 +248,7 @@ public class fileTools {
     }
 
     // 目标SD路径：/storage/emulated/0
-    public static String getSDPath(Context context){
+    public String getSDPath(Context context){
         String sdPath = "";
         boolean isSDExist = Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED); //判断SD卡是否存在
         if (isSDExist) {
@@ -248,7 +267,7 @@ public class fileTools {
         return sdPath;
     }
 
-    public static void getAllFileByEndName(String filePath, String file_end_name,List<File> files){
+    public void getAllFileByEndName(String filePath, String file_end_name,List<File> files){
 
         //获取指定目录下的所有文件或者目录的File数组
         File[] fileArray = new File(filePath).listFiles();
@@ -268,6 +287,48 @@ public class fileTools {
                 }
             }
         }
+    }
+
+    //获取文件大小，带单位
+    public String getSize(double size, int count) {
+        String size_type[] = {"b", "KB", "MB", "GB", "TB", "PB"};
+        if (size > 1024) {
+            double d_size = size / 1024;
+            count = count + 1;
+            return getSize(d_size, count);
+        }
+        String sizestr = String.format("%.2f", size) + size_type[count];
+        return sizestr;
+    }
+
+    public String uriToFilePath(Uri uri, Context context) {
+        File file = null;
+        if(uri == null) return file.toString();
+        //android10以上转换
+        if (uri.getScheme().equals(ContentResolver.SCHEME_FILE)) {
+            file = new File(uri.getPath());
+        } else if (uri.getScheme().equals(ContentResolver.SCHEME_CONTENT)) {
+            //把文件复制到沙盒目录
+            ContentResolver contentResolver = context.getContentResolver();
+            String displayName = System.currentTimeMillis()+ Math.round((Math.random() + 1) * 1000)
+                    +"."+ MimeTypeMap.getSingleton().getExtensionFromMimeType(contentResolver.getType(uri));
+
+//            注释掉的方法可以获取到原文件的文件名，但是比较耗时
+//            Cursor cursor = contentResolver.query(uri, null, null, null, null);
+//            if (cursor.moveToFirst()) {
+//                String displayName = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));}
+
+            try {
+                InputStream is = contentResolver.openInputStream(uri);
+                File cache = new File(context.getExternalCacheDir().getAbsolutePath(), displayName);
+                FileOutputStream fos = new FileOutputStream(cache);
+                file = cache;
+                copyFile(is, fos);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return file.toString();
     }
 
 }

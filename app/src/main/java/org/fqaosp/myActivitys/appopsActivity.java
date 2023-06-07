@@ -8,25 +8,7 @@ package org.fqaosp.myActivitys;
  *
  * */
 
-import static org.fqaosp.utils.fileTools.execDirSelect;
-import static org.fqaosp.utils.fileTools.execFileSelect;
-import static org.fqaosp.utils.fileTools.getAllFileByEndName;
-import static org.fqaosp.utils.fileTools.getPathByLastName;
-import static org.fqaosp.utils.fileTools.getPathByLastNameType;
-import static org.fqaosp.utils.fileTools.getSDPath;
-import static org.fqaosp.utils.multiFunc.checkTools;
-import static org.fqaosp.utils.multiFunc.clearList;
-import static org.fqaosp.utils.multiFunc.getMyUID;
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showCMDInfoMSG;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
-import static org.fqaosp.utils.multiFunc.showPKGS;
-import static org.fqaosp.utils.multiFunc.showProcessBarDialogByCMD;
-
 import android.app.Activity;
-import android.app.ProgressDialog;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -35,8 +17,6 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.provider.Settings;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -57,17 +37,19 @@ import androidx.core.content.ContextCompat;
 
 import org.fqaosp.R;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.utils.dialogUtils;
 import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeWP;
-import org.fqaosp.utils.multiFunc;
+import org.fqaosp.utils.packageUtils;
 import org.fqaosp.utils.permissionRequest;
+import org.fqaosp.utils.stringUtils;
+import org.fqaosp.utils.textUtils;
+import org.fqaosp.utils.userUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
 public class appopsActivity extends AppCompatActivity {
 
@@ -91,6 +73,11 @@ public class appopsActivity extends AppCompatActivity {
     private Context con;
     private Activity activity;
 
+    private packageUtils pkgutils = new packageUtils();
+    private dialogUtils du = new dialogUtils();
+    private userUtils uu = new userUtils();
+    private fileTools ft = new fileTools();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -112,7 +99,7 @@ public class appopsActivity extends AppCompatActivity {
          * */
         uid = intent.getStringExtra("uid");
         if(uid == null){
-            uid=getMyUID();
+            uid=uu.getMyUID();
         }
         initBt();
     }
@@ -126,7 +113,7 @@ public class appopsActivity extends AppCompatActivity {
         apopsasp2 = findViewById(R.id.apopsasp2);
         apopsasp1.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_permis));
         apopsasp2.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, apops_opt));
-        checkTools(this,isADB);
+        ft.checkTools(con,isADB);
         clickedBt();
     }
 
@@ -168,9 +155,7 @@ public class appopsActivity extends AppCompatActivity {
 
 
         appopsab2.setOnClickListener((v)->{
-            String searchStr = apopsaet1.getText().toString();
-            pkginfos = multiFunc.indexOfPKGS(activity,searchStr,pkginfos,checkboxs,0);
-            showPKGS(con,lv1,pkginfos,checkboxs);
+            du.showIndexOfPKGSDialog(con,activity,lv1,apopsaet1,pkginfos,null,checkboxs);
         });
 
 
@@ -202,7 +187,7 @@ public class appopsActivity extends AppCompatActivity {
 
         //应用appops权限更改
         apopsab6.setOnClickListener((v)->{
-            showProcessBarDialogByCMD(con,addPkginfos(),"正在应用更改中...","当前应用更改的应用: ",2,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
+            du.showProcessBarDialogByCMD(con,addPkginfos(),"正在应用更改中...","当前应用更改的应用: ",2,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
         });
 
     }
@@ -268,22 +253,22 @@ public class appopsActivity extends AppCompatActivity {
 
     //安装本地文件
     private void installLocalPKG(int install_mode){
-        showProcessBarDialogByCMD(con,addPkginfos(),"正在安装本地应用中...","当前正在安装: ",3,install_mode ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
+        du.showProcessBarDialogByCMD(con,addPkginfos(),"正在安装本地应用中...","当前正在安装: ",3,install_mode ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
     }
 
     //卸载应用
     private void uninstallPKG(){
-        showProcessBarDialogByCMD(con,addPkginfos(),"正在卸载应用...","当前正在卸载: ",1,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
+        du.showProcessBarDialogByCMD(con,addPkginfos(),"正在卸载应用...","当前正在卸载: ",1,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
     }
 
     //修改应用状态,禁用或者启用
     private void changePKGState(){
-        showProcessBarDialogByCMD(con,addPkginfos(),"正在修改应用状态中...","当前正在更改的应用: ",0,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
+        du.showProcessBarDialogByCMD(con,addPkginfos(),"正在修改应用状态中...","当前正在更改的应用: ",0,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
     }
 
     //提取apk文件
     private void extractPKGFileToLocal(){
-        showProcessBarDialogByCMD(con,addPkginfos(),"正在提取应用中...","当前正在提取的应用: ",11,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
+        du.showProcessBarDialogByCMD(con,addPkginfos(),"正在提取应用中...","当前正在提取的应用: ",11,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
     }
 
     //导出包名列表到本地
@@ -314,10 +299,10 @@ public class appopsActivity extends AppCompatActivity {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(fileTools.writeDataToPath(sb.toString(),outFile,isApp)){
-                showInfoMsg(appopsActivity.this,"提示","保存在: " + outFile);
+            if(ft.writeDataToPath(sb.toString(),outFile,isApp)){
+                du.showInfoMsg(appopsActivity.this,"提示","保存在: " + outFile);
             }else{
-                showInfoMsg(appopsActivity.this,"错误","导出包名列表失败");
+                du.showInfoMsg(appopsActivity.this,"错误","导出包名列表失败");
             }
         }
     }
@@ -327,9 +312,7 @@ public class appopsActivity extends AppCompatActivity {
         switch(item.getItemId()){
             case 0:
                 PKGINFO pkginfo = pkginfos.get(nowItemIndex);
-                ClipboardManager cpm = (ClipboardManager) appopsActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
-                cpm.setText(pkginfo.toString());
-                Toast.makeText(appopsActivity.this, "已复制", Toast.LENGTH_SHORT).show();
+                new textUtils().copyText(con,pkginfo.toString());
                 break;
             case 1:
                 intoSYSApp(nowItemIndex);
@@ -381,43 +364,14 @@ public class appopsActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-    private void getPKGByUID(String cmdstr){
-        ProgressDialog show = showMyDialog(con,"正在检索用户 "+uid+" 下安装的应用,请稍后(可能会出现无响应，请耐心等待)....");
-        Handler handler = new Handler(){
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                if(msg.what==0){
-                    showPKGS(con,lv1,pkginfos,checkboxs);
-                    show.dismiss();
-                }
-            }
-        };
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                pkginfos.clear();
-                checkboxs.clear();
-                multiFunc.getPKGByUID(con,cmdstr,pkginfos,null,checkboxs,isRoot);
-                Collections.sort(pkginfos, new Comparator<PKGINFO>() {
-                    @Override
-                    public int compare(PKGINFO pkginfo, PKGINFO t1) {
-                        return pkginfo.getAppname().compareTo(t1.getAppname());
-                    }
-                });
-                sendHandlerMSG(handler,0);
-            }
-        }).start();
-
-    }
-
     private void selectLocalFile(){
         permissionRequest.getExternalStorageManager(appopsActivity.this);
-        execFileSelect(appopsActivity.this,appopsActivity.this,"请选择要安装的文件");
+        ft.execFileSelect(appopsActivity.this,appopsActivity.this,"请选择要安装的文件");
     }
 
     private void selectLocalDir(){
         permissionRequest.getExternalStorageManager(appopsActivity.this);
-        execDirSelect(appopsActivity.this,appopsActivity.this,"请选择要安装的文件");
+        ft.execDirSelect(appopsActivity.this,appopsActivity.this,"请选择要安装的文件");
     }
 
     @Override
@@ -427,48 +381,40 @@ public class appopsActivity extends AppCompatActivity {
         makeWP wp = new makeWP();
         switch (itemId){
             case 0:
-                if(uid == null || uid.equals(getMyUID())){
-                    multiFunc.queryEnablePKGS(this,pkginfos,checkboxs,0);
-                    showPKGS(con,lv1,pkginfos,checkboxs);
+                if(uid == null || uid.equals(uu.getMyUID())){
+                    du.queryPKGProcessDialog(con,activity,lv1,pkginfos,checkboxs,0,null,isRoot);
                 }else{
-                    getPKGByUID(wp.getPkgByUIDCMD(uid));
+                    du.queryPKGProcessDialog(con,activity,lv1,pkginfos,checkboxs,null,wp.getPkgByUIDCMD(uid),isRoot);
                 }
                 break;
             case 1:
-                if(uid == null || uid.equals(getMyUID())){
-                    multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
-                    showPKGS(con,lv1,pkginfos,checkboxs);
+                if(uid == null || uid.equals(uu.getMyUID())){
+                    du.queryPKGProcessDialog(con,activity,lv1,pkginfos,checkboxs,1,null,isRoot);
                 }else{
-                    getPKGByUID(wp.getPkgByUIDCMD(uid));
+                    du.queryPKGProcessDialog(con,activity,lv1,pkginfos,checkboxs,null,wp.getPkgByUIDCMD(uid),isRoot);
                 }
-
                 break;
             case 2:
-                if(uid == null|| uid.equals(getMyUID())){
-                    multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
-                    showPKGS(con,lv1,pkginfos,checkboxs);
+                if(uid == null || uid.equals(uu.getMyUID())){
+                    du.queryPKGProcessDialog(con,activity,lv1,pkginfos,checkboxs,2,null,isRoot);
                 }else{
-                    getPKGByUID(wp.getUserPkgByUIDCMD(uid));
+                    du.queryPKGProcessDialog(con,activity,lv1,pkginfos,checkboxs,null,wp.getUserPkgByUIDCMD(uid),isRoot);
                 }
-
                 break;
             case 3:
-                if(uid == null|| uid.equals(getMyUID())){
-                    multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
-                    showPKGS(con,lv1,pkginfos,checkboxs);
+                if(uid == null || uid.equals(uu.getMyUID())){
+                    du.queryPKGProcessDialog(con,activity,lv1,pkginfos,checkboxs,3,null,isRoot);
                 }else{
-                    getPKGByUID(wp.getUserPkgByUIDCMD(uid));
+                    du.queryPKGProcessDialog(con,activity,lv1,pkginfos,checkboxs,null,wp.getUserPkgByUIDCMD(uid),isRoot);
                 }
                 break;
             case 4:
                 isDisable=true;
-                if(uid == null || uid.equals(getMyUID())){
-                    multiFunc.queryDisablePKGS(this,pkginfos,checkboxs,0);
-                    showPKGS(con,lv1,pkginfos,checkboxs);
+                if(uid == null || uid.equals(uu.getMyUID())){
+                    du.queryPKGProcessDialog(con,activity,lv1,pkginfos,checkboxs,4,null,isRoot);
                 }else{
-                    getPKGByUID(wp.getDisablePkgByUIDCMD(uid));
+                    du.queryPKGProcessDialog(con,activity,lv1,pkginfos,checkboxs,null,wp.getDisablePkgByUIDCMD(uid),isRoot);
                 }
-
                 break;
             case 5:
                 selectLocalFile();
@@ -477,7 +423,7 @@ public class appopsActivity extends AppCompatActivity {
                 selectLocalDir();
                 break;
             case 7:
-                showInfoMsg(this,"帮助信息","该页面是用于应用管理的,支持应用提取、详情跳转、卸载应用、导出应用信息、安装apks/apk应用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                du.showInfoMsg(this,"帮助信息","该页面是用于应用管理的,支持应用提取、详情跳转、卸载应用、导出应用信息、安装apks/apk应用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
                         "1.搜索框，支持中英文搜索，无大小写限制.\r\n" +
                         "2.长按应用列表会出现相关操作菜单，根据自己需求点击即可。支持批量操作。\r\n" +
                         "3.右上角\"选择本地应用\",支持选择apks进行安装，传统apk文件可以加载出图标。\r\n" +
@@ -500,13 +446,15 @@ public class appopsActivity extends AppCompatActivity {
     private void addPKGINFO(PackageManager pm,Uri uri , String storage){
         String path = uri.getPath();
         String filePath = null;
-        if(path.indexOf("document/primary") != -1){
+        if(path.indexOf("document/msf") != -1){
+            filePath = ft.uriToFilePath(uri,con);
+        }else if(path.indexOf("document/primary") != -1){
             filePath = storage + "/" +uri.getPath().replaceAll("/document/primary:","");
         }else{
             filePath=uri.getPath();
         }
-
-        String nameType = getPathByLastNameType(filePath);
+        stringUtils su = new stringUtils();
+        String nameType = su.getPathByLastNameType(filePath);
         if(nameType.equals("apk")){
             PackageInfo packageInfo = pm.getPackageArchiveInfo(filePath, PackageManager.GET_PERMISSIONS);
             ApplicationInfo applicationInfo = packageInfo.applicationInfo;
@@ -514,7 +462,7 @@ public class appopsActivity extends AppCompatActivity {
             checkboxs.add(false);
         }else if(nameType.equals("apks")){
             Drawable d = ContextCompat.getDrawable(appopsActivity.this,R.drawable.ic_launcher_foreground);
-            pkginfos.add(new PKGINFO(getPathByLastName(filePath),"未知",filePath,"未知","未知", d,new File(filePath).length()));
+            pkginfos.add(new PKGINFO(su.getPathByLastName(filePath),"未知",filePath,"未知","未知", d,new File(filePath).length()));
             checkboxs.add(false);
         }
     }
@@ -522,10 +470,10 @@ public class appopsActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        String storage = getSDPath(con);
+        String storage = ft.getSDPath(con);
+        PackageManager pm = getPackageManager();
         if(requestCode == 0){
-            clearList(pkginfos,checkboxs);
-            PackageManager pm = getPackageManager();
+            pkgutils.clearList(pkginfos,checkboxs);
             if(data != null && data.getClipData() != null) {//有选择多个文件
                 int count = data.getClipData().getItemCount();
                 for(int i =0;i<count;i++){
@@ -536,7 +484,7 @@ public class appopsActivity extends AppCompatActivity {
                 Uri uri = data.getData();
                 addPKGINFO(pm,uri,storage);
             }
-            showPKGS(con,lv1,pkginfos,checkboxs);
+            du.showPKGS(con,lv1,pkginfos,checkboxs);
         }
 
         //安装文件夹里面所有apk文件
@@ -554,24 +502,26 @@ public class appopsActivity extends AppCompatActivity {
                     filePath = new File(path).getParent();
                 }
                 if(isRoot || isADB){
-                    clearList(pkginfos,checkboxs);
+                    pkgutils.clearList(pkginfos,checkboxs);
                     try {
-                        PackageManager pm = getPackageManager();
                         ArrayList<File> files = new ArrayList<>();
-                        getAllFileByEndName(filePath,".apk",files);
+                        ft.getAllFileByEndName(filePath,".apk",files);
                         for (File listFile : files) {
                             addPKGINFO(pm,Uri.fromFile(listFile),storage);
                         }
-                        showPKGS(con,lv1,pkginfos,checkboxs);
-                        showProcessBarDialogByCMD(con,pkginfos,"正在安装 [ "+filePath+" ] 文件夹里面的内容...","当前正在安装: ",4,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
+                        du.showPKGS(con,lv1,pkginfos,checkboxs);
+                        du.showProcessBarDialogByCMD(con,pkginfos,"正在安装 [ "+filePath+" ] 文件夹里面的内容...","当前正在安装: ",4,null ,isDisable,isRoot,uid,null,apops_opt_index,apops_permis_index);
                     }catch (Exception e){
-                        String filesDir = getExternalCacheDir().getAbsolutePath();
+                        String filesDir = getExternalFilesDir(null).toString();
+                        if(isRoot){
+                            filesDir = ft.getMyHomeFilesPath(con);
+                        }
                         String barfile = filesDir+"/"+script_name;
                         String cmdstr = "sh "+barfile+" inapkonpath " + filePath;
-                        showCMDInfoMSG(con,true,cmdstr,isRoot,"正在安装"+filePath+"路径下的应用,请稍后(可能会出现无响应，请耐心等待)....","安装"+filePath+"路径下的应用结束.");
+                        du.showCMDInfoMSG(con,true,cmdstr,isRoot,"正在安装"+filePath+"路径下的应用,请稍后(可能会出现无响应，请耐心等待)....","安装"+filePath+"路径下的应用结束.");
                     }
                 }else{
-                    showInfoMsg(con,"错误","该功能需要adb或者root权限才能使用!!!!");
+                    du.showInfoMsg(con,"错误","该功能需要adb或者root权限才能使用!!!!");
                 }
             }
         }

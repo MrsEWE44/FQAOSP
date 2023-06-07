@@ -1,7 +1,5 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -26,8 +24,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
 import org.fqaosp.sql.killAppDB;
+import org.fqaosp.utils.dialogUtils;
 import org.fqaosp.utils.fuckActivity;
-import org.fqaosp.utils.multiFunc;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -50,6 +48,8 @@ public class sqliteManageActivity extends AppCompatActivity {
     private killAppDB killAppdb = new killAppDB(sqliteManageActivity.this, "killApp.db", null, 1);
 
     private int mode;
+
+    private dialogUtils du = new dialogUtils();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -80,7 +80,7 @@ public class sqliteManageActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 ExecutorService cacheThreadPool = Executors.newFixedThreadPool(4);
-                ProgressDialog show = showMyDialog(sqliteManageActivity.this,"正在更新数据库,请稍后(可能会出现无响应，请耐心等待)....");
+                ProgressDialog show = du.showMyDialog(sqliteManageActivity.this,"正在更新数据库,请稍后(可能会出现无响应，请耐心等待)....");
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -234,7 +234,7 @@ public class sqliteManageActivity extends AppCompatActivity {
                 mode=0;
                 break;
             case 1:
-                showInfoMsg(this,"帮助信息","该页面是用于编辑该软件产生的数据库文件。\r\n" +
+                du.showInfoMsg(this,"帮助信息","该页面是用于编辑该软件产生的数据库文件。\r\n" +
                         "1.killapp（后台管理），即保存的默认后台进程信息.\r\n" +
                         "2.应用分身，即保存的应用分身信息。\r\n"
                 );

@@ -1,23 +1,7 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.fileTools.getPathByLastName;
-import static org.fqaosp.utils.fileTools.getSDPath;
-import static org.fqaosp.utils.multiFunc.checkTools;
-import static org.fqaosp.utils.multiFunc.getMyUID;
-import static org.fqaosp.utils.multiFunc.getPKGByUID;
-import static org.fqaosp.utils.multiFunc.getUID;
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showLowMemDialog;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
-import static org.fqaosp.utils.multiFunc.showProcessBarDialogByCMD;
-import static org.fqaosp.utils.multiFunc.showUsers;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -48,10 +32,14 @@ import androidx.viewpager.widget.ViewPager;
 import org.fqaosp.R;
 import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.utils.dialogUtils;
+import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.makeWP;
-import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.permissionRequest;
+import org.fqaosp.utils.stringUtils;
+import org.fqaosp.utils.textUtils;
+import org.fqaosp.utils.userUtils;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -95,6 +83,9 @@ public class backupRestoreActivity extends AppCompatActivity {
 
     private boolean isRoot = false,isADB=false;
 
+    private fileTools ft = new fileTools();
+    private dialogUtils du = new dialogUtils();
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -109,11 +100,11 @@ public class backupRestoreActivity extends AppCompatActivity {
         if(isRoot){
             userList = getLocalExistsUsers();
             initViews();
-            checkTools(context,isADB);
+            ft.checkTools(context,isADB);
         }else{
-            showInfoMsg(context,"提示","本功能需要root才能正常使用");
+            du.showInfoMsg(context,"提示","本功能需要root才能正常使用");
         }
-        showLowMemDialog(context);
+        du.showLowMemDialog(context);
     }
 
     private void initViews(){
@@ -159,8 +150,8 @@ public class backupRestoreActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 String searchStr = braet1.getText().toString();
-                list=multiFunc.indexOfLIST(list,checkboxs,searchStr);
-                showPKGS(restoreLv1);
+                list=new textUtils().indexOfLIST(list,checkboxs,searchStr);
+                du.showUsers(context,restoreLv1,list,checkboxs);
             }
         });
 
@@ -168,7 +159,7 @@ public class backupRestoreActivity extends AppCompatActivity {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
                 String str = list.get(i);
-                copyText(str);
+                new textUtils().copyText(context,str);
                 return false;
             }
         });
@@ -202,30 +193,20 @@ public class backupRestoreActivity extends AppCompatActivity {
         brasearchb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String searchStr = braet1.getText().toString();
-                pkginfos = multiFunc.indexOfPKGS(backupRestoreActivity.this,searchStr,pkginfos,checkboxs,0);
-                showPKGS(backupLv1);
+                du.showIndexOfPKGSDialog(context,backupRestoreActivity.this,backupLv1,braet1,pkginfos,null,checkboxs);
             }
         });
 
         backupLv1.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                PKGINFO pkginfo = pkginfos.get(i);
-                String str = pkginfo.toString();
-                copyText(str);
+                new textUtils().copyText(context,pkginfos.get(i).toString());
                 return false;
             }
         });
 
         clickedSpinnerBt(brasp,brasp2,brasp3);
 
-    }
-
-    private void copyText(String str){
-        ClipboardManager cpm = (ClipboardManager) backupRestoreActivity.this.getSystemService(Context.CLIPBOARD_SERVICE);
-        cpm.setText(str);
-        Toast.makeText(backupRestoreActivity.this, "已复制", Toast.LENGTH_SHORT).show();
     }
 
     private  void initSpinnerBt(Spinner brasp,Spinner brasp2,Spinner brasp3){
@@ -239,7 +220,7 @@ public class backupRestoreActivity extends AppCompatActivity {
         ArrayList<String> userList = new ArrayList<>();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             for (UserHandle userHandle : um.getUserProfiles()) {
-                userList.add(getUID(userHandle.toString()));
+                userList.add(new userUtils().getUID(userHandle.toString()));
             }
         }
         return userList;
@@ -323,15 +304,15 @@ public class backupRestoreActivity extends AppCompatActivity {
     private void listLocalBackupFiles(){
         file_end=fileEnd2[fileEnd_index];
         permissionRequest.getExternalStorageManager(context);
-        String s = getSDPath(context);
+        String s = ft.getSDPath(context);
         String localBackupDir= s+"/backup_app";
         File file = new File(localBackupDir);
-        ProgressDialog show = showMyDialog(context,"正在扫描本地备份文件,请稍后(可能会出现无响应，请耐心等待)....");
+        ProgressDialog show = du.showMyDialog(context,"正在扫描本地备份文件,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
-                    showPKGS(restoreLv1);
+                    du.showUsers(context,restoreLv1,list,checkboxs);
                     show.dismiss();
                 }
             }
@@ -350,7 +331,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                         }
                     }
                 }
-                sendHandlerMSG(handler,0);
+                du.sendHandlerMSG(handler,0);
             }
         }).start();
     }
@@ -359,14 +340,6 @@ public class backupRestoreActivity extends AppCompatActivity {
         list.clear();
         pkginfos.clear();
         checkboxs.clear();
-    }
-
-    private void showPKGS(ListView listView){
-        if(isBackup){
-            multiFunc.showPKGS(context,listView,pkginfos,checkboxs);
-        }else{
-            showUsers(context,listView,list,checkboxs);
-        }
     }
 
     @Override
@@ -402,7 +375,9 @@ public class backupRestoreActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
         makeWP mw = new makeWP();
+        Activity activity = this;
         clearlist();
+        userUtils uu = new userUtils();
         uid = userList!=null && userList.size()>0?userList.get(uid_index):"0";
         viewPageIndex=brmavp.getCurrentItem();
         switch (viewPageIndex) {
@@ -410,47 +385,42 @@ public class backupRestoreActivity extends AppCompatActivity {
                 isBackup=true;
                 switch (itemId){
                     case 0:
-                        if(uid.equals(getMyUID())){
-                            multiFunc.queryEnablePKGS(this,pkginfos,checkboxs,0);
+                        if(uid == null || uid.equals(uu.getMyUID())){
+                            du.queryPKGProcessDialog(context,activity,backupLv1,pkginfos,checkboxs,0,null,isRoot);
                         }else{
-                            getPKGByUID(context,mw.getPkgByUIDCMD(uid),pkginfos,null,checkboxs,isRoot);
+                            du.queryPKGProcessDialog(context,activity,backupLv1,pkginfos,checkboxs,null,mw.getPkgByUIDCMD(uid),isRoot);
                         }
-                        showPKGS(backupLv1);
                         break;
                     case 1:
-                        if(uid.equals(getMyUID())){
-                            multiFunc.queryPKGS(this,pkginfos,checkboxs,0);
+                        if(uid == null || uid.equals(uu.getMyUID())){
+                            du.queryPKGProcessDialog(context,activity,backupLv1,pkginfos,checkboxs,1,null,isRoot);
                         }else{
-                            getPKGByUID(context,mw.getPkgByUIDCMD(uid),pkginfos,null,checkboxs,isRoot);
+                            du.queryPKGProcessDialog(context,activity,backupLv1,pkginfos,checkboxs,null,mw.getPkgByUIDCMD(uid),isRoot);
                         }
-                        showPKGS(backupLv1);
                         break;
                     case 2:
-                        if(uid.equals(getMyUID())){
-                            multiFunc.queryUserEnablePKGS(this,pkginfos,checkboxs,0);
+                        if(uid == null || uid.equals(uu.getMyUID())){
+                            du.queryPKGProcessDialog(context,activity,backupLv1,pkginfos,checkboxs,2,null,isRoot);
                         }else{
-                            getPKGByUID(context,mw.getUserPkgByUIDCMD(uid),pkginfos,null,checkboxs,isRoot);
+                            du.queryPKGProcessDialog(context,activity,backupLv1,pkginfos,checkboxs,null,mw.getUserPkgByUIDCMD(uid),isRoot);
                         }
-                        showPKGS(backupLv1);
                         break;
                     case 3:
-                        if(uid.equals(getMyUID())){
-                            multiFunc.queryUserPKGS(this,pkginfos,checkboxs,0);
+                        if(uid == null || uid.equals(uu.getMyUID())){
+                            du.queryPKGProcessDialog(context,activity,backupLv1,pkginfos,checkboxs,3,null,isRoot);
                         }else{
-                            getPKGByUID(context,mw.getUserPkgByUIDCMD(uid),pkginfos,null,checkboxs,isRoot);
+                            du.queryPKGProcessDialog(context,activity,backupLv1,pkginfos,checkboxs,null,mw.getUserPkgByUIDCMD(uid),isRoot);
                         }
-                        showPKGS(backupLv1);
                         break;
                     case 4:
-                        if(uid.equals(getMyUID())){
-                            multiFunc.queryDisablePKGS(this,pkginfos,checkboxs,0);
+                        if(uid == null || uid.equals(uu.getMyUID())){
+                            du.queryPKGProcessDialog(context,activity,backupLv1,pkginfos,checkboxs,4,null,isRoot);
                         }else{
-                            getPKGByUID(context,mw.getDisablePkgByUIDCMD(uid),pkginfos,null,checkboxs,isRoot);
+                            du.queryPKGProcessDialog(context,activity,backupLv1,pkginfos,checkboxs,null,mw.getDisablePkgByUIDCMD(uid),isRoot);
                         }
-                        showPKGS(backupLv1);
                         break;
                     case 5:
-                        showInfoMsg(this,"帮助信息","该页面是用于应用备份与恢复的,支持应用备份与恢复，可选择只备份数据、安装包、安装包+数据，也支持仅恢复数据、安装包、安装包+数据，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                        du.showInfoMsg(context,"帮助信息","该页面是用于应用备份与恢复的,支持应用备份与恢复，可选择只备份数据、安装包、安装包+数据，也支持仅恢复数据、安装包、安装包+数据，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
                                 "1.右上角三个点，显示本地备份文件，会列出默认目录下所有通过该软件备份的应用压缩包。\r\n" +
                                 "2.备份，备份应用.\r\n" +
                                 "3.全选，不管有没有勾选，都会操作当前列表所有应用.\r\n" +
@@ -458,7 +428,8 @@ public class backupRestoreActivity extends AppCompatActivity {
                                 "5.未勾选,仅操作勾选以外的应用.\r\n" +
                                 "6.{数据+安装包，数据，安装包}，默认是全部，即备份该应用所有数据包括安装包。\r\n" +
                                 "7.{tgz,tbz,txz,tbr},默认是采用tar.gz压缩格式，这个速度最快，tbr模式速度最慢但解压速度接近gzip，txz速度仅次于tbr但是压缩率最高.\r\n" +
-                                "8.搜索框支持中英文搜索，不区分大小写.\r\n"
+                                "8.搜索框支持中英文搜索，不区分大小写.\r\n" +
+                                "9.用户id,可以选择当前设备上存在的用户id，并使用备份或者恢复功能.\r\n"
                         );
                         break;
                     case 6:
@@ -474,7 +445,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                         listLocalBackupFiles();
                         break;
                     case 1:
-                        showInfoMsg(this,"帮助信息","\r\n" +
+                        du.showInfoMsg(this,"帮助信息","\r\n" +
                                 "1.右上角三个点，显示本地备份文件，会列出默认目录下所有通过该软件备份的应用压缩包。\r\n" +
                                 "2.恢复，恢复应用.\r\n" +
                                 "3.全选，不管有没有勾选，都会操作当前列表所有应用.\r\n" +
@@ -482,7 +453,8 @@ public class backupRestoreActivity extends AppCompatActivity {
                                 "5.未勾选,仅操作勾选以外的应用.\r\n" +
                                 "6.{数据+安装包，数据，安装包}，默认是全部，即备份该应用所有数据包括安装包。\r\n" +
                                 "7.{tgz,tbz,txz,tbr},默认是采用tar.gz压缩格式，这个速度最快，tbr模式速度最慢但解压速度接近gzip，txz速度仅次于tbr但是压缩率最高.\r\n" +
-                                "8.搜索框支持中英文搜索，不区分大小写.\r\n"
+                                "8.搜索框支持中英文搜索，不区分大小写.\r\n" +
+                                "9.用户id,可以选择当前设备上存在的用户id，并使用备份或者恢复功能.\r\n"
                         );
                         break;
                     case 2:
@@ -524,7 +496,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                     }
                 }
 
-                showProcessBarDialogByCMD(context,ppplist,"正在备份用户 [ "+uid+" ] 的应用中...","当前正在备份的应用: ",6,
+                du.showProcessBarDialogByCMD(context,ppplist,"正在备份用户 [ "+uid+" ] 的应用中...","当前正在备份的应用: ",6,
                         null ,null,b[0],uid==null?"0":uid,null,null,
                         null, new String[]{mode2, fileEnd});
 
@@ -533,7 +505,7 @@ public class backupRestoreActivity extends AppCompatActivity {
             }
 
         }else{
-            showImportToolsDialog(context,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用",b[0],b[1]);
+            du.showImportToolsDialog(context,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用",b[0],b[1]);
         }
     }
 
@@ -542,7 +514,7 @@ public class backupRestoreActivity extends AppCompatActivity {
             ArrayList<PKGINFO> plist = new ArrayList<>();
             if(b[2] == false){
                 for (int i = 0; i < checkboxs.size(); i++) {
-                    String s = getPathByLastName(list.get(i));
+                    String s = new stringUtils().getPathByLastName(list.get(i));
                     if(b[5] && !checkboxs.get(i)){
                         plist.add(new PKGINFO(getRestoryFileName(s,fileEnd2),null,null,null,null,null,new File(list.get(i)).length()));
                     }
@@ -556,7 +528,7 @@ public class backupRestoreActivity extends AppCompatActivity {
                     }
                 }
 
-                showProcessBarDialogByCMD(context,plist,"正在恢复用户 [ " +uid+" ] 的应用中...","当前正在恢复的应用: ",7,
+                du.showProcessBarDialogByCMD(context,plist,"正在恢复用户 [ " +uid+" ] 的应用中...","当前正在恢复的应用: ",7,
                         null ,null,b[0],uid,null,null,
                         null, new String[]{mode2 ,fileEnd});
 
@@ -564,12 +536,12 @@ public class backupRestoreActivity extends AppCompatActivity {
                 Toast.makeText(context, "请切换回恢复模式", Toast.LENGTH_SHORT).show();
             }
         }else{
-            showImportToolsDialog(context,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用",b[0],b[1]);
+            du.showImportToolsDialog(context,"当前功能选项缺失相关组件,需要补全组件才能正常使用","当前功能选项缺失相关组件,需要补全组件才能正常使用",b[0],b[1]);
         }
     }
 
     private boolean checkUsrTool(){
-        String filesDir =getMyHomeFilesPath(this);
+        String filesDir =ft.getMyHomeFilesPath(this);
         String usr=filesDir+"/usr";
         File file = new File(usr);
         return file.exists();

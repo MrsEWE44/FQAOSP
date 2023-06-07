@@ -1,16 +1,5 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
-import static org.fqaosp.utils.multiFunc.checkTools;
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showLowMemDialog;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
-import static org.fqaosp.utils.multiFunc.showProcessBarDialogByCMD;
-import static org.fqaosp.utils.multiFunc.showUsers;
-
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
@@ -37,6 +26,8 @@ import org.fqaosp.R;
 import org.fqaosp.adapter.FILESHARINGVIEWPAGERAdapter;
 import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.utils.CMD;
+import org.fqaosp.utils.dialogUtils;
+import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
 
 import java.io.File;
@@ -64,6 +55,9 @@ public class romToolsActivity extends AppCompatActivity {
 
     private Context context ;
 
+    private fileTools ft = new fileTools();
+    private dialogUtils du = new dialogUtils();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -75,16 +69,16 @@ public class romToolsActivity extends AppCompatActivity {
         isRoot = intent.getBooleanExtra("isRoot",false);
         isADB = intent.getBooleanExtra("isADB",false);
         if(Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT){
-            showInfoMsg(this,"警告","该功能暂时不支持安卓4.x设备.");
+            du.showInfoMsg(this,"警告","该功能暂时不支持安卓4.x设备.");
         }else{
-            String filesDir =getMyHomeFilesPath(this);
-            checkTools(this,isADB);
+            String filesDir =ft.getMyHomeFilesPath(this);
+            ft.checkTools(this,isADB);
             String fqtoolsusr = filesDir+"/usr";
             File fqtoolsusrdir = new File(fqtoolsusr);
             if(!fqtoolsusrdir.exists()){
-                showImportToolsDialog(this,"fqtools核心无法获取，请退出重试或者重新安装app","fqtools工具包没有找到,功能使用将受到限制或者异常,要继续使用吗？",isRoot,isADB);
+                du.showImportToolsDialog(this,"fqtools核心无法获取，请退出重试或者重新安装app","fqtools工具包没有找到,功能使用将受到限制或者异常,要继续使用吗？",isRoot,isADB);
             }
-            showLowMemDialog(context);
+            du.showLowMemDialog(context);
             initViews();
         }
     }
@@ -137,12 +131,12 @@ public class romToolsActivity extends AppCompatActivity {
         });
 
         rrab1.setOnClickListener((v)->{
-            ProgressDialog show = showMyDialog(context,"正在扫描本地IMG镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
+            ProgressDialog show = du.showMyDialog(context,"正在扫描本地IMG镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
             Handler handler = new Handler(){
                 @Override
                 public void handleMessage(@NonNull Message msg) {
                     if(msg.what==0){
-                        showUsers(context,rralv1,list,checkboxs);
+                        du.showUsers(context,rralv1,list,checkboxs);
                         show.dismiss();
                     }
                 }
@@ -151,7 +145,7 @@ public class romToolsActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     findROMImgs();
-                    sendHandlerMSG(handler,0);
+                    du.sendHandlerMSG(handler,0);
                 }
             }).start();
 
@@ -182,12 +176,12 @@ public class romToolsActivity extends AppCompatActivity {
         });
 
         ruab1.setOnClickListener((v)->{
-            ProgressDialog show = showMyDialog(context,"正在扫描本地ROM镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
+            ProgressDialog show = du.showMyDialog(context,"正在扫描本地ROM镜像文件,请稍后(可能会出现无响应，请耐心等待)....");
             Handler handler = new Handler(){
                 @Override
                 public void handleMessage(@NonNull Message msg) {
                     if(msg.what==0){
-                        showUsers(context,rualv1,list,checkboxs);
+                        du.showUsers(context,rualv1,list,checkboxs);
                         show.dismiss();
                     }
                 }
@@ -196,7 +190,7 @@ public class romToolsActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     findROMImgs();
-                    sendHandlerMSG(handler,0);
+                    du.sendHandlerMSG(handler,0);
                 }
             }).start();
 
@@ -217,7 +211,7 @@ public class romToolsActivity extends AppCompatActivity {
             }
         }
 
-        showProcessBarDialogByCMD(context,pplist,"正在"+(mode ==0?"解":"打")+"包ROM","当前正在"+(mode ==0?"解":"打")+"包ROM: ",9,
+        du.showProcessBarDialogByCMD(context,pplist,"正在"+(mode ==0?"解":"打")+"包ROM","当前正在"+(mode ==0?"解":"打")+"包ROM: ",9,
                 null ,false,false,"0",mode,null,
                 null, new String[]{getRomType() ,mode==0?getRomPartType():String.valueOf((rom_img_index2_ver+1))});
     }
@@ -273,7 +267,7 @@ public class romToolsActivity extends AppCompatActivity {
         list.clear();
         checkboxs.clear();
         String storage = Environment.getExternalStorageDirectory().toString();
-        String myStorageHomePath = getMyStorageHomePath(this);
+        String myStorageHomePath = ft.getMyStorageHomePath(this);
         String cmdstr = "find " + storage + "/ -path \""+storage+"/Android\" -prune -o -name  '"+rom_imgs[rom_img_index]+"' -print";
         String cmdstr2 = "find " + storage + "/ -path \""+storage+"/Android\" -prune -o -name  '*.img' -print && find "+myStorageHomePath+"/ -name '*.img' -print";
         CMD cmd = new CMD(viewPageIndex==0? cmdstr:cmdstr2,false);
@@ -296,13 +290,13 @@ public class romToolsActivity extends AppCompatActivity {
         switch (itemId){
             case 0:
                 if(viewPageIndex == 0){
-                    showInfoMsg(this,"帮助信息","该功能主要是用于rom包解包，支持payload.bin/system.new.dat/system.new.dat.br/super.img等文件解包。\r\n" +
+                    du.showInfoMsg(this,"帮助信息","该功能主要是用于rom包解包，支持payload.bin/system.new.dat/system.new.dat.br/super.img等文件解包。\r\n" +
                             "1.选择左边下拉栏的文件类型,然后点击右边的扫描选项，即会开始扫描本地匹配的选项。\r\n" +
                             "2.搜索出结果后，会在下面显示，勾选左边选框再点击解包，就会开始解包当前镜像类型，支持批量解包.\r\n" +
                             "3.注意，一定要保持rom包本来的结构再使用这个工具，目前还处于测试阶段，后续会逐渐完善.\r\n"
                     );
                 }else{
-                    showInfoMsg(this,"帮助信息","该功能主要是用于本地IMG打包，暂时支持system.new.dat/system.new.dat.br文件格式打包。\r\n" +
+                    du.showInfoMsg(this,"帮助信息","该功能主要是用于本地IMG打包，暂时支持system.new.dat/system.new.dat.br文件格式打包。\r\n" +
                             "1.点击右边的扫描即会开始扫描本地所有匹配的img文件,并在下面列出所有匹配项。\r\n" +
                             "2.左边下拉框的内容是目前支持的打包格式,例如:system.new.dat，默认会将勾选中的目标img文件打包成system.new.dat类型，下面的br类型同理.\r\n" +
                             "3.右边下拉框的内容是设置打包的安卓版本,支持安卓5.x至安卓7以上.\r\n" +

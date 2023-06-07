@@ -1,16 +1,5 @@
 package org.fqaosp;
 
-import static org.fqaosp.utils.fileTools.getMyStorageHomePath;
-import static org.fqaosp.utils.multiFunc.checkTools;
-import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
-import static org.fqaosp.utils.multiFunc.isADB;
-import static org.fqaosp.utils.multiFunc.isSuEnable;
-import static org.fqaosp.utils.multiFunc.jump;
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showImportToolsDialog;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
-
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -58,9 +47,13 @@ import org.fqaosp.myActivitys.otherToolsActivity;
 import org.fqaosp.myActivitys.romToolsActivity;
 import org.fqaosp.myActivitys.sqliteManageActivity;
 import org.fqaosp.myActivitys.workProfileMenuActivity;
+import org.fqaosp.utils.dialogUtils;
+import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
+import org.fqaosp.utils.multiFunc;
 import org.fqaosp.utils.netUtils;
 import org.fqaosp.utils.permissionRequest;
+import org.fqaosp.utils.shellUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,6 +75,9 @@ public class MainActivity extends Activity {
     private boolean haveupdate=false;
     private boolean isRoot , isADB;
 
+    private dialogUtils du = new dialogUtils();
+    private fileTools ft = new fileTools();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,18 +87,19 @@ public class MainActivity extends Activity {
         try{
             getExternalCacheDir().mkdirs();
         }catch (Exception e){
-            showInfoMsg(this,"警告","你当前的系统是存在问题，不能够读写Android/data/"+getPackageName()+"/cache路径.\r\n错误内容: " + e.toString());
+            du.showInfoMsg(this,"警告","你当前的系统是存在问题，不能够读写Android/data/"+getPackageName()+"/cache路径.\r\n错误内容: " + e.toString());
         }
-        isRoot=isSuEnable();
+        shellUtils su = new shellUtils();
+        isRoot=su.isSuEnable();
         if(!isRoot){
             try{
-                isADB=isADB();
+                isADB=su.isADB();
             }catch (Exception e){
-                showImportToolsDialog(this,"当前没有root跟adb权限授权哦!软件使用将会受限","当前没有root跟adb权限授权哦!软件使用将会受限",isRoot,isADB);
+                du.showImportToolsDialog(this,"当前没有root跟adb权限授权哦!软件使用将会受限","当前没有root跟adb权限授权哦!软件使用将会受限",isRoot,isADB);
             }
         }
         initBut();
-        checkTools(this,isADB);
+        ft.checkTools(this,isADB);
     }
 
     private  void initBut(){
@@ -163,11 +160,12 @@ public class MainActivity extends Activity {
                         "FQAOSP(中文全称为: 法可油安卓),它是一个适用于类原生的搞机工具，同样也适用于国内定制ui系统，它拥有很多常用的功能，例如：后台清理、一键卸载与安装应用、安装某个指定的文件夹里面所有apk文件、将手机本地的pe镜像文件挂载给电脑重装系统、反/回编译软件、提取或者刷入系统分区文件、软件的备份与恢复、应用分身、共享手机本地文件给局域网内所有用户、搜索自己设定范围内的文件等等，未来还会加入更多功能，现在部分功能已经可以不再需要root，已经对接了adb授权，但是仍有部分需要root才能使用，后续会逐渐完善与adb权限的对接。\r\n" +
                         "如果有新功能或建议，可以在GitHub提issue！\r\n" +
                         "\n" +
-                        "当前最新版本为: V1.3.6\n" +
-                        "1.修复应用组件搜索闪退问题.\n" +
-                        "2.增加弹窗进度显示.\n" +
-                        "3.增加备份/恢复应用分身功能.\n" +
-                        "4.修改版本号为V1.3.6.");
+                        "当前最新版本为: # V1.3.6t\n" +
+                        "1.修复安卓13应用恢复后，打开无法读取之前备份的数据，或者闪退问题.\n" +
+                        "2.优化弹窗进度显示.\n" +
+                        "3.优化获取组件、应用列表、扫描本地文件的界面交互.\n" +
+                        "4.优化应用内存占用.\n" +
+                        "5.修改版本号为V1.3.6t.");
                 amupdate.setVisibility(View.VISIBLE);
                 dl.closeDrawer(Gravity.LEFT);
             }
@@ -176,7 +174,7 @@ public class MainActivity extends Activity {
         lv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
             public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
-                jump(activity, menuEntities.get(i).getClassz(),isRoot,isADB);
+                new multiFunc().jump(activity, menuEntities.get(i).getClassz(),isRoot,isADB);
                 return false;
             }
         });
@@ -195,7 +193,7 @@ public class MainActivity extends Activity {
                     Log.e("PKGMFQAOSP",e.toString());
                 }
 
-                String myStorageHomePath = getMyStorageHomePath(activity);
+                String myStorageHomePath = ft.getMyStorageHomePath(activity);
                 String outDir = myStorageHomePath + "/cache/update";
                 File file = new File(outDir);
                 if(!file.exists()){
@@ -203,7 +201,7 @@ public class MainActivity extends Activity {
                 }
                 //如果有更新，那就直接获取更新日志与下载连接
                 if(haveupdate){
-                    ProgressDialog show = showMyDialog(MainActivity.this,"正在获取更新内容,请稍后(可能会出现无响应，请耐心等待)....");
+                    ProgressDialog show = du.showMyDialog(MainActivity.this,"正在获取更新内容,请稍后(可能会出现无响应，请耐心等待)....");
                     AlertDialog.Builder ab = new AlertDialog.Builder(context);
                     View view2 = activity.getLayoutInflater().inflate(R.layout.update_activity, null);
                     TextView updateatv1 = view2.findViewById(R.id.updateatv1);
@@ -238,7 +236,7 @@ public class MainActivity extends Activity {
                                 Log.e("UPFQAOSP",e.toString());
                             }
 
-                            sendHandlerMSG(handler,0);
+                            du.sendHandlerMSG(handler,0);
                         }
                     }).start();
                     updateabt1.setOnClickListener(new View.OnClickListener() {
@@ -331,8 +329,8 @@ public class MainActivity extends Activity {
                     ab.setNegativeButton("检测", new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialogInterface, int i) {
-                            ProgressDialog show = showMyDialog(MainActivity.this,"正在检查更新,请稍后(可能会出现无响应，请耐心等待)....");
-                            Handler handler = dismissDialogHandler(0,show);
+                            ProgressDialog show = du.showMyDialog(MainActivity.this,"正在检查更新,请稍后(可能会出现无响应，请耐心等待)....");
+                            Handler handler = du.dismissDialogHandler(0,show);
                             new Thread(new Runnable() {
                                 @Override
                                 public void run() {
@@ -354,7 +352,7 @@ public class MainActivity extends Activity {
                                         Log.e("MFQAOSP",e.toString());
                                     }
                                     dialogInterface.dismiss();
-                                    sendHandlerMSG(handler,0);
+                                    du.sendHandlerMSG(handler,0);
                                 }
                             }).start();
                         }

@@ -1,9 +1,5 @@
 package org.fqaosp.utils;
 
-import static org.fqaosp.utils.multiFunc.checkBoxs;
-import static org.fqaosp.utils.multiFunc.getMyUID;
-import static org.fqaosp.utils.multiFunc.queryUSERS;
-
 import android.app.Activity;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -44,7 +40,7 @@ public class makeWP {
     }
 
     public String getCreateWPCMD(){
-        return "pm create-user --profileOf "+getMyUID()+" --managed fqaosop";
+        return "pm create-user --profileOf "+new userUtils().getMyUID()+" --managed fqaosop";
     }
 
     //创建一个工作空间
@@ -111,7 +107,7 @@ public class makeWP {
                 for (String s : cmd.getResult().split("\n")) {
                     PackageManager pm = activity.getPackageManager();
                     PackageInfo packageInfo = pm.getPackageInfo(s, 0);
-                    checkBoxs(pkginfos,checkboxs,packageInfo,pm);
+                    new packageUtils().checkBoxs(pkginfos,checkboxs,packageInfo,pm);
                 }
             }
         } catch (PackageManager.NameNotFoundException e) {

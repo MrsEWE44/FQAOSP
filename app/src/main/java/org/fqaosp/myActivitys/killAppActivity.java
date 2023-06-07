@@ -1,14 +1,5 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.fileTools.extactAssetsFile;
-import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.multiFunc.getCMD;
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
-import static org.fqaosp.utils.multiFunc.showPKGS;
-import static org.fqaosp.utils.multiFunc.showProcessBarDialogByCMD;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ClipboardManager;
@@ -36,15 +27,16 @@ import org.fqaosp.R;
 import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.sql.killAppDB;
 import org.fqaosp.utils.CMD;
+import org.fqaosp.utils.dialogUtils;
+import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
-import org.fqaosp.utils.multiFunc;
+import org.fqaosp.utils.processUtils;
+import org.fqaosp.utils.shellUtils;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class killAppActivity extends AppCompatActivity {
 
@@ -59,6 +51,8 @@ public class killAppActivity extends AppCompatActivity {
     private boolean isRoot=false,isADB=false;
 
     private Context context;
+
+    private dialogUtils du = new dialogUtils();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -173,7 +167,7 @@ public class killAppActivity extends AppCompatActivity {
                         }
                     }
                 }
-                showProcessBarDialogByCMD(context,list,"终止后台进程中...","正在终止: ",5,null ,null,isRoot,"0",null,null,null);
+                du.showProcessBarDialogByCMD(context,list,"终止后台进程中...","正在终止: ",5,null ,null,isRoot,"0",null,null,null);
 
             }
         });
@@ -182,9 +176,7 @@ public class killAppActivity extends AppCompatActivity {
         kaasearchb.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String searchStr = kaaet1.getText().toString();
-                pkginfos = multiFunc.indexOfPKGS(killAppActivity.this,searchStr,pkginfos,checkboxs,0);
-                showPKGS(context,lv1,pkginfos,checkboxs);
+                du.showIndexOfPKGSDialog(context,killAppActivity.this,lv1,kaaet1,pkginfos,null,checkboxs);
             }
         });
 
@@ -204,18 +196,19 @@ public class killAppActivity extends AppCompatActivity {
 
     //获取在后台运行的程序
     private void getRunning(int ss){
-        ProgressDialog show = showMyDialog(context,"正在获取后台应用,请稍后(可能会出现无响应，请耐心等待)....");
+        ProgressDialog show = du.showMyDialog(context,"正在获取后台应用,请稍后(可能会出现无响应，请耐心等待)....");
         Handler handler = new Handler(){
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if(msg.what==0){
-                    showPKGS(context,lv1,pkginfos,checkboxs);
+                    du.showPKGS(context,lv1,pkginfos,checkboxs);
                     show.dismiss();
                 }
             }
         };
         Activity activity = this;
         Context context =this;
+        processUtils pu = new processUtils();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -223,33 +216,21 @@ public class killAppActivity extends AppCompatActivity {
                 pkginfos.clear();
                 //这里是设置了一个阈值参数，如果等于1，就默认列出用户安装的应用，否则就列出所有应用
                 if(ss == 1){
-                    multiFunc.queryRunningPKGS(activity,pkginfos,checkboxs,0);
+                    pu.queryRunningPKGS(activity,pkginfos,checkboxs,0);
                 }else{
-                    multiFunc.queryAllRunningPKGS(activity,pkginfos,checkboxs,0);
+                    pu.queryAllRunningPKGS(activity,pkginfos,checkboxs,0);
                 }
                 checkRunningPKG(context);
-                sendHandlerMSG(handler,0);
+                du.sendHandlerMSG(handler,0);
             }
         }).start();
 
     }
 
-    /**
-     * <p>
-     * 进行字符串正则提取
-     */
-    public String getByString(String src, String regex, String re_str) {
-        StringBuilder tmp = new StringBuilder();
-        Matcher m = Pattern.compile(regex).matcher(src);
-        while (m.find()) {
-            tmp.append(m.group().replaceAll(re_str, "") + "\n");
-        }
-        return tmp.toString();
-    }
-
     private void checkRunningPKG(Context context){
+        fileTools ft = new fileTools();
         String datab="/data/local/tmp/busybox";
-        String filesPath = getMyHomeFilesPath(context);
+        String filesPath = ft.getMyHomeFilesPath(context);
         if(isADB){
             filesPath=context.getExternalCacheDir().toString();
         }
@@ -260,14 +241,15 @@ public class killAppActivity extends AppCompatActivity {
             filesP.mkdirs();
         }
         if(!busyF.exists()){
-            extactAssetsFile(this,"busybox",busyboxFile);
+            ft.extactAssetsFile(this,"busybox",busyboxFile);
         }
         String cmdstr="chmod 755 "+busyboxFile +" && "+busyboxFile+" ps";
+        shellUtils su = new shellUtils();
         if(isADB){
-            CMD cmd = getCMD( "cp " + busyboxFile + " "+datab+" && chmod 777 "+datab, false);
+            CMD cmd = su.getCMD( "cp " + busyboxFile + " "+datab+" && chmod 777 "+datab, false);
             cmdstr="chmod 777 "+datab+" && "+datab+" ps";
         }
-        CMD cmd = getCMD(cmdstr,isRoot);
+        CMD cmd = su.getCMD(cmdstr,isRoot);
         if(cmd.getResultCode() == 0){
             String[] split = cmd.getResult().split("\n");
             for (int i = 0; i < pkginfos.size(); i++) {
@@ -283,7 +265,7 @@ public class killAppActivity extends AppCompatActivity {
                             pid=pid.replaceAll("\\s+","");
                             if(!pid.isEmpty()){
                                 String proc_pid_status_cmd="cat /proc/"+pid+"/status |grep 'VmRSS' | "+(isADB?datab:busyboxFile)+" awk '{print $2}'";
-                                CMD cmd1 = getCMD(proc_pid_status_cmd,isRoot);
+                                CMD cmd1 = su.getCMD(proc_pid_status_cmd,isRoot);
                                 if(cmd1.getResultCode() == 0){
                                     pkginfos.get(i).setFilesize((Long.parseLong(cmd1.getResult().trim())*1024));
                                 }
@@ -297,10 +279,10 @@ public class killAppActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(Menu.NONE,0,0,"显示所有进程");
-        menu.add(Menu.NONE,1,1,"显示用户进程(用户安装的应用)");
-        menu.add(Menu.NONE,2,2,"帮助");
-        menu.add(Menu.NONE,3,3,"退出");
+        menu.add(Menu.NONE, 0, 0, "显示所有进程");
+        menu.add(Menu.NONE, 1, 1, "显示用户进程(用户安装的应用)");
+        menu.add(Menu.NONE, 2, 2, "帮助");
+        menu.add(Menu.NONE, 3, 3, "退出");
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -310,14 +292,12 @@ public class killAppActivity extends AppCompatActivity {
         switch (itemId){
             case 0 :
                 getRunning(2);
-                showPKGS(context,lv1,pkginfos,checkboxs);
                 break;
             case 1:
                 getRunning(1);
-                showPKGS(context,lv1,pkginfos,checkboxs);
                 break;
             case 2:
-                showInfoMsg(this,"帮助信息","该页面是用于后台进程终止，需要root授权。\r\n" +
+                du.showInfoMsg(this,"帮助信息","该页面是用于后台进程终止，需要root授权。\r\n" +
                         "1.右上角三个点，显示所有进程，会列出所有在后台运行的程序，包括系统应用进程。\r\n" +
                         "2.右上角三个点，显示用户进程，会列出所有在后台运行的程序，不包括系统应用进程，仅列出用户安装的。\r\n" +
                         "3.全选，不管有没有勾选，都会操作当前列表所有应用.\r\n" +

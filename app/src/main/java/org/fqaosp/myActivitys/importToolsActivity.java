@@ -1,17 +1,5 @@
 package org.fqaosp.myActivitys;
 
-import static org.fqaosp.utils.fileTools.copyFile;
-import static org.fqaosp.utils.fileTools.execFileSelect;
-import static org.fqaosp.utils.fileTools.extactAssetsFile;
-import static org.fqaosp.utils.fileTools.getMyHomeFilesPath;
-import static org.fqaosp.utils.fileTools.selectFile;
-import static org.fqaosp.utils.fileTools.writeDataToPath;
-import static org.fqaosp.utils.multiFunc.checkTools;
-import static org.fqaosp.utils.multiFunc.dismissDialogHandler;
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showMyDialog;
-
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
@@ -29,6 +17,8 @@ import androidx.annotation.Nullable;
 
 import org.fqaosp.R;
 import org.fqaosp.utils.CMD;
+import org.fqaosp.utils.dialogUtils;
+import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
 import org.fqaosp.utils.netUtils;
 import org.fqaosp.utils.permissionRequest;
@@ -44,6 +34,8 @@ public class importToolsActivity extends Activity {
     private Button itab1 , itab2,itab5,itab6,itab7,itab8;
     private String fqfile="fqtools.tar.xz";
     private boolean isRoot=false , isADB=false;
+    private fileTools ft = new fileTools();
+    private dialogUtils du = new dialogUtils();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -74,14 +66,14 @@ public class importToolsActivity extends Activity {
         Activity activity = this;
 
         itab1.setOnClickListener((v)->{
-            String filesPath = getMyHomeFilesPath(importToolsActivity.this);
+            String filesPath = ft.getMyHomeFilesPath(importToolsActivity.this);
             String fqtoolsd = filesPath+"/fqtools";
             File file = new File(fqtoolsd);
             itatv1.setText(file.exists() ? "fqtools已经安装" : "fqtools未安装,请前往 https://github.com/MrsEWE44/FQAOSP/releases 下载最新工具包");
         });
 
         itab2.setOnClickListener((v)->{
-            execFileSelect(importToolsActivity.this,importToolsActivity.this,"请选择 "+fqfile+" 文件");
+            ft.execFileSelect(importToolsActivity.this,importToolsActivity.this,"请选择 "+fqfile+" 文件");
         });
 
 
@@ -94,18 +86,18 @@ public class importToolsActivity extends Activity {
             String myStorageHomeCachePath = context.getExternalCacheDir().toString();
             String filepath = myStorageHomeCachePath+"/"+new File(url).getName();
             new netUtils().downloadFileOnUrlByAndorid(context,filepath,url);
-            showInfoMsg(context,"提示","等待下载完成之后,就可以手动安装了!下载完成后的文件,会保存在 "+filepath);
+            du.showInfoMsg(context,"提示","等待下载完成之后,就可以手动安装了!下载完成后的文件,会保存在 "+filepath);
         });
 
         itab7.setOnClickListener((v)->{
-            String filesPath = getMyHomeFilesPath(context);
+            String filesPath = ft.getMyHomeFilesPath(context);
             String s = Environment.getExternalStorageDirectory().toString();
             String makeFQTOOLSScriptFile = filesPath+"/makefqtools.sh";
             File makeFQTOOLSScriptF = new File(makeFQTOOLSScriptFile);
             if(makeFQTOOLSScriptF.exists()){
                 makeFQTOOLSScriptF.delete();
             }
-            extactAssetsFile(this,"makefqtools.sh",makeFQTOOLSScriptFile);
+            ft.extactAssetsFile(this,"makefqtools.sh",makeFQTOOLSScriptFile);
             String outPath = s+"/Download/FQTOOLS";
             String fqtools = filesPath+"/makefqtools.sh";
             String outFile = outPath+"/makefqtools.sh";
@@ -113,7 +105,7 @@ public class importToolsActivity extends Activity {
             if(!file.exists()){
                 file.mkdirs();
             }
-            if(copyFile(fqtools,outFile)){
+            if(ft.copyFile(fqtools,outFile)){
                 File file1 = new File(outFile);
                 if(file1.exists()){
                     itatv1.setText("你只需要复制下面这段命令在termux里边执行,随后等待出现\"make fqtools ok !\" 字样，然后选择本地安装即可.工具包在Downloads文件夹里面.\r\nsh storage/downloads/FQTOOLS/makefqtools.sh\r\n");
@@ -124,7 +116,7 @@ public class importToolsActivity extends Activity {
         });
 
         itab8.setOnClickListener((v)->{
-            String filesPath = getMyHomeFilesPath(context);
+            String filesPath = ft.getMyHomeFilesPath(context);
             String s = Environment.getExternalStorageDirectory().toString();
             String scriptName="startADBServiceByFQAOSP.sh";
             String makeFQTOOLSScriptFile = filesPath+"/"+scriptName;
@@ -134,7 +126,7 @@ public class importToolsActivity extends Activity {
                 String cmdstr ="killall FQAOSPADB\n" +
                         "exec app_process -Djava.class.path=\""+context.getApplicationInfo().sourceDir+"\" /system/bin --nice-name=FQAOSPADB org.fqaosp.service.startADBService >>/dev/null 2>&1 &\n" +
                         "echo \"run fqtools ok\"";
-                writeDataToPath(cmdstr,makeFQTOOLSScriptFile,false);
+                ft.writeDataToPath(cmdstr,makeFQTOOLSScriptFile,false);
             }
             String outPath = s+"/Download/FQTOOLS";
             String fqtools = filesPath+"/"+scriptName;
@@ -143,7 +135,7 @@ public class importToolsActivity extends Activity {
             if(!file.exists()){
                 file.mkdirs();
             }
-            if(copyFile(fqtools,outFile)){
+            if(ft.copyFile(fqtools,outFile)){
                 File file1 = new File(outFile);
                 if(file1.exists()){
                     itatv1.setText("你只需要复制下面这段命令在adb shell里边执行,随后等待出现\"run fqtools ok !\" 字样即可.\r\nsh "+outFile+"\r\n");
@@ -162,20 +154,20 @@ public class importToolsActivity extends Activity {
 
     private void extractFile(String s, String fff){
         String myuid = Process.myUid()+"";
-        String filesPath = getMyHomeFilesPath(importToolsActivity.this);
+        String filesPath = ft.getMyHomeFilesPath(importToolsActivity.this);
         new File(filesPath).mkdirs();
         String outName = filesPath+"/"+fff;
-        if(copyFile(s,outName)){
-            checkTools(this,isADB);
+        if(ft.copyFile(s,outName)){
+            ft.checkTools(this,isADB);
             String cmd = "cd " + filesPath + " && sh extract.sh && cd ../ && chown -R "+myuid+":"+myuid+ " files/";
-            ProgressDialog show = showMyDialog(importToolsActivity.this,"正在安装插件,请稍后(可能会出现无响应，请耐心等待)....");
-            Handler handler = dismissDialogHandler(0,show);
+            ProgressDialog show = du.showMyDialog(importToolsActivity.this,"正在安装插件,请稍后(可能会出现无响应，请耐心等待)....");
+            Handler handler = du.dismissDialogHandler(0,show);
             new Thread(new Runnable() {
                 @Override
                 public void run() {
                     CMD cmd1 = new CMD(cmd,false);
                     Log.d("importTools",cmd1.getResultCode() +" -- " + cmd1.getResult());
-                    sendHandlerMSG(handler,0);
+                    du.sendHandlerMSG(handler,0);
                 }
             }).start();
         }else{
@@ -193,11 +185,11 @@ public class importToolsActivity extends Activity {
                 int count = data.getClipData().getItemCount();
                 for(int i =0;i<count;i++){
                     Uri uri = data.getClipData().getItemAt(i).getUri();
-                    selectFile(importToolsActivity.this,storage,uri,list,checkboxs,"请选择正确的 "+fqfile+" 文件","xz");
+                    ft.selectFile(importToolsActivity.this,storage,uri,list,checkboxs,"请选择正确的 "+fqfile+" 文件","xz");
                 }
             } else if(data.getData() != null) {//只有一个文件咯
                 Uri uri = data.getData();
-                selectFile(importToolsActivity.this,storage,uri,list,checkboxs,"请选择正确的 "+fqfile+" 文件","xz");
+                ft.selectFile(importToolsActivity.this,storage,uri,list,checkboxs,"请选择正确的 "+fqfile+" 文件","xz");
             }
             for (String s : list) {
                 if(s.indexOf(fqfile) != -1){

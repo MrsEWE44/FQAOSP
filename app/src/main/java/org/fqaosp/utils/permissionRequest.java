@@ -1,15 +1,12 @@
 package org.fqaosp.utils;
 
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
 
 import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.UriPermission;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -21,9 +18,6 @@ import android.widget.Toast;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
-
-import java.io.File;
-import java.util.List;
 
 public class permissionRequest {
 
@@ -99,7 +93,7 @@ public class permissionRequest {
                     grantAndroidObb(that);
                 }
                 dialogInterface.cancel();
-                showInfoMsg(that, "提示", "授权完成后，重启应用");
+                new dialogUtils().showInfoMsg(that, "提示", "授权完成后，重启应用");
             }
         });
         ab.setPositiveButton("取消", new DialogInterface.OnClickListener() {

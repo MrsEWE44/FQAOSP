@@ -267,7 +267,8 @@ restory_app(){
 						done
 					fi
 					if [ "$backup_type" == "tbr" ];then
-              $brotli_my -d "data.${r_fffend}" && $busybox_my tar xf "data.tar" -mokC $pkg_data_dir
+              $brotli_my -d "data.${r_fffend}"
+              $busybox_my tar xf "data.tar" -mokC $pkg_data_dir
           else
           	  $busybox_my tar xf "data.${r_fffend}" -mokC $pkg_data_dir
           fi
@@ -279,16 +280,19 @@ restory_app(){
 					done
 					if [ -f "sddata.${r_fffend}" ];then
 					  if [ "$backup_type" == "tbr" ];then
-                $brotli_my -d "sddata.${r_fffend}" && $busybox_my tar xf "sddata.tar" -C $sdcard_android_path/data/
+                $brotli_my -d "sddata.${r_fffend}" && $busybox_my tar xf "sddata.tar" -C $sdcard_android_path/data/ && $busybox_my chown -R $in_app_uid:$in_app_uid $sdcard_android_path/data/$pkgname
             else
-                $busybox_my tar xf "sddata.${r_fffend}" -C $sdcard_android_path/data/
+                $busybox_my tar xf "sddata.${r_fffend}" -C $sdcard_android_path/data/ && $busybox_my chown -R $in_app_uid:$in_app_uid $sdcard_android_path/data/$pkgname
             fi
 					fi
 					if [ -f "sdobb.${r_fffend}" ];then
 					  if [ "$backup_type" == "tbr" ];then
-                $brotli_my -d "sdobb.${r_fffend}" && $busybox_my tar xf "sdobb.${r_fffend}" -C $sdcard_android_path/obb/
+                $brotli_my -d "sdobb.${r_fffend}"
+                $busybox_my tar xf "sdobb.tar" -C $sdcard_android_path/obb/
+                $busybox_my chown -R $in_app_uid:$in_app_uid $sdcard_android_path/obb/$pkgname
             else
                 $busybox_my tar xf "sdobb.${r_fffend}" -C $sdcard_android_path/obb/
+                $busybox_my chown -R $in_app_uid:$in_app_uid $sdcard_android_path/obb/$pkgname
             fi
 					fi
 					cd ../
@@ -304,7 +308,8 @@ restory_app(){
 		data)
 			if [ -f "$pkgname.${r_fffend}" ];then
 			  if [ "$backup_type" == "tbr" ];then
-          $brotli_my -d "$pkgname.${r_fffend}" && $busybox_my tar xf "$pkgname.tar"
+          $brotli_my -d "$pkgname.${r_fffend}"
+          $busybox_my tar xf "$pkgname.tar"
         else
           $busybox_my tar xf "$pkgname.${r_fffend}"
         fi
@@ -350,16 +355,22 @@ restory_app(){
 					done
 					if [ -f "sddata.${r_fffend}" ];then
             if [ "$backup_type" == "tbr" ];then
-                $brotli_my -d "sddata.${r_fffend}" && $busybox_my tar xf "sddata.tar" -C $sdcard_android_path/data/
+                $brotli_my -d "sddata.${r_fffend}"
+                $busybox_my tar xf "sddata.tar" -C $sdcard_android_path/data/
+                $busybox_my chown -R $in_app_uid:$in_app_uid $sdcard_android_path/data/$pkgname
             else
                 $busybox_my tar xf "sddata.${r_fffend}" -C $sdcard_android_path/data/
+                $busybox_my chown -R $in_app_uid:$in_app_uid $sdcard_android_path/data/$pkgname
             fi
           fi
           if [ -f "sdobb.${r_fffend}" ];then
             if [ "$backup_type" == "tbr" ];then
-                $brotli_my -d "sdobb.${r_fffend}" && $busybox_my tar xf "sdobb.${r_fffend}" -C $sdcard_android_path/obb/
+                $brotli_my -d "sdobb.${r_fffend}"
+                $busybox_my tar xf "sdobb.tar" -C $sdcard_android_path/obb/
+                $busybox_my chown -R $in_app_uid:$in_app_uid $sdcard_android_path/obb/$pkgname
             else
                 $busybox_my tar xf "sdobb.${r_fffend}" -C $sdcard_android_path/obb/
+                $busybox_my chown -R $in_app_uid:$in_app_uid $sdcard_android_path/obb/$pkgname
             fi
           fi
 					cd ../

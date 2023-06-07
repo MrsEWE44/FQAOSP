@@ -8,12 +8,9 @@ package org.fqaosp.myActivitys;
  *
  * */
 
-import static org.fqaosp.utils.multiFunc.sendHandlerMSG;
-import static org.fqaosp.utils.multiFunc.showInfoMsg;
-import static org.fqaosp.utils.multiFunc.showProcessBarDialogByCMD;
-
 import android.app.Activity;
 import android.app.AppOpsManager;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -45,8 +42,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import org.fqaosp.R;
 import org.fqaosp.adapter.APPOPSINFOAdapter;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.utils.dialogUtils;
 import org.fqaosp.utils.fuckActivity;
-import org.fqaosp.utils.multiFunc;
+import org.fqaosp.utils.textUtils;
 
 import java.util.ArrayList;
 
@@ -67,6 +65,7 @@ public class appopsInfoActivity extends AppCompatActivity {
     private Boolean apasb1Bool,apasb2Bool;
     private int mode;
     private boolean isRoot = false,isADB=false;
+    private dialogUtils du = new dialogUtils();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -92,10 +91,10 @@ public class appopsInfoActivity extends AppCompatActivity {
             tv1.setText(appInfo.packageName);
             tv2.setText(appInfo.loadLabel(pm));
         } catch (PackageManager.NameNotFoundException e) {
-            showInfoMsg(this,e.getClass().getName(),e.toString());
+            du.showInfoMsg(this,e.getClass().getName(),e.toString());
         }
         if(!isRoot){
-            showInfoMsg(this,"提示","本功能需要root才能正常使用");
+            du.showInfoMsg(this,"提示","本功能需要root才能正常使用");
         }
 
     }
@@ -114,25 +113,35 @@ public class appopsInfoActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();
+        ProgressDialog show = du.showMyDialog(this,"正在获取组件信息中(请稍后...)");
+        Handler handler = new Handler(){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if(msg.what ==0){
+                    show.dismiss();
+                    showListView(lv1);
+                }else{
+                    show.dismiss();
+                }
+            }
+        };
         switch (itemId){
             case 0:
                 getPKGActivitys(packageInfo);
-                showListView(lv1);
+
                 break;
             case 1:
                 getPKGServices(pm,appInfo);
-                showListView(lv1);
                 break;
             case 2:
                 getPKGPermission(packageInfo);
-                showListView(lv1);
                 break;
             case 3:
                 getPKGReceivers(pm,appInfo);
-                showListView(lv1);
                 break;
             case 4:
-                showInfoMsg(this,"帮助信息","该页面是用于应用配置的,支持应用权限设置、服务禁/启用、活动项禁/启用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
+                du.sendHandlerMSG(handler,1);
+                du.showInfoMsg(this,"帮助信息","该页面是用于应用配置的,支持应用权限设置、服务禁/启用、活动项禁/启用，需要安装fqtools,如果没有安装，则会自动跳转安装页面，按照页面提示安装即可。\r\n" +
                         "1.右上角三个点，活动项，列出该应用的所有可修改的活动项，支持批量启动或者禁用.\r\n" +
                         "2.右上角三个点，服务项，列出该应用的所有可修改的服务项，支持批量启动或者禁用.\r\n"+
                         "3.右上角三个点，权限列表，列出该应用的所有可修改的权限列表，支持批量启动或者禁用.\r\n"+
@@ -143,9 +152,11 @@ public class appopsInfoActivity extends AppCompatActivity {
                 );
                 break;
             case 5:
+                du.sendHandlerMSG(handler,1);
                 fuckActivity.getIns().killall();
                 ;
         }
+        du.sendHandlerMSG(handler,0);
         return super.onOptionsItemSelected(item);
     }
 
@@ -344,7 +355,7 @@ public class appopsInfoActivity extends AppCompatActivity {
                         pplist.add(new PKGINFO(pkgname,list.get(i),list.get(i),null,switbs.get(i)?"false":"true",null,null));
                     }
                 }
-                showProcessBarDialogByCMD(appopsInfoActivity.this,pplist,"正在修改组件状态中...","当前正在修改的组件名称: ",10,null ,null,isRoot,uid,mode,null,null);
+                du.showProcessBarDialogByCMD(appopsInfoActivity.this,pplist,"正在修改组件状态中...","当前正在修改的组件名称: ",10,null ,null,isRoot,uid,mode,null,null);
             }
         });
 
@@ -369,7 +380,7 @@ public class appopsInfoActivity extends AppCompatActivity {
                 checkboxs.clear();
                 for (int i = 0; i < list.size(); i++) {
                     String s=list.get(i);
-                    if(multiFunc.isIndexOfStr(s,searchStr)){
+                    if(new textUtils().isIndexOfStr(s,searchStr)){
                         strings.add(s);
                         switbs2.add(switbs.get(i));
                         checkboxs.add(false);
@@ -377,7 +388,7 @@ public class appopsInfoActivity extends AppCompatActivity {
                 }
                 list=strings;
                 switbs=switbs2;
-                sendHandlerMSG(handler,0);
+                du.sendHandlerMSG(handler,0);
             }
         });
 
