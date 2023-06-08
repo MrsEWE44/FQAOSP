@@ -30,12 +30,29 @@
 
         </LinearLayout>
 
-        <Button
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="挂载选中的镜像文件"
-            android:id="@+id/mliab1"
-            ></Button>
+            android:orientation="horizontal">
+
+            <Button
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="挂载选中的镜像文件"
+                android:id="@+id/mliab1"
+                ></Button>
+
+            <Switch
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="开启mtp"
+                android:textAlignment="center"
+                android:id="@+id/mliasb1"></Switch>
+
+
+        </LinearLayout>
 
         <ListView
             android:layout_width="match_parent"

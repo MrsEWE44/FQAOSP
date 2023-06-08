@@ -160,55 +160,67 @@ public class appopsCmdStr {
 
 
     //拼接命令参数字符串
-    public String spliceCMDStr(PKGINFO pkginfo,int mode , int apops_opt_index,int apops_permis_index){
+    public String spliceCMDStr(PKGINFO pkginfo,Integer mode , int apops_opt_index,int apops_permis_index){
         StringBuilder sb = new StringBuilder();
         String cmdHead = "appops set --uid  "+pkginfo.getPkgname()+" ";
         String cmdWrite = "appops write-settings ";
         String modestr="";
 
-        if(mode == 0){
-            switch (apops_opt_index){
-                case 0:
-                    modestr = "default";
-                    break;
-                case 1:
-                    modestr = "ignore";
-                    break;
-                case 2:
-                    modestr = "allow";
-                    break;
-                case 3:
-                    modestr = "foreground";
-                    break;
+        if(mode == null){
+            if(apops_permis_index == 11 || apops_permis_index == 13){
+                mode = 1;
+            }else if(apops_permis_index == 12){
+                mode =2;
+            }else{
+                mode =0;
             }
         }
-        if(mode ==1){
-            switch (apops_opt_index){
-                case 0:
-                    modestr = "true";
-                    break;
-                case 1:
-                    modestr = "false";
-                    break;
+
+        if(mode != null){
+            if(mode == 0){
+                switch (apops_opt_index){
+                    case 0:
+                        modestr = "default";
+                        break;
+                    case 1:
+                        modestr = "ignore";
+                        break;
+                    case 2:
+                        modestr = "allow";
+                        break;
+                    case 3:
+                        modestr = "foreground";
+                        break;
+                }
             }
-        }
-        if(mode ==2){
-            switch (apops_opt_index){
-                case 0:
-                    modestr = "active";
-                    break;
-                case 1:
-                    modestr = "working_set";
-                    break;
-                case 2:
-                    modestr = "frequent";
-                    break;
-                case 3:
-                    modestr = "rare";
-                    break;
-                case 4:
-                    modestr = "restricted";
-                    break;
+            if(mode ==1){
+                switch (apops_opt_index){
+                    case 0:
+                        modestr = "true";
+                        break;
+                    case 1:
+                        modestr = "false";
+                        break;
+                }
+            }
+            if(mode ==2){
+                switch (apops_opt_index){
+                    case 0:
+                        modestr = "active";
+                        break;
+                    case 1:
+                        modestr = "working_set";
+                        break;
+                    case 2:
+                        modestr = "frequent";
+                        break;
+                    case 3:
+                        modestr = "rare";
+                        break;
+                    case 4:
+                        modestr = "restricted";
+                        break;
+                }
             }
         }
 

@@ -34,6 +34,7 @@ import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.utils.dialogUtils;
 import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
+import org.fqaosp.utils.packageUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -67,6 +68,9 @@ public class fileSharingActivity extends AppCompatActivity {
     private fileTools ft = new fileTools();
     private dialogUtils du = new dialogUtils();
 
+    private Context context;
+    private Activity activity;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -74,6 +78,8 @@ public class fileSharingActivity extends AppCompatActivity {
         setContentView(R.layout.file_sharing_activity);
         fuckActivity.getIns().add(this);
         setTitle("文件共享");
+        context = this;
+        activity = this;
         initLayout();
         Intent intent = getIntent();
         isRoot = intent.getBooleanExtra("isRoot",false);
@@ -99,7 +105,7 @@ public class fileSharingActivity extends AppCompatActivity {
             fsaet1.setText("当前未连接WiFi或开启热点");
             fsab1.setEnabled(false);
         } else {
-            ProgressDialog show = du.showMyDialog(this,  "正在加载内容,请稍后(可能会出现无响应，请耐心等待)....");
+            ProgressDialog show = du.showMyDialog(context,  "正在加载内容,请稍后(可能会出现无响应，请耐心等待)....");
 //            preventDismissDialog(show);
             Handler handler = new Handler() {
                 @Override
@@ -149,7 +155,6 @@ public class fileSharingActivity extends AppCompatActivity {
     }
 
     private void initBtClick() {
-        Activity that = this;
 
         fsab1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -159,7 +164,7 @@ public class fileSharingActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         fsab1.setText("当前正在运行");
-                        new HttpServer().start(that);
+                        new HttpServer().start(activity);
                     }
                 });
             }
@@ -167,10 +172,11 @@ public class fileSharingActivity extends AppCompatActivity {
     }
 
     private void initFileView() {
-        checkPeer(this);
+        checkPeer(activity);
     }
 
     private void initAppView() {
+
         ListView fsalv = appView.findViewById(R.id.fsalv);
         fsalv.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
             @Override
@@ -179,7 +185,7 @@ public class fileSharingActivity extends AppCompatActivity {
                     if (checkboxs.get(i1)) {
                         PKGINFO pkginfo = pkginfos.get(i1);
                         fileList.add(pkginfo.getApkpath());
-                        Toast.makeText(fileSharingActivity.this, pkginfo.getAppname() + " 已加入分享队列", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context, pkginfo.getAppname() + " 已加入分享队列", Toast.LENGTH_SHORT).show();
                     }
                 }
                 return false;
@@ -195,8 +201,8 @@ public class fileSharingActivity extends AppCompatActivity {
                 startActivity(intent2);
             }
         });
-
-        du.queryPKGProcessDialog(this,this,fsalv,pkginfos,checkboxs,2,null,isRoot);
+        new packageUtils().queryUserEnablePKGS(activity,pkginfos,checkboxs,0);
+        du.showPKGS(context,fsalv,pkginfos,checkboxs);
     }
 
     private void checkPeer(Activity that) {

@@ -9,6 +9,7 @@ package org.fqaosp.myActivitys;
  * */
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
@@ -17,7 +18,10 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.Settings;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -37,6 +41,9 @@ import androidx.core.content.ContextCompat;
 
 import org.fqaosp.R;
 import org.fqaosp.entity.PKGINFO;
+import org.fqaosp.sql.iptablesDB;
+import org.fqaosp.utils.CMD;
+import org.fqaosp.utils.appopsCmdStr;
 import org.fqaosp.utils.dialogUtils;
 import org.fqaosp.utils.fileTools;
 import org.fqaosp.utils.fuckActivity;
@@ -50,6 +57,8 @@ import org.fqaosp.utils.userUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class appopsActivity extends AppCompatActivity {
 
@@ -125,6 +134,38 @@ public class appopsActivity extends AppCompatActivity {
                 if(apops_permis_index==11||apops_permis_index==13){
                     mode=1;
                     apopsasp2.setAdapter(new ArrayAdapter<String>(con, android.R.layout.simple_list_item_1, apops_opt3));
+                    ProgressDialog pd = du.showMyDialog(con, "正在应用网络更改");
+                    Handler handler = new Handler(){
+                        @Override
+                        public void handleMessage(@NonNull Message msg) {
+                            if(msg.what == 0){
+                                pd.dismiss();
+                            }
+                        }
+                    };
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            iptablesDB ipDB = new iptablesDB(con,"iptable.db",null,1);
+                            if(ipDB.count() > 0){
+                                HashMap<String, Integer> select = ipDB.select(null, 0);
+                                appopsCmdStr ac = new appopsCmdStr();
+                                for (Map.Entry<String, Integer> entry : select.entrySet()) {
+//                                Log.i("key-value",entry.getKey()+" -- "+entry.getValue());
+                                    try {
+                                        ApplicationInfo applicationInfo = con.getPackageManager().getApplicationInfo(entry.getKey(), 0);
+                                        new CMD(ac.disableAppByAPPUIDCMD(applicationInfo.uid));
+                                    } catch (PackageManager.NameNotFoundException e) {
+                                        throw new RuntimeException(e);
+                                    }
+
+                                }
+                            }
+
+                            du.sendHandlerMSG(handler,0);
+                        }
+                    }).start();
+                    //需要实现iptable数据库
                 }else if(apops_permis_index==12){
                     mode=2;
                     apopsasp2.setAdapter(new ArrayAdapter<String>(con, android.R.layout.simple_list_item_1, apops_opt2));

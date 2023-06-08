@@ -323,7 +323,7 @@ public class apkDecompileMenuActivity extends AppCompatActivity implements View.
                     @Override
                     public void run() {
                         clearList();
-                        String defaultDecompileDir = context.getExternalCacheDir().toString() + "/cache/decompile";
+                        String defaultDecompileDir = context.getExternalCacheDir().toString() + "/decompile";
                         File file1 = new File(defaultDecompileDir);
                         if (file1.exists()) {
                             File[] files = file1.listFiles();

@@ -47,7 +47,7 @@ public class killAppActivity extends AppCompatActivity {
     private Button b1 ,kaasearchb;
     private Switch kaasb1,kaasb2,kaasb3;
     private Boolean kaasb1Bool,kaasb2Bool,kaasb3Bool;
-    private killAppDB killAppdb = new killAppDB(killAppActivity.this, "killApp.db", null, 1);
+    private killAppDB killAppdb = new killAppDB(killAppActivity.this, "killapp.db", null, 1);
     private boolean isRoot=false,isADB=false;
 
     private Context context;
@@ -136,18 +136,21 @@ public class killAppActivity extends AppCompatActivity {
                     if(kaasb3Bool && !checkboxs.get(i)){
                         if(!pkginfo.getPkgname().equals(getPackageName())){
                             list.add(pkginfo);
+                            killAppdb.insert(pkginfo.getPkgname(),0);
                         }
                     }
 
                     if(kaasb2Bool && checkboxs.get(i)){
                         if(!pkginfo.getPkgname().equals(getPackageName())){
                             list.add(pkginfo);
+                            killAppdb.insert(pkginfo.getPkgname(),0);
                         }
                     }
 
                     if(kaasb1Bool){
                         if(!pkginfo.getPkgname().equals(getPackageName())){
                             list.add(pkginfo);
+                            killAppdb.insert(pkginfo.getPkgname(),0);
                         }
                     }
                 }
@@ -157,6 +160,7 @@ public class killAppActivity extends AppCompatActivity {
                         for (PKGINFO pkginfo : pkginfos) {
                             if(!pkginfo.getPkgname().equals(getPackageName())){
                                 list.add(pkginfo);
+                                killAppdb.insert(pkginfo.getPkgname(),0);
                             }
                         }
                     }else{

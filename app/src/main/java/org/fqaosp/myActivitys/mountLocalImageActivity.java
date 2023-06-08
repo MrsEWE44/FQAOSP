@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -51,6 +52,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
     private ArrayList<String> list = new ArrayList<>();
     private ArrayList<Boolean> checkboxs = new ArrayList<>();
     private Button mliab1,mliab2,mliab3;
+    private Switch mliasb1;
     private ListView lv1;
     private String[] filetype = {"img","iso"};
     private String[] filetype2 = {"ext2","minix","minix2","vfat","reiser"};
@@ -84,6 +86,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
         mliab1 = findViewById(R.id.mliab1);
         mliab2 = findViewById(R.id.mliab2);
         mliab3 = findViewById(R.id.mliab3);
+        mliasb1 = findViewById(R.id.mliasb1);
         lv1 = findViewById(R.id.mlialv1);
         clickBts();
     }
@@ -99,7 +102,7 @@ public class mountLocalImageActivity extends AppCompatActivity {
                 for (int i = 0; i < checkboxs.size(); i++) {
                     if(checkboxs.get(i)){
                         String imgPath = list.get(i);
-                        if(toPC.mountLocalFile(imgPath)){
+                        if(toPC.mountLocalFile(imgPath,mliasb1.isChecked())){
                             Toast.makeText(context, "挂载成功 "+imgPath, Toast.LENGTH_SHORT).show();
                         }else{
                             Toast.makeText(context, "挂载失败 "+imgPath, Toast.LENGTH_SHORT).show();

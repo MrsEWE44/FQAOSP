@@ -10,7 +10,6 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
@@ -26,6 +25,7 @@ import org.fqaosp.adapter.PKGINFOAdapter;
 import org.fqaosp.adapter.USERAdapter;
 import org.fqaosp.entity.PKGINFO;
 import org.fqaosp.myActivitys.importToolsActivity;
+import org.fqaosp.sql.iptablesDB;
 
 import java.io.File;
 import java.lang.reflect.Field;
@@ -313,6 +313,18 @@ public class dialogUtils {
                             cmdstr = makewp.getUninstallPkgByUIDCMD(uid, pkginfo.getPkgname());
                             break;
                         case 2:
+                            if(apops_permis_index == 13 && isRoot == false){
+                                sendHandlerMSG(mUpdateProgressHandler,6,"当前功能必须要root权限才能使用");
+                            }
+                            if(apops_permis_index == 13 && isRoot){
+                                iptablesDB ipDB = new iptablesDB(context,"iptable.db",null,1);
+                                if(apops_opt_index == 0){
+                                    ipDB.delete(pkginfo.getPkgname(),0);
+                                }else{
+                                    ipDB.insert(pkginfo.getPkgname(),0);
+                                }
+
+                            }
                             cmdstr = acs.spliceCMDStr(pkginfo,mode,apops_opt_index,apops_permis_index);
                             break;
                         case 3:
