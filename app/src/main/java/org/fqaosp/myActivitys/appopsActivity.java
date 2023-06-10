@@ -133,13 +133,13 @@ public class appopsActivity extends AppCompatActivity {
                 apops_permis_index = i;
                 if(apops_permis_index==11||apops_permis_index==13){
                     mode=1;
-                    apopsasp2.setAdapter(new ArrayAdapter<String>(con, android.R.layout.simple_list_item_1, apops_opt3));
                     ProgressDialog pd = du.showMyDialog(con, "正在应用网络更改");
                     Handler handler = new Handler(){
                         @Override
                         public void handleMessage(@NonNull Message msg) {
                             if(msg.what == 0){
                                 pd.dismiss();
+                                apopsasp2.setAdapter(new ArrayAdapter<String>(con, android.R.layout.simple_list_item_1, apops_opt3));
                             }
                         }
                     };
@@ -156,7 +156,7 @@ public class appopsActivity extends AppCompatActivity {
                                         ApplicationInfo applicationInfo = con.getPackageManager().getApplicationInfo(entry.getKey(), 0);
                                         new CMD(ac.disableAppByAPPUIDCMD(applicationInfo.uid));
                                     } catch (PackageManager.NameNotFoundException e) {
-                                        throw new RuntimeException(e);
+                                        Log.e(appopsActivity.class.getName(),e.toString());
                                     }
 
                                 }
@@ -165,7 +165,6 @@ public class appopsActivity extends AppCompatActivity {
                             du.sendHandlerMSG(handler,0);
                         }
                     }).start();
-                    //需要实现iptable数据库
                 }else if(apops_permis_index==12){
                     mode=2;
                     apopsasp2.setAdapter(new ArrayAdapter<String>(con, android.R.layout.simple_list_item_1, apops_opt2));

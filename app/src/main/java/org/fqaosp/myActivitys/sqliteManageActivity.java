@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import org.fqaosp.R;
+import org.fqaosp.sql.iptablesDB;
 import org.fqaosp.sql.killAppDB;
 import org.fqaosp.utils.dialogUtils;
 import org.fqaosp.utils.fuckActivity;
@@ -45,7 +46,8 @@ public class sqliteManageActivity extends AppCompatActivity {
     private TableLayout tableLayout ;
     private HorizontalScrollView horizontalScrollView ;
     private ScrollView scrollView;
-    private killAppDB killAppdb = new killAppDB(sqliteManageActivity.this, "killApp.db", null, 1);
+    private killAppDB killAppdb = new killAppDB(sqliteManageActivity.this, "killapp.db", null, 1);
+    private iptablesDB ipdb = new iptablesDB(sqliteManageActivity.this, "iptable.db", null, 1);
 
     private int mode;
 
@@ -69,9 +71,7 @@ public class sqliteManageActivity extends AppCompatActivity {
         sqlitemab1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(mode == 0){
-                    showDatabase(killAppdb,tableLayout,horizontalScrollView,scrollView);
-                }
+                showDatabase(tableLayout,horizontalScrollView,scrollView);
             }
         });
 
@@ -111,6 +111,19 @@ public class sqliteManageActivity extends AppCompatActivity {
                                         }
                                     }
 
+                                    if(mode ==1){
+                                        if(editText.getText().toString().isEmpty() || editText2.getText().toString().isEmpty()){
+                                            ipdb.delete(finalEntry.getKey(), finalEntry.getValue());
+                                        }
+                                        if(select.get(editText.getText().toString()) == null){
+                                            try {
+                                                ipdb.update(finalEntry.getKey(), finalEntry.getValue(),editText.getText().toString(),Integer.valueOf(editText2.getText().toString()));
+                                            }catch (Exception e){
+                                                Toast.makeText(me, e.getMessage(), Toast.LENGTH_SHORT).show();
+                                            }
+                                        }
+                                    }
+
                                 }
                             };
 
@@ -121,11 +134,7 @@ public class sqliteManageActivity extends AppCompatActivity {
                         cacheThreadPool.shutdown();
                         while(true){
                             if(cacheThreadPool.isTerminated()){
-
-                                if(mode ==0){
-                                    showDatabase(killAppdb,tableLayout,horizontalScrollView,scrollView);
-                                }
-
+                                showDatabase(tableLayout,horizontalScrollView,scrollView);
                                 show.dismiss();
                                 break;
                             }
@@ -147,15 +156,19 @@ public class sqliteManageActivity extends AppCompatActivity {
             public void onClick(View view) {
                 if(mode == 0){
                     killAppdb.delete(null,null);
-                    showDatabase(killAppdb,tableLayout,horizontalScrollView,scrollView);
                 }
+
+                if(mode == 1){
+                    ipdb.delete(null,null);
+                }
+                showDatabase(tableLayout,horizontalScrollView,scrollView);
             }
         });
 
 
     }
 
-    private void showDatabase(killAppDB killAppdb , TableLayout tableLayout,HorizontalScrollView horizontalScrollView,ScrollView scrollView){
+    private void showDatabase(TableLayout tableLayout,HorizontalScrollView horizontalScrollView,ScrollView scrollView){
         list.clear();
         linearLayout1.removeAllViews();
         horizontalScrollView.removeAllViews();
@@ -163,11 +176,17 @@ public class sqliteManageActivity extends AppCompatActivity {
         tableLayout.removeAllViews();
         TableRow tableRow = initTableRow();
         String[] columNames = killAppdb.getColumNames();
+        if(mode == 1){
+            columNames = ipdb.getColumNames();
+        }
         for (String columName : columNames) {
             addTableText(tableRow,columName);
         }
         tableLayout.addView(tableRow);
         select = killAppdb.select(null, null);
+        if(mode == 1){
+            select = ipdb.select(null,null);
+        }
         for (Map.Entry<String, Integer> entry : select.entrySet()) {
             addTableData(tableLayout,entry);
             list.add(entry);
@@ -176,6 +195,7 @@ public class sqliteManageActivity extends AppCompatActivity {
         scrollView.addView(horizontalScrollView);
         linearLayout1.addView(scrollView);
     }
+
 
     private EditText getEditText(String text){
         EditText et = new EditText(me);
@@ -202,26 +222,12 @@ public class sqliteManageActivity extends AppCompatActivity {
         tableRow.addView(tv);
     }
 
-    private void addText(LinearLayout layout , String text){
-        TextView tv = new TextView(me);
-        tv.setText(text);
-        layout.addView(tv);
-    }
-
-    private LinearLayout initLayout(int state){
-        LinearLayout layout = new LinearLayout(me);
-        layout.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
-        layout.setOrientation(state);
-        return layout;
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         menu.add(Menu.NONE,0,0,"切换killapp数据库");
-        menu.add(Menu.NONE,1,1,"帮助");
-        menu.add(Menu.NONE,2,2,"退出");
+        menu.add(Menu.NONE,1,1,"切换iptable数据库");
+        menu.add(Menu.NONE,2,2,"帮助");
+        menu.add(Menu.NONE,3,3,"退出");
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -234,12 +240,16 @@ public class sqliteManageActivity extends AppCompatActivity {
                 mode=0;
                 break;
             case 1:
-                du.showInfoMsg(this,"帮助信息","该页面是用于编辑该软件产生的数据库文件。\r\n" +
-                        "1.killapp（后台管理），即保存的默认后台进程信息.\r\n" +
-                        "2.应用分身，即保存的应用分身信息。\r\n"
-                );
+                mode =1;
                 break;
             case 2:
+                du.showInfoMsg(this,"帮助信息","该页面是用于编辑该软件产生的数据库文件。\r\n" +
+                        "1.killapp（后台管理），即保存的默认后台进程信息.\r\n" +
+                        "2.iptable（联网管理），里面保存了需要被禁用联网的应用内容.\r\n" +
+                        "3.应用分身，即保存的应用分身信息。\r\n"
+                );
+                break;
+            case 3:
                 fuckActivity.getIns().killall();
                 ;
         }
