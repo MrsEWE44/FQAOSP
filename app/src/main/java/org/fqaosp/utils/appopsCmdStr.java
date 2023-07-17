@@ -1,5 +1,6 @@
 package org.fqaosp.utils;
 
+import android.app.AppOpsManager;
 import android.os.Build;
 
 import org.fqaosp.entity.PKGINFO;
@@ -165,6 +166,7 @@ public class appopsCmdStr {
         String cmdHead = "appops set --uid  "+pkginfo.getPkgname()+" ";
         String cmdWrite = "appops write-settings ";
         String modestr="";
+        ArrayList<String> ops = new ArrayList<>();
 
         if(mode == null){
             if(apops_permis_index == 11 || apops_permis_index == 13){
@@ -226,117 +228,106 @@ public class appopsCmdStr {
 
         switch (apops_permis_index){
             case 0 :
-                sb.append(cmdHead+" READ_PHONE_STATE "+modestr+";");
-                sb.append(cmdHead+" READ_CONTACTS "+modestr+";");
-                sb.append(cmdHead+" WRITE_CONTACTS "+modestr+";");
-                sb.append(cmdHead+" READ_CALL_LOG "+modestr+";");
-                sb.append(cmdHead+" WRITE_CALL_LOG "+modestr+";");
-                sb.append(cmdHead+" CALL_PHONE "+modestr+";");
-                sb.append(cmdHead+" READ_SMS "+modestr+";");
-                sb.append(cmdHead+" WRITE_SMS "+modestr+";");
-                sb.append(cmdHead+" SEND_SMS "+modestr+";");
-                sb.append(cmdHead+" RECEIVE_SMS "+modestr+";");
-                sb.append(cmdHead+" RECEIVE_EMERGECY_SMS "+modestr+";");
-                sb.append(cmdHead+" RECEIVE_MMS "+modestr+";");
-                sb.append(cmdHead+" RECEIVE_WAP_PUSH "+modestr+";");
-                sb.append(cmdHead+" READ_ICC_SMS "+modestr+";");
-                sb.append(cmdHead+" WRITE_ICC_SMS "+modestr+";");
-                sb.append(cmdHead+" PROCESS_OUTGOING_CALLS "+modestr+";");
-                sb.append(cmdHead+" READ_CELL_BROADCASTS "+modestr+";");
-                sb.append(cmdHead+" android:add_voicemail "+modestr+";");
-                sb.append(cmdHead+" android:answer_phone_calls "+modestr+";");
-                sb.append(cmdHead+" android:call_phone "+modestr+";");
-                sb.append(cmdHead+" android:read_call_log "+modestr+";");
-                sb.append(cmdHead+" android:read_contacts "+modestr+";");
-                sb.append(cmdHead+" android:read_cell_broadcasts "+modestr+";");
-                sb.append(cmdHead+" android:read_phone_numbers "+modestr+";");
-                sb.append(cmdHead+" android:read_phone_state "+modestr+";");
-                sb.append(cmdHead+" android:read_sms "+modestr+";");
-                sb.append(cmdHead+" android:receive_mms "+modestr+";");
-                sb.append(cmdHead+" android:receive_sms "+modestr+";");
-                sb.append(cmdHead+" android:receive_wap_push "+modestr+";");
-                sb.append(cmdHead+" android:send_sms "+modestr+";");
-                sb.append(cmdHead+" android:write_call_log "+modestr+";");
-                sb.append(cmdHead+" android:write_contacts "+modestr+";");
-                sb.append(cmdHead+" android:process_outgoing_calls "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.CALL_LOG "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.CONTACTS "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.PHONE "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.SMS "+modestr+";");
+                ops.add(AppOpsManager.OPSTR_READ_PHONE_STATE);
+                ops.add(AppOpsManager.OPSTR_READ_CONTACTS);
+                ops.add(AppOpsManager.OPSTR_WRITE_CONTACTS);
+                ops.add(AppOpsManager.OPSTR_READ_CALL_LOG);
+                ops.add(AppOpsManager.OPSTR_WRITE_CALL_LOG);
+                ops.add(AppOpsManager.OPSTR_CALL_PHONE);
+                ops.add(AppOpsManager.OPSTR_READ_SMS);
+                ops.add("WRITE_SMS");
+                ops.add(AppOpsManager.OPSTR_SEND_SMS);
+                ops.add(AppOpsManager.OPSTR_RECEIVE_SMS);
+                ops.add("RECEIVE_EMERGECY_SMS");
+                ops.add(AppOpsManager.OPSTR_RECEIVE_MMS);
+                ops.add(AppOpsManager.OPSTR_RECEIVE_WAP_PUSH);
+                ops.add("READ_ICC_SMS");
+                ops.add("WRITE_ICC_SMS");
+                ops.add(AppOpsManager.OPSTR_PROCESS_OUTGOING_CALLS);
+                ops.add("READ_CELL_BROADCASTS");
+                ops.add(AppOpsManager.OPSTR_ADD_VOICEMAIL);
+                ops.add(AppOpsManager.OPSTR_ANSWER_PHONE_CALLS);
+                ops.add(AppOpsManager.OPSTR_READ_CELL_BROADCASTS);
+                ops.add(AppOpsManager.OPSTR_READ_PHONE_NUMBERS);
+                ops.add(AppOpsManager.OPSTR_READ_PHONE_STATE);
+                ops.add("android.permission-group.CALL_LOG");
+                ops.add("android.permission-group.CONTACTS");
+                ops.add("android.permission-group.PHONE");
+                ops.add("android.permission-group.SMS");
                 break;
             case 1:
-                sb.append(cmdHead+" READ_EXTERNAL_STORAGE "+modestr+";");
-                sb.append(cmdHead+" WRITE_EXTERNAL_STORAGE "+modestr+";");
-                sb.append(cmdHead+" ACCESS_MEDIA_LOCATION "+modestr+";");
-                sb.append(cmdHead+" LEGACY_STORAGE "+modestr+";");
-                sb.append(cmdHead+" WRITE_MEDIA_AUDIO "+modestr+";");
-                sb.append(cmdHead+" READ_MEDIA_AUDIO "+modestr+";");
-                sb.append(cmdHead+" WRITE_MEDIA_VIDEO "+modestr+";");
-                sb.append(cmdHead+" READ_MEDIA_VIDEO "+modestr+";");
-                sb.append(cmdHead+" READ_MEDIA_IMAGES "+modestr+";");
-                sb.append(cmdHead+" WRITE_MEDIA_IMAGES "+modestr+";");
-                sb.append(cmdHead+" MANAGE_EXTERNAL_STORAGE "+modestr+";");
-                sb.append(cmdHead+" android:picture_in_picture "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.READ_MEDIA_AURAL "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.READ_MEDIA_VISUAL "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.READ_MEDIA_VISUAL "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.STORAGE "+modestr+";");
+                ops.add(AppOpsManager.OPSTR_READ_EXTERNAL_STORAGE);
+                ops.add(AppOpsManager.OPSTR_WRITE_EXTERNAL_STORAGE);
+                ops.add("ACCESS_MEDIA_LOCATION");
+                ops.add("LEGACY_STORAGE");
+                ops.add("WRITE_MEDIA_AUDIO");
+                ops.add("READ_MEDIA_AUDIO");
+                ops.add("WRITE_MEDIA_VIDEO");
+                ops.add("READ_MEDIA_VIDEO");
+                ops.add("READ_MEDIA_IMAGES");
+                ops.add("WRITE_MEDIA_IMAGES");
+                ops.add("MANAGE_EXTERNAL_STORAGE");
+                ops.add(AppOpsManager.OPSTR_PICTURE_IN_PICTURE);
+                ops.add("android.permission-group.READ_MEDIA_AURAL");
+                ops.add("android.permission-group.READ_MEDIA_VISUAL");
+                ops.add("android.permission-group.STORAGE");
                 break;
             case 2:
-                sb.append(cmdHead+" READ_CLIPBOARD "+modestr+";");
-                sb.append(cmdHead+" WRITE_CLIPBOARD "+modestr+";");
+                ops.add("READ_CLIPBOARD");
+                ops.add("WRITE_CLIPBOARD");
                 break;
             case 3:
-                sb.append(cmdHead+" RUN_ANY_IN_BACKGROUND "+modestr+";");
+                ops.add("RUN_ANY_IN_BACKGROUND");
                 break;
             case 4:
-                sb.append(cmdHead+" RUN_IN_BACKGROUND "+modestr+";");
+                ops.add("RUN_IN_BACKGROUND");
                 break;
             case 5:
-                sb.append(cmdHead+" CAMERA "+modestr+";");
-                sb.append(cmdHead+" android:camera "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.CAMERA "+modestr+";");
+                ops.add(AppOpsManager.OPSTR_CAMERA);
+                ops.add("android.permission-group.CAMERA");
                 break;
             case 6:
-                sb.append(cmdHead+" RECORD_AUDIO "+modestr+";");
-                sb.append(cmdHead+" android:record_audio "+modestr+";");
-                sb.append(cmdHead+" TAKE_AUDIO_FOCUS "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.MICROPHONE "+modestr+";");
+                ops.add(AppOpsManager.OPSTR_RECORD_AUDIO);
+                ops.add("TAKE_AUDIO_FOCUS");
+                ops.add("android.permission-group.MICROPHONE");
                 break;
             case 7:
-                sb.append(cmdHead+" COARSE_LOCATION "+modestr+";");
-                sb.append(cmdHead+" FINE_LOCATION "+modestr+";");
-                sb.append(cmdHead+" android:coarse_location "+modestr+";");
-                sb.append(cmdHead+" android:fine_location "+modestr+";");
-                sb.append(cmdHead+" android:mock_location "+modestr+";");
-                sb.append(cmdHead+" android:monitor_location_high_power "+modestr+";");
-                sb.append(cmdHead+" android:monitor_location "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.LOCATION "+modestr+";");
+                ops.add(AppOpsManager.OPSTR_COARSE_LOCATION);
+                ops.add(AppOpsManager.OPSTR_FINE_LOCATION);
+                ops.add(AppOpsManager.OPSTR_MOCK_LOCATION);
+                ops.add(AppOpsManager.OPSTR_MONITOR_HIGH_POWER_LOCATION);
+                ops.add(AppOpsManager.OPSTR_MONITOR_LOCATION);
+                ops.add("android.permission-group.LOCATION");
                 break;
             case 8:
-                sb.append(cmdHead+" READ_CALENDAR "+modestr+";");
-                sb.append(cmdHead+" WRITE_CALENDAR "+modestr+";");
-                sb.append(cmdHead+" android:write_calendar "+modestr+";");
-                sb.append(cmdHead+" android:read_calendar "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.CALENDAR "+modestr+";");
+                ops.add(AppOpsManager.OPSTR_READ_CALENDAR);
+                ops.add(AppOpsManager.OPSTR_WRITE_CALENDAR);
+                ops.add("android.permission-group.CALENDAR");
                 break;
             case 9:
-                sb.append(cmdHead+" WIFI_SCAN "+modestr+";");
-                sb.append(cmdHead+" android:use_sip "+modestr+";");
-                sb.append(cmdHead+" BLUETOOTH_SCAN "+modestr+";");
-                sb.append(cmdHead+" BLUETOOTH_ADVERTISE "+modestr+";");
-                sb.append(cmdHead+" BLUETOOTH_CONNECT "+modestr+";");
-                sb.append(cmdHead+" BLUETOOTH_ADMIN "+modestr+";");
-                sb.append(cmdHead+" BLUETOOTH "+modestr+";");
-                sb.append(cmdHead+" NEARBY_DEVICES "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.NEARBY_DEVICES "+modestr+";");
-                sb.append(cmdHead+" android.permission-group.SENSORS "+modestr+";");
+                ops.add(AppOpsManager.OPSTR_USE_SIP);
+                ops.add("WIFI_SCAN");
+                ops.add("BLUETOOTH_SCAN");
+                ops.add("BLUETOOTH_ADVERTISE");
+                ops.add("BLUETOOTH_CONNECT");
+                ops.add("BLUETOOTH_ADMIN");
+                ops.add("BLUETOOTH");
+                ops.add("NEARBY_DEVICES");
+                ops.add(AppOpsManager.OPSTR_BODY_SENSORS);
+                ops.add("android.permission-group.NEARBY_DEVICES");
+                ops.add("android.permission-group.SENSORS");
+                ops.add("BODY_SENSORS");
+                ops.add("BODY_SENSORS_BACKGROUND");
+                ops.add("HIGH_SAMPLING_RATE_SENSORS");
+                ops.add("SENSOR_ENABLE");
+                ops.add("android.permission-group.HARDWARE_CONTROLS");
+                ops.add("SENSOR_INFO");
                 break;
             case 10:
-                sb.append(cmdHead+" android.permission-group.NOTIFICATIONS "+modestr+";");
-                sb.append(cmdHead+" ACCESS_NOTIFICATIONS "+modestr+";");
-                sb.append(cmdHead+" POST_NOTIFICATION "+modestr+";");
-                sb.append(cmdHead+" android.permission.POST_NOTIFICATIONS "+modestr+";");
+                ops.add("android.permission-group.NOTIFICATIONS");
+                ops.add("ACCESS_NOTIFICATIONS");
+                ops.add("POST_NOTIFICATION");
+                ops.add("android.permission.POST_NOTIFICATIONS");
                 break;
             case 11:
                 sb.append("am set-inactive  "+pkginfo.getPkgname()+" "+modestr);
@@ -350,6 +341,9 @@ public class appopsCmdStr {
                 break;
         }
         if(apops_permis_index < 11){
+            for (String op : ops) {
+                sb.append(cmdHead+" "+op+" "+modestr+";");
+            }
             sb.append(cmdWrite);
         }
         return sb.toString();

@@ -79,6 +79,21 @@ public class permissionRequest {
         }
     }
 
+    public static void requestInstallLocalProgram(Activity activity){
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            boolean isGranted = activity.getPackageManager().canRequestPackageInstalls();
+            if(!isGranted){
+                Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                activity.startActivityForResult(intent, 98);
+            }
+        }else{
+            if(!(ActivityCompat.checkSelfPermission(activity, Manifest.permission.REQUEST_INSTALL_PACKAGES) == PackageManager.PERMISSION_GRANTED || ActivityCompat.checkSelfPermission(activity, Manifest.permission.INSTALL_PACKAGES) == PackageManager.PERMISSION_GRANTED)){
+                Intent intent = new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES);
+                activity.startActivityForResult(intent, 98);
+            }
+        }
+    }
+
     public static void intoGrantDataOrObb(Activity that){
         AlertDialog.Builder ab = new AlertDialog.Builder(that);
         ab.setTitle("提示");
